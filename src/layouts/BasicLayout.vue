@@ -26,6 +26,7 @@
       :theme="navTheme"
       :collapsed="collapsed"
       :collapsible="true"
+      style="position: fixed; left: 0; top: 0; height: 100vh; z-index: 100; background: #001529;"
     ></side-menu>
 
     <div :style="{minWidth: placeholderDivMinWidth}" v-if="!isMobile()"></div>
@@ -45,9 +46,17 @@
       <!-- layout content -->
       <a-layout-content :style="{ height: '100%', margin: '24px 24px 0', paddingTop: fixedHeader ? '55px' : '0' }">
         <multi-tab v-if="multiTab"></multi-tab>
-        <transition name="page-transition">
-          <route-view :key="$route.fullPath" />
-        </transition>
+        <div class="content-container">
+          <!-- 使用router-view确保Vue 3正确渲染 -->
+          <router-view v-slot="{ Component }">
+            <transition name="page-transition" mode="out-in">
+              <keep-alive v-if="keepAliveRoute">
+                <component :is="Component" :key="$route.fullPath" />
+              </keep-alive>
+              <component v-else :is="Component" :key="$route.fullPath" />
+            </transition>
+          </router-view>
+        </div>
       </a-layout-content>
 
       <!-- layout footer -->
@@ -108,9 +117,8 @@ export default {
   },
   computed: {
     ...mapState({
-      // 动态主路由
-      mainMenu: state => state.permission.addRouters,
-      backendMenus: state => state.permission.menus
+      // 动态主路由 - 与旧版项目保持一致
+      mainMenu: state => state.permission.addRouters
     }),
     ...mapGetters(['userInfo']),
     
@@ -129,6 +137,10 @@ export default {
     },
     contentWidth() {
       return this.settings.contentWidth
+    },
+    // 检查当前路由是否需要keep-alive
+    keepAliveRoute() {
+      return this.$route.meta && this.$route.meta.keepAlive
     },
     autoHideHeader() {
       return this.settings.autoHideHeader
@@ -176,14 +188,6 @@ export default {
     mainMenu (val) {
       this.setMenus()
     },
-    // 监听后端菜单变化(应用切换后)
-    backendMenus (val) {
-      console.log('📋 [BasicLayout] backendMenus 变化:', val)
-      if (val && val.length > 0) {
-        console.log('📋 [BasicLayout] 检测到新的后端菜单数据,重新设置菜单')
-        this.setMenus()
-      }
-    },
     $route: function(val) {
       // 可以在这里处理路由变化
     },
@@ -208,13 +212,21 @@ export default {
     }
   },
   created () {
+    console.log('🚀🚀🚀 [BasicLayout] 组件 created 开始执行')
+    console.log('🚀🚀🚀 [BasicLayout] 当前路由:', this.$route.path, this.$route.name)
     this.loadSettings()
     this.collapsed = !this.sidebarOpened
     
     // 设置菜单
+    console.log('🚀🚀🚀 [BasicLayout] 准备设置菜单')
     this.setMenus()
+    console.log('🚀🚀🚀 [BasicLayout] created 执行完成，menus长度:', this.menus?.length)
   },
   mounted () {
+    console.log('🚀🚀🚀 [BasicLayout] 组件 mounted 开始执行')
+    console.log('🚀🚀🚀 [BasicLayout] 当前 menus 数据:', this.menus)
+    console.log('🚀🚀🚀 [BasicLayout] 当前 mainMenu 数据:', this.mainMenu)
+    
     const userAgent = navigator.userAgent
     if (userAgent.indexOf('Edge') > -1) {
       this.$nextTick(() => {
@@ -224,38 +236,76 @@ export default {
         }, 16)
       })
     }
+    console.log('🚀🚀🚀 [BasicLayout] mounted 执行完成')
   },
   methods: {
     ...mapActions(['setSidebar']),
-    // 重新生成菜单
+    // 重新生成菜单 - 与旧版项目保持一致
     setMenus () {
       console.log('🔧 [BasicLayout] setMenus 开始执行')
-      console.log('🔧 [BasicLayout] backendMenus:', this.backendMenus)
       console.log('🔧 [BasicLayout] mainMenu:', this.mainMenu)
-      
-      // 优先使用后端菜单数据(应用切换后的新菜单)
-      if (this.backendMenus && this.backendMenus.length > 0) {
-        console.log("📋 [BasicLayout] setMenus - 使用后端菜单数据:", this.backendMenus)
-        // 验证菜单数据结构
-        this.validateMenuData(this.backendMenus)
-        this.menus = this.backendMenus
-        return
-      }
-      
-      // 回退到使用路由配置生成菜单
-      const rootRoute = this.mainMenu.find(item => item.path === '/')
-      
-      if (rootRoute && rootRoute.children) {
-        // 使用convertRoutes处理路由,与旧项目保持一致
-        const convertedRoute = convertRoutes(rootRoute)
-        this.menus = (convertedRoute && convertedRoute.children) || []
-        console.log("📋 [BasicLayout] setMenus - 设置路由菜单完成:", this.menus)
-        // 验证菜单数据结构
-        this.validateMenuData(this.menus)
+      console.log('🔧 [BasicLayout] mainMenu 数据结构:', JSON.stringify(this.mainMenu, null, 2))
+
+      if (this.mainMenu && this.mainMenu.length > 0) {
+        // 先尝试找到根路由（path为'/'或''或undefined的路由）
+        let rootRoute = this.mainMenu.find(item => item.path === '/' || item.path === '' || item.path === undefined)
+        
+        // 如果没找到根路由，尝试找到第一个有children的路由作为备选
+        if (!rootRoute) {
+          rootRoute = this.mainMenu.find(item => item.children && item.children.length > 0)
+        }
+        
+        // 如果还是没找到，就使用第一个路由
+        if (!rootRoute && this.mainMenu.length > 0) {
+          rootRoute = this.mainMenu[0]
+        }
+
+        if (rootRoute) {
+          console.log('🔍 [BasicLayout] 找到根路由:', rootRoute)
+          // 强制显示菜单容器，即使没有有效菜单
+          document.querySelector('.ant-layout-sider')?.setAttribute('style', 'display: block !important; position: fixed; left: 0; top: 0; height: 100vh; z-index: 100;')
+          
+          const routes = convertRoutes(rootRoute)
+          console.log('🔍 [BasicLayout] 转换后的路由:', JSON.stringify(routes, null, 2))
+
+          if (routes && routes.children) {
+            this.menus = routes.children
+          } else {
+            console.warn('⚠️ [BasicLayout] 转换后的路由没有 children，设置空菜单')
+            this.menus = []
+          }
+        } else {
+          console.warn('⚠️ [BasicLayout] 未找到根路由，设置空菜单')
+          this.menus = []
+        }
       } else {
-        console.warn("⚠️ [BasicLayout] setMenus - 未找到根路由或根路由没有子菜单")
+        console.warn('⚠️ [BasicLayout] mainMenu 为空或未定义，设置空菜单')
         this.menus = []
       }
+
+      console.log("📋 [BasicLayout] setMenus - 设置菜单完成:", JSON.stringify(this.menus, null, 2))
+
+      if (!this.menus || this.menus.length === 0) {
+        console.error('❌ [BasicLayout] menus 为空，可能导致侧边栏和顶部菜单无法渲染')
+        // 尝试从路由中获取菜单
+        try {
+          const routes = this.$router.getRoutes()
+          console.log('🔍 [BasicLayout] 尝试从路由中获取菜单:', routes)
+          const layoutRoute = routes.find(r => r.name === 'MenuIndex.vue' || r.name === 'BasicLayout')
+          if (layoutRoute && layoutRoute.children) {
+            console.log('✅ [BasicLayout] 从路由中找到布局路由:', layoutRoute)
+            this.menus = layoutRoute.children.map(child => ({
+              ...child,
+              meta: child.meta || { title: child.name }
+            }))
+            console.log('✅ [BasicLayout] 从路由生成的菜单:', this.menus)
+          }
+        } catch (err) {
+          console.error('❌ [BasicLayout] 从路由生成菜单失败:', err)
+        }
+      }
+
+      this.validateMenuData(this.menus)
     },
     
     // 验证菜单数据结构

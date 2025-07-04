@@ -185,6 +185,15 @@ const user = {
                 console.error('预览头像错误：' + err.message)
               })
             }
+            
+            // 确保返回的数据包含菜单信息，与旧版保持一致
+            console.log('🔍 检查返回数据是否包含菜单信息:', {
+              menus: data.menus,
+              apps: data.apps,
+              hasMenus: !!data.menus,
+              hasApps: !!data.apps
+            })
+            
             console.log('✅ 用户信息设置完成')
             resolve(data)
           } else {

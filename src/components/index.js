@@ -11,6 +11,9 @@ import RankList from '@/components/Charts/RankList'
 import TransferBar from '@/components/Charts/TransferBar'
 import TagCloud from '@/components/Charts/TagCloud'
 
+// xnComponents
+import XCard from '@/components/xnComponents/XCard'
+
 // pro components
 import AvatarList from '@/components/AvatarList'
 import CountDown from '@/components/CountDown'
@@ -32,7 +35,6 @@ import AntdEditor from '@/components/Editor/WangEditor'
 import Dialog from '@/components/Dialog'
 
 // xn components
-import XCard from '@/components/xnComponents/XCard'
 import vfd from '@/components/flow/FlowDesigner'
 
 import expvfd from '@/components/expFlow/FlowDesigner'

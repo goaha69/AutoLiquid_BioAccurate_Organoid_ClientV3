@@ -3,67 +3,67 @@
     <a-spin :spinning="formLoading">
       <a-form :model="form" >
         <a-form-item style="display: none;" has-feedback>
-          <a-input v-model="form.id" ></a>
+          <a-input v-model="form.id"></a-input>
         </a-form-item>
 
         <a-row :gutter="24">
-          <a-col  md="24" : sm="24">
+          <a-col :md="24" :sm="24">
             <a-form-item>
               <a-button type="primary" @click.stop="btnConnect">连接设备</a-button>
-                <a-divider type="vertical"></a>
+                <a-divider type="vertical"></a-divider>
                 <a-button type="primary" @click="btnInitMachine">全部复位</a-button>
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="24">
-          <a-col  md="24" : sm="24">
+          <a-col :md="24" :sm="24">
             <a-form-item>
-                <a-button type="primary" @click="btnInitCmd('xi')" :loading="isLoading('xi')"  :disabled="isAnyLoading()" >X轴复位/a-button>
-                <a-button type="primary" @click="btnInitCmd('yi')" :loading="isLoading('yi')"  :disabled="isAnyLoading()"> Y轴复位/a-button>
-                <a-button type="primary" @click="btnInitCmd('zi')" :loading="isLoading('zi')"  :disabled="isAnyLoading()" >Z轴复位/a-button>
-                <a-button type="primary" @click="btnInitCmd('pi')" :loading="isLoading('pi')"  :disabled="isAnyLoading()" >P轴复位/a-button>
+                <a-button type="primary" @click="btnInitCmd('xi')" :loading="isLoading('xi')"  :disabled="isAnyLoading()">X轴复位</a-button>
+                <a-button type="primary" @click="btnInitCmd('yi')" :loading="isLoading('yi')"  :disabled="isAnyLoading()">Y轴复位</a-button>
+                <a-button type="primary" @click="btnInitCmd('zi')" :loading="isLoading('zi')"  :disabled="isAnyLoading()">Z轴复位</a-button>
+                <a-button type="primary" @click="btnInitCmd('pi')" :loading="isLoading('pi')"  :disabled="isAnyLoading()">P轴复位</a-button>
 
-                <a-divider type="vertical"></a>
+                <a-divider type="vertical"></a-divider>
                 
-                <a-button type="primary" @click="btnInitCmd('qi')" :loading="isLoading('qi')"  :disabled="isAnyLoading()" >Q轴复位/a-button>
-                <a-button type="primary" @click="btnInitCmd('wi')" :loading="isLoading('wi')"  :disabled="isAnyLoading()" >W轴复位/a-button>
-                <a-button type="primary" @click="btnInitCmd('mi')" :loading="isLoading('mi')"  :disabled="isAnyLoading()" >M轴复位/a-button>
-                <a-button type="primary" @click="btnInitCmd('ni')" :loading="isLoading('ni')"  :disabled="isAnyLoading()" >N轴复位/a-button>
+                <a-button type="primary" @click="btnInitCmd('qi')" :loading="isLoading('qi')"  :disabled="isAnyLoading()">Q轴复位</a-button>
+                <a-button type="primary" @click="btnInitCmd('wi')" :loading="isLoading('wi')"  :disabled="isAnyLoading()">W轴复位</a-button>
+                <a-button type="primary" @click="btnInitCmd('mi')" :loading="isLoading('mi')"  :disabled="isAnyLoading()" >M轴复位</a-button>
+                <a-button type="primary" @click="btnInitCmd('ni')" :loading="isLoading('ni')"  :disabled="isAnyLoading()" >N轴复位</a-button>
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="24">
           <div style="margin-top:10px;">
-            <sp-input-number label="X" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.xPos" allow-clear></sp>
+            <sp-input-number label="X" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.xPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('xa')" :loading="isLoading('xa')"  :disabled="isAnyLoading()" >执行</a-button>
-            <sp-input-number label="Y" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.yPos" allow-clear></sp>
+            <sp-input-number label="Y" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.yPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('ya')" :loading="isLoading('ya')"  :disabled="isAnyLoading()" >执行</a-button>
-            <sp-input-number label="Z" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.zPos" allow-clear></sp>
+            <sp-input-number label="Z" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.zPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('za')" :loading="isLoading('za')"  :disabled="isAnyLoading()" >执行</a-button>
-            <sp-input-number label="P" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.pPos" allow-clear></sp>
+            <sp-input-number label="P" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.pPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('pa')" :loading="isLoading('pa')"  :disabled="isAnyLoading()" >执行</a-button>
           </div>
           <div style="margin-top:10px;">
-            <sp-input-number label="Q" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.qPos" allow-clear ></sp>
+            <sp-input-number label="Q" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.qPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('qa')" :loading="isLoading('qa')"  :disabled="isAnyLoading()" >执行</a-button>
-            <sp-input-number label="W" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.wPos" allow-clear ></sp>
+            <sp-input-number label="W" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.wPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('wa')" :loading="isLoading('wa')"  :disabled="isAnyLoading()" >执行</a-button>
-            <sp-input-number label="M" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.mPos" allow-clear ></sp>
+            <sp-input-number label="M" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.mPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('ma')" :loading="isLoading('ma')"  :disabled="isAnyLoading()" >执行</a-button>
-            <sp-input-number label="N" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.nPos" allow-clear ></sp>
+            <sp-input-number label="N" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.nPos" allow-clear></sp-input-number>
             <a-button type="primary" @click="btnGoPos('na')" :loading="isLoading('na')"  :disabled="isAnyLoading()" >执行</a-button>
           </div>
           <div style="margin-top:10px;">
-            <sp-input-number label="@" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.atPos" allow-clear ></sp>
-              <a-select style="width: 100px" v-model : value="atName"  placeholder="textarea with clear icon">
+            <sp-input-number label="@" :labelWidth="40" placeholder="0.00" :max="10000" unit="mm" v-model="paramsPos.atPos" allow-clear></sp-input-number>
+              <a-select style="width: 100px" v-model:value="atName" placeholder="textarea with clear icon">
                 <a-select-option v-for="(item, index) in atRows" :key="index" :value="item">{{ item }}</a-select-option>
               </a-select>
             <a-button type="primary" @click="btnGoPosAt()" :loading="isLoading('at')"  :disabled="isAnyLoading()" >执行</a-button> 
           </div>
           <div style="margin-top:10px;">
             <a-form-item label="命令" :labelCol="labelCol_JG" :wrapperCol="wrapperCol_JG" has-feedback>
-              <a-textarea placeholder="请输入命令" v-model="cmdParam" allow-clear :auto-size="{ minRows: 10, maxRows: 15 }"></a>
+              <a-textarea placeholder="请输入命令" v-model="cmdParam" allow-clear :auto-size="{ minRows: 10, maxRows: 15 }"></a-textarea>
               <a-button type="primary" @click="btnDoCmd()" :loading="isLoading('cmd')"  :disabled="isAnyLoading()">DoCmd</a-button> 
             </a-form-item>
           </div>
@@ -188,8 +188,8 @@ export default {
     btnGoPos(axle) {
       const data = this.form
       var value=0.0
-      this.setLoading(aa)
       var aa = axle.substring(0,1)
+      this.setLoading(axle)
       console.log(aa)
       switch(aa)
       {

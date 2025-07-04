@@ -1,5 +1,5 @@
 <template>
-  <div :style="!$route.meta.hiddenHeaderContent: 'margin: -24px -24px 0px;' : null">
+  <div :style="!$route.meta.hiddenHeaderContent ? 'margin: -24px -24px 0px;' : null">
     <!-- pageHeader , route meta :true on hide -->
     <page-header v-if="!$route.meta.hiddenHeaderContent" :title="pageTitle" :logo="logo" :avatar="avatar">
       <template #action>
@@ -40,11 +40,15 @@
     <div class="content">
       <div class="page-header-index-wide">
         <slot>
-          <!-- keep-alive  -->
-          <keep-alive v-if="multiTab" :exclude="routeExclude">
-            <router-view ref="content" />
-          </keep-alive>
-          <router-view v-else ref="content" style="margin: -12px -14px 0;" />
+          <!-- Vue 3兼容的router-view实现（优化版） -->
+          <router-view v-slot="{ Component }">
+            <transition name="page-transition" mode="out-in">
+              <keep-alive v-if="keepAliveEnabled">
+                <component :is="Component" ref="content" :key="$route.fullPath" />
+              </keep-alive>
+              <component v-else :is="Component" ref="content" style="margin: -12px -14px 0;" :key="$route.fullPath" />
+            </transition>
+          </router-view>
         </slot>
       </div>
     </div>
@@ -91,8 +95,12 @@ export default {
   computed: {
     ...mapState({
       multiTab: state => state.app.multiTab,
-      routeExclude:state => state.permission.routeExclude
-    })
+      routeExclude: state => state.permission.routeExclude
+    }),
+    keepAliveEnabled() {
+      const meta = this.$route.meta || {}
+      return this.multiTab || meta.keepAlive
+    }
   },
   mounted () {
     this.tabs = this.directTabs

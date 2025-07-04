@@ -1,4 +1,3 @@
-// 修复版本 generator-routers.js - 简化组件导入逻辑
 import { BasicLayout, BlankLayout, PageView, RouteView, Iframe } from '@/layouts'
 import { markRaw, defineAsyncComponent } from 'vue'
 
@@ -15,7 +14,6 @@ const constantRouterComponents = {
   '500': markRaw(() => import('@/views/system/exception/500.vue')),
 
   'Workplace': markRaw(() => import('@/views/system/dashboard/Workplace.vue')),
-  'welcome': markRaw(() => import('@/views/system/index/welcome.vue')),
   // account
   'AccountCenter': markRaw(() => import('@/views/system/account/center/Index.vue')),
   'AccountSettings': markRaw(() => import('@/views/system/account/settings/Index.vue')),
@@ -168,7 +166,7 @@ const userAccount = [
   },
   {
     'name': 'Console',
-    'path': 'welcome', // 不能以/开头
+    'path': '/welcome',
     'pid': 0,
     'id': 183183,
     'meta': {
@@ -179,28 +177,18 @@ const userAccount = [
   }
 ]
 
-// 修复 /welcome 路由注册逻辑
+// 根级菜单
 const rootRouter = {
   key: '',
   name: 'MenuIndex.vue',
-  path: '/', // 确保根路径为 '/'
+  path: '',
   component: 'BasicLayout',
   redirect: '/welcome',
   meta: {
     title: '首页'
   },
-  children: [
-    {
-      name: 'Console',
-      path: 'welcome', // 子路由 path 不以 '/' 开头
-      component: 'Console',
-      meta: {
-        title: '首页',
-        show: true
-      }
-    }
-  ]
-};
+  children: []
+}
 
 /**
  * 动态生成菜单
@@ -208,81 +196,41 @@ const rootRouter = {
  * @returns {Promise<Router>}
  */
 export const generatorDynamicRouter = (data) => {
-  console.log('🔍 generatorDynamicRouter 开始生成路由, 输入数据:', data)
+  console.log('🔍 generatorDynamicRouter 开始生成路由, 输入数据:', data);
   return new Promise((resolve, reject) => {
     try {
-      const { antDesignmenus } = data
+      const resNav = data.antDesignmenus
       const menuNav = []
       const childrenNav = []
-
-      console.log('🔍 后端返回的菜单数据:', antDesignmenus)
-
+      
+      console.log('🔍 后端返回的菜单数据:', resNav)
+      
       // 验证输入数据
-      if (!antDesignmenus || !Array.isArray(antDesignmenus)) {
-        console.error('❌ 菜单数据无效，应该是数组:', antDesignmenus)
-        // 如果没有菜单数据，创建默认菜单
-        const defaultMenus = [
-          {
-            name: 'welcome',
-            path: '/welcome',
-            component: 'welcome',
-            meta: { title: '首页', icon: 'home' },
-            pid: 0
-          },
-          {
-            name: 'dashboard',
-            path: '/dashboard',
-            component: 'RouteView',
-            meta: { title: '仪表盘', icon: 'dashboard' },
-            pid: 0,
-            children: [
-              {
-                name: 'workplace',
-                path: '/dashboard/workplace',
-                component: 'Workplace',
-                meta: { title: '工作台' }
-              }
-            ]
-          }
-        ]
-        
-        console.log('🔧 使用默认菜单:', defaultMenus)
-        listToTree(defaultMenus, childrenNav, 0)
-      } else {
-        // 后端数据, 根级树数组,  根级 PID
-        listToTree(antDesignmenus, childrenNav, 0)
+      if (!resNav || !Array.isArray(resNav)) {
+        console.error('❌ 菜单数据无效，应该是数组:', resNav)
+        reject(new Error('菜单数据无效，应该是数组'))
+        return
       }
+      
+      //      后端数据, 根级树数组,  根级 PID
+      listToTree(resNav, childrenNav, 0)
+      
+      console.log('🔍 处理后端菜单后的childrenNav:', childrenNav)
 
-      // 添加静态个人中心页面
+      /**
+       * 增加静态网页
+       */
       listToTree(userAccount, childrenNav, 0)
       
-      // 确保welcome路由存在
-      const hasWelcome = childrenNav.some(nav => 
-        nav.path === '/welcome' || 
-        nav.path === 'welcome' || 
-        (nav.children && nav.children.some(child => child.path === 'welcome' || child.path === '/welcome'))
-      )
+      console.log('🔍 添加静态路由后的childrenNav:', childrenNav)
       
-      if (!hasWelcome) {
-        console.log('🔧 添加默认welcome路由')
-        childrenNav.unshift({
-          name: 'welcome',
-          path: 'welcome', // 不要以 / 开头，因为会作为rootRouter的子路由
-          component: 'Console',
-          meta: { title: '首页', icon: 'home' }
-        })
-      }
-
-      console.log('🔍 转换后的树形路由结构 (childrenNav):', JSON.parse(JSON.stringify(childrenNav)))
-
       rootRouter.children = childrenNav
       menuNav.push(rootRouter)
-
       const routers = generator(menuNav)
       routers.push(notFoundRouter)
-
-      console.log('🔍 最终生成的路由 (routers):', JSON.parse(JSON.stringify(routers)))
-
+      
+      console.log('🔍 最终生成的路由:', routers)
+      
       resolve(routers)
     } catch (err) {
       console.error('❌ 路由生成失败:', err)
@@ -302,96 +250,98 @@ export const generator = (routerMap, parent) => {
   return routerMap.map(item => {
     // eslint-disable-next-line no-unused-vars
     const { title, show, hideChildren, hiddenHeaderContent, target, icon, link, keepAlive } = item.meta || {}
-    // 修复路径拼接逻辑
-    let currentPath
-    if (item.path) {
-      currentPath = item.path
-    } else if (parent && parent.path) {
-      currentPath = parent.path === '/' ? item.key : `${parent.path}/${item.key}`
-    } else {
-      currentPath = item.key
-    }
     const currentRouter = {
-      path: currentPath,
+      // 如果路由设置了 path，则作为默认 path，否则 路由地址 动态拼接生成如 /dashboard/workplace
+      path: item.path || `${parent && parent.path || ''}/${item.key}`,
+      // 路由名称，建议唯一
       name: item.name || item.key || '',
-      component: (constantRouterComponents[item.component || item.key]) || (item.component === 'RouteView' ? constantRouterComponents['RouteView'] : item.component === 'PageView' ? constantRouterComponents['PageView'] : markRaw(defineAsyncComponent({
-        loader: () => {
-          console.log('🔍 尝试加载组件:', item.component || item.key, '路径:', item.path)
-          
-          // 特别处理设备管理页面
-          if (item.component === 'experiment/equipment' || item.component === 'equipment') {
-            console.log('⚠️ 设备管理特殊处理:', item.component)
-            return import('@/views/experiment/equipment/index.vue')
-          }
-          
-          // 改进的路径处理逻辑：支持多种路径格式和嵌套模式
-          if (item.component && item.component.includes('/')) {
-            // 处理形如 'system/user' 的路径
-            return new Promise((resolve, reject) => {
-              import(`@/views/${item.component}.vue`)
-                .then(component => resolve(component))
-                .catch(() => {
-                  // 尝试加载 index.vue
-                  import(`@/views/${item.component}/index.vue`)
-                    .then(component => resolve(component))
-                    .catch(() => {
-                      console.warn(`找不到组件: @/views/${item.component} 或其 index.vue`)
-                      // 最后尝试404
-                      import('@/views/system/exception/404.vue').then(resolve)
-                    })
-                })
-            })
-          } else if (item.component) {
-            // 处理形如 'user' 的路径
-            return new Promise((resolve, reject) => {
-              import(`@/views/${item.component}/index.vue`)
-                .then(component => resolve(component))
-                .catch(() => {
-                  // 尝试直接加载.vue文件
-                  import(`@/views/${item.component}.vue`)
-                    .then(component => resolve(component))
-                    .catch(() => {
-                      console.warn(`找不到组件: @/views/${item.component}/index.vue 或 @/views/${item.component}.vue`)
-                      // 最后尝试404
-                      import('@/views/system/exception/404.vue').then(resolve)
-                    })
-                })
-            })
-          } else {
-            console.warn('组件路径为空，返回404页面')
-            return import('@/views/system/exception/404.vue')
-          }
-        },
-        // 添加错误处理和加载状态
-        onError: (error) => {
-          console.error('组件加载错误:', error, item.component || item.key)
-        },
-        loadingComponent: {
-          template: '<div class="loading-component">正在加载组件...</div>'
-        },
-        delay: 200, // 延迟显示加载组件的时间
-        timeout: 10000 // 超时时间
-      }))),
+      // 该路由对应页面的 组件
+      component: (constantRouterComponents[item.component || item.key]) 
+        // 如果在预设的路由组件中能找到对应的组件，则使用预设的组件
+        ? constantRouterComponents[item.component || item.key] 
+        // 否则尝试按照路径动态加载，使用Vue3的defineAsyncComponent
+        : defineAsyncComponent({
+            loader: () => {
+              const componentPath = item.component ? item.component : item.key
+              console.log('🔍 使用defineAsyncComponent加载组件:', componentPath)
+              
+              // 特别处理设备管理页面
+              if (componentPath === 'experiment/equipment' || componentPath === 'equipment') {
+                console.log('⚠️ 设备管理特殊处理:', componentPath)
+                return import('@/views/experiment/equipment/index.vue')
+              }
+              
+              // 尝试各种可能的导入路径
+              if (componentPath.includes('/')) {
+                // 如果路径包含/，优先尝试完整路径
+                return import(`@/views/${componentPath}.vue`)
+                  .catch(err => {
+                    console.warn(`尝试导入 @/views/${componentPath}.vue 失败:`, err.message)
+                    return import(`@/views/${componentPath}/index.vue`)
+                  })
+                  .catch(err => {
+                    console.warn(`尝试导入 @/views/${componentPath}/index.vue 失败:`, err.message)
+                    return import(`@/views/${componentPath}`)
+                  })
+                  .catch(err => {
+                    console.error(`组件 ${componentPath} 所有导入尝试均失败:`, err.message)
+                    return import('@/views/system/exception/404.vue')
+                  })
+              } else {
+                // 没有/的路径，优先尝试index.vue
+                return import(`@/views/${componentPath}/index.vue`)
+                  .catch(err => {
+                    console.warn(`尝试导入 @/views/${componentPath}/index.vue 失败:`, err.message)
+                    return import(`@/views/${componentPath}.vue`)
+                  })
+                  .catch(err => {
+                    console.warn(`尝试导入 @/views/${componentPath}.vue 失败:`, err.message)
+                    return import('@/views/system/exception/404.vue')
+                  })
+              }
+            },
+            // 显示加载组件时出错的信息
+            onError(error, retry, fail, attempts) {
+              if (attempts <= 3) {
+                console.log(`组件加载失败，正在重试(${attempts})...`)
+                retry()
+              } else {
+                console.error(`组件加载失败，超过最大重试次数:`, error)
+                fail()
+              }
+            },
+            delay: 0,
+            timeout: 10000
+          }),
+      // meta: 页面标题, 菜单图标, 页面权限(供指令权限用，可去掉)
       meta: {
         title: title,
         icon: icon || undefined,
+        // hiddenHeaderContent: hiddenHeaderContent,
         target: target,
         link: link,
-        keepAlive: keepAlive
+        keepAlive:keepAlive
       },
-      hidden: item.hidden
+      hidden:item.hidden
     }
+    // 是否设置了隐藏菜单
     if (show === false) {
       currentRouter.hidden = true
     }
+    // 是否设置了隐藏子菜单
     if (hideChildren) {
       currentRouter.hideChildrenInMenu = true
+      console.log('🔍 Menu hideChildren:', item.name || item.key, item)
     }
+    // 为了防止出现后端返回结果不规范，处理有可能出现拼接出两个 反斜杠
     if (!currentRouter.path.startsWith('http')) {
       currentRouter.path = currentRouter.path.replace('//', '/')
     }
+    // 重定向
     item.redirect && (currentRouter.redirect = item.redirect)
+    // 是否有子菜单，并递归处理
     if (item.children && item.children.length > 0) {
+      // Recursion
       currentRouter.children = generator(item.children, currentRouter)
     }
     return currentRouter

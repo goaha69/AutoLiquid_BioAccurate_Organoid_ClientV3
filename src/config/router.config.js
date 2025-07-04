@@ -34,18 +34,6 @@ export const asyncRouterMap = [
             meta: { title: '工作台', keepAlive: false/*, permission: [ 'dashboard' ] */ }
           }
         ]
-      },
-      {
-        path: 'welcome',
-        name: 'welcome',
-        component: () => import('@/views/system/index/welcome.vue'),
-        meta: { title: '欢迎页', keepAlive: true }
-      },
-      {
-        path: 'test',
-        name: 'test',
-        component: () => import('@/views/test-page.vue'),
-        meta: { title: '测试页', keepAlive: false }
       }
     ]
   },
@@ -95,7 +83,8 @@ export const constantRouterMap = [
     component: () => import('@/views/404.vue')
   },
   {
-    path: '/',
-    redirect: '/welcome'
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    redirect: '/404'
   }
 ]

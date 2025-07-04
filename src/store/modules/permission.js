@@ -73,32 +73,30 @@ const permission = {
        console.log("GenerateRoutes",data)
       return new Promise(resolve => {
         const { roles, antDesignmenus } = data
-        // 兼容两种传参方式：roles 或 antDesignmenus
-        if (roles) {
-          // 原有的基于角色权限的路由过滤
-          const accessedRouters = filterAsyncRouter(asyncRouterMap, roles)
-          commit('SET_ROUTERS', accessedRouters)
-        } else if (antDesignmenus) {
-          // 基于后端返回的菜单直接生成路由
+        
+        if (antDesignmenus && Array.isArray(antDesignmenus) && antDesignmenus.length > 0) {
+          // 如果有后端菜单数据，使用generator-routers.js生成路由
           console.log('🔄 [permission.js] 使用 antDesignmenus 生成路由:', antDesignmenus)
-          // 参考旧项目，这里应该传递一个模拟的roles对象
-          const mockRoles = { permissionList: [] }
-          const accessedRouters = filterAsyncRouter(asyncRouterMap, mockRoles)
-          commit('SET_ROUTERS', accessedRouters)
-          // 设置菜单数据
-          console.log('🔄 [permission.js] 调用 SET_MENUS，菜单数据:', antDesignmenus)
-          commit('SET_MENUS', antDesignmenus)
+          
+          import('@/router/generator-routers').then(module => {
+            module.generatorDynamicRouter(data).then(routers => {
+              console.log('🔄 动态生成的路由:', routers)
+              commit('SET_ROUTERS', routers)
+              resolve()
+            }).catch(err => {
+              console.error('生成路由失败:', err)
+              resolve()
+            })
+          })
         } else {
-          // 默认情况，使用所有异步路由
-          const mockRoles = { permissionList: [] }
+          // 如果没有后端菜单数据或为空，使用本地路由配置 - 与旧版项目保持一致
+          console.log('🔄 [permission.js] 使用本地路由配置 (asyncRouterMap)')
+          const mockRoles = roles || { permissionList: [] }
           const accessedRouters = filterAsyncRouter(asyncRouterMap, mockRoles)
           commit('SET_ROUTERS', accessedRouters)
+          resolve()
         }
-        resolve()
       })
-    },
-    setMenus ({ commit }, menus) {
-      commit('SET_MENUS', menus)
     }
   }
 }

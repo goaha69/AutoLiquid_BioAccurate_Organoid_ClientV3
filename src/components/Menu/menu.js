@@ -1,5 +1,5 @@
-import Menu from 'ant-design-vue/es/menu'
-import { message } from 'ant-design-vue/es'
+import { Menu } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { 
   HomeOutlined, 
   DashboardOutlined, 
@@ -10,6 +10,7 @@ import {
   FileOutlined,
   FolderOutlined
 } from '@ant-design/icons-vue'
+import { h } from 'vue'
 
 // 图标映射表，用于将字符串类型的图标名称映射到相应的组件
 const iconMap = {
@@ -186,14 +187,14 @@ export default {
         })
       }
 
-      return (
-        <Menu.Item key={menu.path}>
-          <CustomTag {...(target ? { attrs } : { props })}>
-            {this.renderIcon(menu.meta && menu.meta.icon)}
-            <span>{menu.meta && menu.meta.title}</span>
-          </CustomTag>
-        </Menu.Item>
-      )
+      // 使用Vue3的h函数创建元素
+      const h = this.$createElement
+      return h(Menu.Item, { key: menu.path }, {
+        default: () => h(CustomTag, target ? { attrs } : { props }, [
+          this.renderIcon(menu.meta && menu.meta.icon),
+          h('span', {}, menu.meta && menu.meta.title)
+        ])
+      })
     },
     renderSubMenu (menu) {
       const itemArr = []
@@ -205,19 +206,16 @@ export default {
           }
         })
       }
-      return (
-        <Menu.SubMenu key={menu.path}>
-          {{
-            title: () => (
-              <span>
-                {this.renderIcon(menu.meta && menu.meta.icon)}
-                <span>{menu.meta && menu.meta.title}</span>
-              </span>
-            ),
-            default: () => itemArr
-          }}
-        </Menu.SubMenu>
-      )
+      
+      const h = this.$createElement
+      // 使用Vue3方式创建子菜单
+      return h(Menu.SubMenu, { key: menu.path }, {
+        title: () => h('span', {}, [
+          this.renderIcon(menu.meta && menu.meta.icon),
+          h('span', {}, menu.meta && menu.meta.title)
+        ]),
+        default: () => itemArr
+      })
     },
     renderIcon (icon) {
       if (icon === 'none' || icon === undefined) {
@@ -228,17 +226,18 @@ export default {
       if (typeof icon === 'string') {
         const IconComponent = iconMap[icon.toLowerCase()]
         if (IconComponent) {
-          return <IconComponent />
+          // Vue3中使用h函数创建组件
+          return this.$createElement(IconComponent)
         } else {
           // 默认图标
-          return <AppstoreOutlined />
+          return this.$createElement(AppstoreOutlined)
         }
       }
       
       // 处理对象类型的图标（自定义组件）
       if (typeof icon === 'object') {
         const Component = icon
-        return <Component />
+        return this.$createElement(Component)
       }
       
       return null
@@ -251,8 +250,8 @@ export default {
       theme: this.theme,
       openKeys: this.openKeys,
       selectedKeys: this.selectedKeys,
-      onOpenChange: this.onOpenChange,
-      onSelect: this.onSelect
+      'onUpdate:openKeys': this.onOpenChange,
+      'onUpdate:selectedKeys': this.onSelect
     }
 
     // 确保menu是数组
@@ -266,6 +265,8 @@ export default {
       return this.renderItem(item)
     }).filter(Boolean) // 过滤掉null值
 
-    return (<Menu {...dynamicProps}>{menuTree}</Menu>)
+    // 使用h函数创建菜单
+    const h = this.$createElement
+    return h(Menu, dynamicProps, () => menuTree)
   }
 }
