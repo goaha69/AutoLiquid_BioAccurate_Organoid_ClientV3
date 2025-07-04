@@ -13,15 +13,19 @@
             mode="horizontal"
             :selected-keys="defApp"
           >
-            <menu-unfold-outlined v-if="device==='mobile'" class="trigger" @click="toggle"></menu-unfold-outlined>
-            <menu-fold-outlined v-else class="trigger" @click="toggle"></menu-fold-outlined>
+            <!-- 隐藏 Vue 渲染的菜单图标，只使用静态生成的图标 -->
+            <!-- 
+            <menu-unfold-outlined v-if="collapsed" class="trigger" style="font-size: 18px; padding: 0 10px;" @click="toggle"></menu-unfold-outlined>
+            <menu-fold-outlined v-else class="trigger" style="font-size: 18px; padding: 0 10px;" @click="toggle"></menu-fold-outlined>
+            -->
 
             <!-- 调试信息：显示appMenus数量 -->
             <!-- <div style="color: white; position: absolute; top: 0; left: 80px; font-size: 12px;">
               菜单数量: {{ appMenus ? appMenus.length : 0 }}
             </div> -->
 
-            <!-- 固定显示顶部应用导航菜单，无论布局模式如何 -->
+            <!-- 由于我们使用了静态生成的菜单，这里隐藏 Vue 渲染的菜单项 -->
+            <!-- 
             <a-menu-item 
               v-for="(item) in appMenus" 
               :key="item.code" 
@@ -31,11 +35,14 @@
             >
               {{ item.name }}
             </a-menu-item>
+             -->
             
-            <!-- 添加固定的菜单项，测试是否能显示 -->
+            <!-- 隐藏测试菜单项 -->
+            <!-- 
             <a-menu-item key="test-menu" class="app-menu-item" :style="{ lineHeight: '55px', paddingLeft: '15px', paddingRight: '15px', height: '55px', display: 'inline-block', color: 'white', background: headerColor }">
               测试菜单
             </a-menu-item>
+             -->
             
             <div class="right-menu" style="position: absolute; right: 20px; top: 0;">
               <user-menu class="user-menu-container"></user-menu>
@@ -227,31 +234,15 @@ export default {
     this.$nextTick(() => {
       this.setDefaultApp()
     })
-    
-    // 添加创建静态菜单的任务
-    setTimeout(() => {
-      this.createStaticMenu()
-    }, 500)
   },
   mounted () {
     // 确保我们总是能看到至少一个顶部菜单
     // 不要立即处理，等待DOM完全渲染
     setTimeout(() => {
       console.log('🚀 [GlobalHeader] mounted 完成，检查状态')
-      console.log('🚀 [GlobalHeader] 当前 appMenus:', this.appMenus)
-      console.log('🚀 [GlobalHeader] 菜单项数量:', this.appMenus ? this.appMenus.length : 0)
       
-      // 如果appMenus为空，尝试重新加载
-      if (!this.appMenus || this.appMenus.length === 0) {
-        console.log('⚠️ [GlobalHeader] appMenus为空，尝试使用默认值')
-        // 使用默认应用列表
-        ls.set(ALL_APPS_MENU, this.defaultApps, 7 * 24 * 60 * 60 * 1000)
-      }
-      
-      // 检查DOM
+      // 检查DOM，确保没有多余的header
       const headers = document.querySelectorAll('.header-animat')
-      console.log('🔍 [GlobalHeader] 找到 header-animat 元素数量:', headers.length)
-      
       if (headers.length > 1) {
         console.warn(`检测到${headers.length}个GlobalHeader组件！`)
         
@@ -270,53 +261,9 @@ export default {
         }
       }
       
-      // 检查菜单项是否渲染
-      const menuItems = document.querySelectorAll('.app-menu-item')
-      console.log('🔍 [GlobalHeader] 找到 app-menu-item 元素数量:', menuItems.length)
+      // 创建静态菜单
+      this.createStaticMenu()
       
-      if (menuItems.length === 0) {
-        console.warn('⚠️ [GlobalHeader] 未找到菜单项元素，可能渲染失败')
-        
-        // 检查 ant-menu 是否正确渲染
-        const antMenu = document.querySelector('.ant-menu')
-        if (antMenu) {
-          console.log('🔍 [GlobalHeader] ant-menu 元素存在，宽度:', antMenu.offsetWidth, '高度:', antMenu.offsetHeight)
-          console.log('🔍 [GlobalHeader] ant-menu 样式:', window.getComputedStyle(antMenu))
-          
-          // 检查是否有隐藏的菜单项
-          const hiddenMenuItems = document.querySelectorAll('.ant-menu-item')
-          console.log('🔍 [GlobalHeader] 所有 ant-menu-item 元素数量:', hiddenMenuItems.length)
-          hiddenMenuItems.forEach((item, index) => {
-            const style = window.getComputedStyle(item)
-            console.log(`🔍 [GlobalHeader] 菜单项 ${index+1} 可见性:`, style.display, style.visibility)
-          })
-        } else {
-          console.warn('⚠️ [GlobalHeader] ant-menu 元素不存在，可能整个菜单未渲染')
-        }
-        
-        // 尝试强制创建测试菜单项
-        const parentMenu = document.querySelector('.ant-menu')
-        if (parentMenu) {
-          const testMenuItem = document.createElement('li')
-          testMenuItem.className = 'ant-menu-item app-menu-item'
-          testMenuItem.style.lineHeight = '55px'
-          testMenuItem.style.height = '55px'
-          testMenuItem.style.display = 'inline-block'
-          testMenuItem.style.color = 'white'
-          testMenuItem.style.background = this.headerColor
-          testMenuItem.style.padding = '0 15px'
-          testMenuItem.innerText = '强制测试菜单'
-          
-          // 添加到菜单的开头
-          if (parentMenu.firstChild) {
-            parentMenu.insertBefore(testMenuItem, parentMenu.firstChild.nextSibling)
-          } else {
-            parentMenu.appendChild(testMenuItem)
-          }
-          
-          console.log('✅ [GlobalHeader] 已强制添加测试菜单项')
-        }
-      }
     }, 200)
 
     document.addEventListener('scroll', this.handleScroll, { passive: true })
@@ -453,7 +400,42 @@ export default {
       // 创建一个新的菜单容器
       const menuContainer = document.createElement('div')
       menuContainer.className = 'static-top-menu'
-      menuContainer.style.cssText = 'position: absolute; top: 0; left: 150px; height: 55px; display: flex; z-index: 999;'
+      menuContainer.style.cssText = 'position: absolute; top: 0; left: 40px; height: 55px; display: flex; z-index: 999;'
+      
+      // 先创建菜单折叠/展开图标
+      const triggerIcon = document.createElement('div')
+      triggerIcon.className = 'static-trigger'
+      triggerIcon.style.cssText = `
+        display: inline-block;
+        height: 55px;
+        line-height: 55px;
+        padding: 0 10px;
+        margin-right: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        color: white;
+      `
+      // 根据当前折叠状态设置图标
+      triggerIcon.innerHTML = this.collapsed ? 
+        '<svg viewBox="64 64 896 896" focusable="false" data-icon="menu-unfold" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM142.4 642.1L298.7 519a8.84 8.84 0 000-13.9L142.4 381.9c-5.8-4.6-14.4-.5-14.4 6.9v246.3a8.9 8.9 0 0014.4 7z"></path></svg>' :
+        '<svg viewBox="64 64 896 896" focusable="false" data-icon="menu-fold" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 000 13.8z"></path></svg>';
+      
+      // 添加点击事件处理折叠/展开侧边栏
+      triggerIcon.addEventListener('click', () => {
+        this.toggle();
+        // 切换图标
+        setTimeout(() => {
+          triggerIcon.innerHTML = this.collapsed ? 
+            '<svg viewBox="64 64 896 896" focusable="false" data-icon="menu-unfold" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM142.4 642.1L298.7 519a8.84 8.84 0 000-13.9L142.4 381.9c-5.8-4.6-14.4-.5-14.4 6.9v246.3a8.9 8.9 0 0014.4 7z"></path></svg>' :
+            '<svg viewBox="64 64 896 896" focusable="false" data-icon="menu-fold" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 000 13.8z"></path></svg>';
+        }, 100);
+      });        // 将折叠/展开图标添加到菜单容器
+      menuContainer.appendChild(triggerIcon)
+      
+      // 添加一个小的间隔元素
+      const spacer = document.createElement('div')
+      spacer.style.width = '10px'
+      menuContainer.appendChild(spacer)
       
       // 获取菜单数据
       const menuItems = [
@@ -473,12 +455,14 @@ export default {
           display: inline-block;
           height: 55px;
           line-height: 55px;
-          padding: 0 15px;
+          padding: 0 20px;
           color: white;
           cursor: pointer;
           font-size: 14px;
+          font-weight: ${item.active ? 'bold' : 'normal'};
           transition: background 0.3s;
           ${item.active ? 'background: rgba(255,255,255,0.2);' : ''}
+          border-bottom: ${item.active ? '2px solid white' : 'none'};
         `
         menuItem.innerText = item.name
         menuItem.dataset.code = item.code
