@@ -33,7 +33,7 @@
     <a-layout :class="[layoutMode, `content-width-${contentWidth}`]" :style="{ minHeight: '100vh' }">
       <!-- layout header -->
       <global-header
-        :mode="layoutMode"
+        mode="sidemenu"
         :menus="menus"
         :theme="navTheme"
         :collapsed="collapsed"
@@ -76,7 +76,8 @@ import { mixin, mixinDevice } from '@/utils/mixin'
 import { DEVICE_TYPE } from '@/utils/device'
 import RouteView from './RouteView'
 import SideMenu from '@/components/Menu/SideMenu'
-import GlobalHeader from '@/components/GlobalHeader/GlobalHeader'
+// 从components/GlobalHeader导入，而不是直接从GlobalHeader.vue导入，避免重复组件
+import GlobalHeader from '@/components/GlobalHeader'
 import GlobalFooter from '@/components/GlobalFooter'
 import MultiTab from '@/components/MultiTab'
 import { convertRoutes } from '@/utils/routeConvert'
@@ -118,7 +119,9 @@ export default {
   computed: {
     ...mapState({
       // 动态主路由 - 与旧版项目保持一致
-      mainMenu: state => state.permission.addRouters
+      mainMenu: state => state.permission.addRouters,
+      // 从permission模块获取菜单
+      permissionMenus: state => state.permission.menus
     }),
     ...mapGetters(['userInfo']),
     
@@ -184,9 +187,24 @@ export default {
     sidebarOpened (val) {
       this.collapsed = !val
     },
-    // 菜单变化
-    mainMenu (val) {
-      this.setMenus()
+    // 监听主菜单变化
+    mainMenu: {
+      handler(val) {
+        console.log('🔄 [BasicLayout] mainMenu 发生变化，重新设置菜单')
+        this.setMenus()
+      },
+      deep: true
+    },
+    // 监听权限模块的菜单变化
+    permissionMenus: {
+      handler(val) {
+        console.log('🔄 [BasicLayout] permissionMenus 发生变化:', val)
+        if (val && val.length > 0) {
+          console.log('🔄 [BasicLayout] 从permissionMenus更新左侧菜单')
+          this.updateSideMenus()
+        }
+      },
+      deep: true
     },
     $route: function(val) {
       // 可以在这里处理路由变化
@@ -219,7 +237,16 @@ export default {
     
     // 设置菜单
     console.log('🚀🚀🚀 [BasicLayout] 准备设置菜单')
-    this.setMenus()
+    
+    // 检查是否有permission菜单数据
+    if (this.permissionMenus && this.permissionMenus.length > 0) {
+      console.log('🚀🚀🚀 [BasicLayout] 使用permission菜单数据')
+      this.updateSideMenus()
+    } else {
+      console.log('🚀🚀🚀 [BasicLayout] 使用mainMenu设置菜单')
+      this.setMenus()
+    }
+    
     console.log('🚀🚀🚀 [BasicLayout] created 执行完成，menus长度:', this.menus?.length)
   },
   mounted () {
@@ -244,7 +271,13 @@ export default {
     setMenus () {
       console.log('🔧 [BasicLayout] setMenus 开始执行')
       console.log('🔧 [BasicLayout] mainMenu:', this.mainMenu)
-      console.log('🔧 [BasicLayout] mainMenu 数据结构:', JSON.stringify(this.mainMenu, null, 2))
+      
+      // 检查permission模块中是否有菜单数据
+      if (this.permissionMenus && this.permissionMenus.length > 0) {
+        console.log('🔍 [BasicLayout] 发现permission模块中有菜单数据，优先使用')
+        this.updateSideMenus()
+        return
+      }
 
       if (this.mainMenu && this.mainMenu.length > 0) {
         // 先尝试找到根路由（path为'/'或''或undefined的路由）
@@ -266,7 +299,7 @@ export default {
           document.querySelector('.ant-layout-sider')?.setAttribute('style', 'display: block !important; position: fixed; left: 0; top: 0; height: 100vh; z-index: 100;')
           
           const routes = convertRoutes(rootRoute)
-          console.log('🔍 [BasicLayout] 转换后的路由:', JSON.stringify(routes, null, 2))
+          console.log('🔍 [BasicLayout] 转换后的路由:', routes)
 
           if (routes && routes.children) {
             this.menus = routes.children
@@ -279,11 +312,18 @@ export default {
           this.menus = []
         }
       } else {
-        console.warn('⚠️ [BasicLayout] mainMenu 为空或未定义，设置空菜单')
-        this.menus = []
+        console.warn('⚠️ [BasicLayout] mainMenu 为空或未定义，检查 permissionMenus')
+        
+        // 尝试从permissionMenus获取菜单数据
+        if (this.permissionMenus && this.permissionMenus.length > 0) {
+          this.updateSideMenus()
+        } else {
+          console.warn('⚠️ [BasicLayout] permissionMenus 也为空，设置空菜单')
+          this.menus = []
+        }
       }
 
-      console.log("📋 [BasicLayout] setMenus - 设置菜单完成:", JSON.stringify(this.menus, null, 2))
+      console.log("📋 [BasicLayout] setMenus - 设置菜单完成:", this.menus)
 
       if (!this.menus || this.menus.length === 0) {
         console.error('❌ [BasicLayout] menus 为空，可能导致侧边栏和顶部菜单无法渲染')
@@ -385,21 +425,81 @@ export default {
       this.collapsed = false
     },
     // 处理应用准备切换事件
-    onAppChanging(appData) {
-      console.log('🚀 [BasicLayout] 收到应用准备切换事件:', appData)
+    onAppChanging(appCode) {
+      console.log('🚀 [BasicLayout] 收到应用准备切换事件:', appCode)
+      console.log('🔄 [BasicLayout] 应用切换开始')
+      // 清空当前菜单，避免过时数据
+      this.menus = []
     },
     // 处理应用切换事件
-    onAppChanged(appData) {
-      console.log('🎯 [BasicLayout] 收到应用切换事件:', appData)
-      console.log('🎯 [BasicLayout] 当前菜单状态 - backendMenus:', this.backendMenus)
-      console.log('🎯 [BasicLayout] 当前菜单状态 - mainMenu:', this.mainMenu)
+    onAppChanged(appCode) {
+      console.log('🎯 [BasicLayout] 收到应用切换事件:', appCode)
+      console.log('✅ [BasicLayout] 应用切换完成，立即重新设置菜单')
       
-      // 应用切换时,菜单已经通过 store 更新了,这里重新设置菜单
-      this.$nextTick(() => {
-        console.log('🔄 [BasicLayout] 开始重新设置菜单...')
+      // 直接调用更新侧边菜单，不需要nextTick
+      this.updateSideMenus()
+      
+      // 备份措施：如果直接更新失败，延迟再次尝试
+      setTimeout(() => {
+        console.log('🔄 [BasicLayout] 延迟执行菜单更新')
+        this.updateSideMenus()
+        
+        // 强制刷新DOM，以防菜单状态不更新
+        this.$forceUpdate()
+      }, 300)
+    },
+    
+    // 从permissionMenus更新左侧菜单
+    updateSideMenus() {
+      console.log('🔄 [BasicLayout] updateSideMenus 执行...')
+      
+      // 先强制刷新DOM显示侧边栏
+      document.querySelector('.ant-layout-sider')?.setAttribute('style', 'display: block !important; position: fixed; left: 0; top: 0; height: 100vh; z-index: 100;')
+      
+      if (this.permissionMenus && this.permissionMenus.length > 0) {
+        console.log('📋 [BasicLayout] 从permission模块获取菜单数据，长度:', this.permissionMenus.length)
+        
+        // 从permission模块的menus生成左侧菜单
+        try {
+          // 创建一个根路由对象
+          const rootRoute = { 
+            path: '/', 
+            component: 'RouteView',
+            children: this.permissionMenus
+          }
+          
+          console.log('🔄 [BasicLayout] 转换菜单的根路由对象:', rootRoute)
+          
+          const routes = convertRoutes(rootRoute)
+          console.log('🔄 [BasicLayout] 转换后的路由:', routes)
+          
+          if (routes && routes.children) {
+            // 更新菜单前先保存菜单项数量
+            const oldMenuCount = this.menus ? this.menus.length : 0
+            
+            // 清空并重新设置菜单
+            this.menus = []
+            this.$nextTick(() => {
+              this.menus = routes.children
+              console.log(`✅ [BasicLayout] 左侧菜单更新成功: 从${oldMenuCount}项更新到${this.menus.length}项`)
+              
+              // 更新DOM以确保菜单立即显示
+              this.$forceUpdate()
+            })
+          } else {
+            console.warn('⚠️ [BasicLayout] 转换后的路由没有children属性')
+            this.menus = []
+          }
+        } catch (error) {
+          console.error('❌ [BasicLayout] 转换路由失败:', error)
+          this.menus = []
+        }
+      } else {
+        console.warn('⚠️ [BasicLayout] permissionMenus为空，尝试从mainMenu获取菜单')
+        
+        // 尝试从mainMenu获取菜单作为后备
         this.setMenus()
-        console.log('✅ [BasicLayout] 菜单重新设置完成,当前菜单:', this.menus)
-      })
+      }
     }
   }
 }

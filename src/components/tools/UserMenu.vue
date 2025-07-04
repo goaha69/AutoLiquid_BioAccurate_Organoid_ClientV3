@@ -22,12 +22,6 @@
         </span>
         <template #overlay>
           <a-menu class="user-dropdown-menu-wrapper">
-            <a-menu-item key="4" v-if="mode === 'sidemenu'">
-              <a @click="appToggled()">
-                <swap-outlined></swap-outlined>
-                <span>切换应用</span>
-              </a>
-            </a-menu-item>
             <a-menu-item v-if="!production" key="2">
               <a href="javascript:;" @click="$refs.settingDrawer.toggle()">
                 <appstore-outlined></appstore-outlined>
@@ -52,31 +46,6 @@
         </template>
       </a-dropdown>
     </div>
-    <a-modal
-      title="切换应用"
-      v-model:open="visible" 
-      :footer="null"
-      :confirm-loading="confirmLoading"
-      @cancel="handleCancel"
-    >
-      <a-form :model="form1">
-        <a-form-item 
-          :label-col="labelCol" 
-          :wrapper-col="wrapperCol"
-          label="选择应用"
-        >
-          <a-menu
-            mode="inline"
-            :default-selected-keys="defApp"
-            style="border-bottom: 0px;line-height : 55px;"
-          >
-            <a-menu-item v-for="(item) in userInfo.apps" :key="item.code" style="top:0px;" @click="switchApp(item.code)">
-              {{ item.name }}
-            </a-menu-item>
-          </a-menu>
-        </a-form-item>
-      </a-form>
-    </a-modal>
   </div>
 </template>
 
@@ -88,7 +57,6 @@ import { mapGetters, mapActions } from 'vuex'
 import SettingDrawer from '@/components/SettingDrawer'
 import { 
   SettingOutlined, 
-  SwapOutlined, 
   AppstoreOutlined, 
   UserOutlined,
   LogoutOutlined 
@@ -100,7 +68,6 @@ export default {
     NoticeIcon,
     SettingDrawer,
     SettingOutlined,
-    SwapOutlined,
     AppstoreOutlined,
     UserOutlined,
     LogoutOutlined
@@ -115,25 +82,14 @@ export default {
   data () {
     return {
       production: config.production,
-      labelCol: {
-        xs: { span: 24 },
-        sm: { span: 5 }
-      },
-      wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 16 }
-      },
-      visible: false,
-      confirmLoading: false,
-      form1: {},
-      defApp: []
+      confirmLoading: false
     }
   },
   computed: {
     ...mapGetters(['nickname', 'avatar', 'userInfo'])
   },
   methods: {
-    ...mapActions(['Logout', 'MenuChange']),
+    ...mapActions(['Logout']),
     loadError() {
       this.$store.commit('SET_AVATAR', '/avatar2.jpg');
     },
@@ -146,34 +102,29 @@ export default {
         this.confirmLoading = false
         message.error('退出登录失败:' + err.message)
       })
-    },
-    appToggled () {
-      this.visible = true
-      this.defApp = []
-      if (this.userInfo.apps) {
-        this.userInfo.apps.forEach(item => {
-          if (item.active) {
-            this.defApp.push(item.code)
-          }
-        })
-      }
-    },
-    switchApp (appCode) {
-      this.visible = false
-      this.defApp = []
-      const applicationData = this.userInfo.apps.filter(item => item.code === appCode)
-      const hideMessage = message.loading('正在切换应用!', 0)
-      this.MenuChange(applicationData[0]).then((res) => {
-        hideMessage()
-      }).catch((err) => {
-        message.error('应用切换异常')
-      })
-    },
-    handleCancel () {
-      this.form1 = {}
-      this.visible = false
     }
-  }
+  },
+  mounted() {
+    // 延迟执行，确保DOM已完全加载
+    setTimeout(() => {
+      const userMenus = document.querySelectorAll('.user-wrapper')
+      
+      // 检查可见的用户菜单数量
+      const visibleUserMenus = Array.from(userMenus).filter(menu => {
+        const style = window.getComputedStyle(menu)
+        return style.display !== 'none' && style.visibility !== 'hidden'
+      })
+      
+      if (visibleUserMenus.length > 1) {
+        console.warn(`检测到${visibleUserMenus.length}个可见的UserMenu组件！`)
+        // 保留第一个，隐藏其他所有的
+        for (let i = 1; i < visibleUserMenus.length; i++) {
+          visibleUserMenus[i].style.display = 'none'
+          console.log(`隐藏额外的UserMenu ${i+1}`)
+        }
+      }
+    }, 300)
+  },
 }
 </script>
 

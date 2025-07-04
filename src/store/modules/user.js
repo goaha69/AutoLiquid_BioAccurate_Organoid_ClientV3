@@ -194,6 +194,29 @@ const user = {
               hasApps: !!data.apps
             })
             
+            // 设置默认应用列表
+            if (data.apps && Array.isArray(data.apps) && data.apps.length > 0) {
+              console.log('📱 设置默认应用列表:', data.apps)
+              // 确保第一个应用是激活状态
+              const appList = data.apps.map((app, index) => ({
+                ...app,
+                active: index === 0
+              }))
+              ls.set(ALL_APPS_MENU, appList, 7 * 24 * 60 * 60 * 1000)
+            } else {
+              // 使用默认应用列表
+              const defaultApps = [
+                { code: 'platform', name: '平台管理', active: true, path: '/welcome' },
+                { code: 'system', name: '系统管理', active: false, path: '/system' },
+                { code: 'operation', name: '运营管理', active: false, path: '/operation' },
+                { code: 'business', name: '业务应用', active: false, path: '/business' },
+                { code: 'experiment', name: '实验管理', active: false, path: '/experiment' },
+                { code: 'workflow', name: '流程中心', active: false, path: '/workflow' }
+              ]
+              console.log('📱 使用默认应用列表:', defaultApps)
+              ls.set(ALL_APPS_MENU, defaultApps, 7 * 24 * 60 * 60 * 1000)
+            }
+            
             console.log('✅ 用户信息设置完成')
             resolve(data)
           } else {
@@ -295,33 +318,48 @@ const user = {
               return
             }
             
-            // 参考旧项目的逻辑：构建新的应用对象
-            const apps = {
+            // 构建当前应用的更新对象
+            const currentApp = {
               'code': application.code,
               'name': application.name,
               'active': true,
               'menu': menuData
             }
             
-            // 参考旧项目：先获取所有应用，将它们设为非活跃状态
-            const allAppMenu = ls.get(ALL_APPS_MENU, [])
-            const newFalseAllAppMenu = []
-            allAppMenu.forEach(item => {
-              if (item.active) {
-                item.active = false
+            // 获取所有应用，将它们设为非活跃状态
+            let allAppMenu = ls.get(ALL_APPS_MENU, [])
+            
+            // 如果localStorage中没有应用列表，创建一个包含默认应用的列表
+            if (!allAppMenu || allAppMenu.length === 0) {
+              allAppMenu = [
+                { code: 'platform', name: '平台管理', active: false },
+                { code: 'system', name: '系统管理', active: false },
+                { code: 'operation', name: '运营管理', active: false },
+                { code: 'business', name: '业务应用', active: false },
+                { code: 'experiment', name: '实验管理', active: false },
+                { code: 'workflow', name: '流程中心', active: false }
+              ]
+            }
+            
+            // 更新应用列表 - 保留所有应用，只更新激活状态和当前应用的信息
+            const updatedAppMenu = allAppMenu.map(app => {
+              // 如果是当前应用，更新它的信息和激活状态
+              if (app.code === currentApp.code) {
+                return currentApp
               }
-              newFalseAllAppMenu.push(item)
+              // 否则将其他应用设置为非激活状态
+              return { ...app, active: false }
             })
             
-            // 参考旧项目：设置为非活跃状态
-            ls.set(ALL_APPS_MENU, newFalseAllAppMenu, 7 * 24 * 60 * 60 * 1000)
+            // 如果应用列表中没有当前应用，添加它
+            if (!updatedAppMenu.some(app => app.code === currentApp.code)) {
+              updatedAppMenu.push(currentApp)
+            }
             
-            // 参考旧项目：创建新的当前应用数组并覆盖 ALL_APPS_MENU
-            const applicationR = []
-            applicationR.push(apps)
-            ls.set(ALL_APPS_MENU, applicationR, 7 * 24 * 60 * 60 * 1000)
+            // 保存更新后的应用列表到localStorage
+            ls.set(ALL_APPS_MENU, updatedAppMenu, 7 * 24 * 60 * 60 * 1000)
             
-            console.log('💾 [user.js] 更新 localStorage 应用菜单完成，当前应用:', applicationR)
+            console.log('💾 [user.js] 更新 localStorage 应用菜单完成，所有应用:', updatedAppMenu)
             
             // 重新生成路由
             console.log('🔄 [user.js] 开始重新生成路由，菜单数据:', menuData)
@@ -338,10 +376,45 @@ const user = {
               
               // 使用 router.addRoute 逐个添加路由（Vue 3 方式）
               try {
+                // 先重置路由，清除所有非基础路由
+                const resetRouter = () => {
+                  // 获取所有路由
+                  const routes = router.getRoutes()
+                  
+                  // 找出动态添加的路由并移除
+                  routes.forEach(route => {
+                    const name = route.name
+                    if (name && name !== 'login' && name !== '404' && name !== '403' && name !== 'BasicLayout') {
+                      router.removeRoute(name)
+                    }
+                  })
+                  console.log('🔄 [user.js] 路由已重置')
+                }
+                
+                // 重置路由后添加新路由
+                resetRouter()
+                
+                // 首先提交菜单数据，确保菜单更新在路由更新之前
+                console.log('📋 [user.js] 首先提交菜单数据到 SET_MENUS:', menuData)
+                store.commit('SET_MENUS', menuData)
+                
+                // 添加新的路由
                 addRouters.forEach((route, index) => {
                   console.log(`🔄 [user.js] 添加路由 ${index + 1}:`, route)
                   router.addRoute(route)
                 })
+                
+                // 强制触发当前路由更新以反映菜单变化
+                const currentPath = router.currentRoute.value.path
+                console.log('� [user.js] 当前路径:', currentPath)
+                
+                // 触发一个路由刷新，让组件重新获取更新后的菜单
+                router.replace({ path: '/refresh-router', query: { redirect: currentPath } })
+                  .catch(err => {
+                    if (err.name !== 'NavigationDuplicated') {
+                      console.error('路由刷新失败:', err)
+                    }
+                  })
                 
                 console.log('✅ [user.js] 应用菜单切换成功')
                 resolve(response)
@@ -349,27 +422,18 @@ const user = {
                 console.error('❌ [user.js] 添加路由失败:', routerError)
                 reject(routerError)
               }
-            }).catch(err => {
-              console.error('❌ [user.js] 生成路由失败:', err)
-              reject(err)
+            }).catch(error => {
+              console.error('❌ [user.js] 生成路由失败:', error)
+              reject(error)
             })
           } else {
-            const errorMsg = response.message || '菜单切换失败'
-            console.error('❌ [user.js] 菜单切换失败:', errorMsg)
+            const errorMsg = response.message || '菜单切换接口返回失败'
+            console.error('❌ [user.js]', errorMsg)
             reject(new Error(errorMsg))
           }
         }).catch(error => {
           console.error('❌ [user.js] 菜单切换接口调用失败:', error)
-          // 提供更友好的错误信息
-          let errorMessage = '菜单切换失败'
-          if (error.response) {
-            errorMessage = `服务器错误: ${error.response.status} - ${error.response.data?.message || error.response.statusText}`
-          } else if (error.request) {
-            errorMessage = '网络连接失败，请检查网络或后端服务'
-          } else {
-            errorMessage = error.message || '未知错误'
-          }
-          reject(new Error(errorMessage))
+          reject(error)
         })
       })
     }
