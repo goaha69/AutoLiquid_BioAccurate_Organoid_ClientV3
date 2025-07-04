@@ -1,0 +1,397 @@
+<template>
+  <a-modal title="编辑耗材" :width="1300" :open="visible" :maskClosable="false" @ok="handleSubmit"
+    @cancel="handleCancel">
+    <a-spin :spinning="formLoading">
+      <a-form :form="form">
+        <a-row :gutter="8">
+          <div>
+            <sp-input label="耗材编号" :required="true" :isError="errors.code" v-model="attributeData.code" ></sp>
+            <sp-input label="耗材名称" :labelWidth="80" :required="true" :isError="errors.name" :inputWidth="200"
+              v-model="attributeData.name" ></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number :step="1" label="行数" :required="true" v-model="attributeData.rowCount" ></sp>
+            <sp-input-number :step="1" label="列数" :labelWidth="100" :required="true" v-model="attributeData.colCount" ></sp>
+            <sp-input-number label="行距" unit="mm" :labelWidth="100" :required="true" v-model="attributeData.rowSpace" ></sp>
+            <sp-input-number label="列距" unit="mm" :labelWidth="100" :required="true" v-model="attributeData.colSpace" ></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number label="X尺寸" unit="mm" :required="true" v-model="attributeData.xSize" ></sp>
+            <sp-input-number label="Y尺寸" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.ySize" ></sp>
+            <sp-input-number label="X偏移" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.xOffset" ></sp>
+            <sp-input-number label="Y偏移" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.yOffset" ></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="span-label" style="width:140px;">是否枪头盒::</span>
+            <a-checkbox v-model="attributeData.isTipBox" style="width:60px;" ></a>
+
+            <span class="span-label" style="margin-left:60px;">量程::</span>
+            <a-select style="width: 100px" v-model  value="attributeData.liquidRange" : disabled="!attributeData.isTipBox">
+              <a-select-option v-for="(item, index) in liquidRanges" :key="index" :value="item.code">{{ item.value
+                }}</a-select-option>
+            </a-select>
+            <span class="span-unit">(μl)</span>
+
+            
+            <sp-input-number  step="0.001" label="耗材底面" : labelWidth="140"
+              v-model="attributeData.consumableBasalAreaCoefficient" ></sp>
+
+          </div>
+          <div style="margin-top:10px;">
+            <span class="span-label" style="width:140px;">使用夹抓::</span>
+            <a-checkbox v-model="attributeData.useArm" style="width:100px;" ></a>
+            <span class="span-label" style="width: 140px; margin-left : 10px;">机械臂::</span>
+            <a-select style="width: 140px;" v-model  value="armAttribute.equipmentId" : disabled="!attributeData.useArm">
+              <a-select-option v-for="(item, index) in armEquipmentData" :key="index" :value="item.id">{{ item.name
+                }}</a-select-option>
+            </a-select>
+            <sp-input-number :step="100" label="最大体" :labelWidth="100" unit="μl" v-model="attributeData.maxVolume" ></sp>
+            <a-checkbox v-model="attributeData.isRemainingVolume"
+              style="margin-left: 20px;color : #000;">剩余体积</a-checkbox>
+            <sp-input-number :step="100" label="" :labelWidth="-10" unit="μl" v-model="attributeData.remainingVolume" ></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number :step="0.5" label="底面积系" :labelWidth="140" :right-empty="true"
+              v-model="attributeData.basalAreaCoefficient" ></sp>
+            <sp-input-number :step="0.5" label="耗材高度" :labelWidth="90" unit="mm"
+              v-model="attributeData.consumableHeight" ></sp>
+            <sp-input-number :step="0.5" label="混胶修正系数" :labelWidth="100"
+              v-model="attributeData.mixBMEModifiedCoefficient" ></sp>
+            <sp-input-number :step="0.5" label="大容量高度修正系" :labelWidth="150"
+              v-model="attributeData.heightModifiedCoefficient" ></sp>
+          </div>
+        </a-row>
+
+        <a-row :gutter="8">
+          <a-tabs type="editable-card" hide-add style="margin-left: 0px; margin-top : 10px;">
+            <a-tab-pane v-for="(item,index) in attributeData.pToZSpeedLiquidJson" :tab="index=='fifty':'50ul':index=='oneThousand':'1000ul':'200ul'" :key="index"  :closable="false">
+              <div>
+                <sp-input-number label="吸液速度" v-model="item.absorbSpeed" ></sp>
+                <sp-input-number label="P-Z吸液速度转换系数" :labelWidth="150" :step="3" unit="mm"
+                  v-model="item.pToZSpeedCoefficient" ></sp>
+              </div>
+
+            </a-tab-pane>
+          </a-tabs>
+        </a-row>
+        <a-row :gutter="8">
+          <a-tabs type="editable-card" hide-add style="margin-left: 0px; margin-top : 10px;">
+            <a-tab-pane v-for="item in params" :key="item.id" :tab="item.name" :closable="false">
+              <div>
+                <sp-input-number label="行走高度" :labelWidth="120" unit="mm" :required="true"
+                  :isError="errors.normalHeight" v-model="item.normalHeight" ></sp>
+                <sp-input-number label="变距步数" :step="1" :rightEmpty="true" v-model="item.variableDistanceStep" ></sp>
+                <sp-input-number label="吸前混合高度" unit="mm" v-model="item.absorbMixingHeight" ></sp>
+                <sp-input-number label="自主变距恢复步长" :step="1" :rightEmpty="true" v-model="item.isAutoVariableRenewStep" ></sp>
+                <span class="span-label" style="width:80px;">液面检测::</span>
+              <a-checkbox v-model="item.isDetectLiquid" ></a>
+              </div>
+              <div style="margin-top:10px;" v-if="!attributeData.isTipBox">
+                <div>
+                  <sp-input-number label="预吸液高" :labelWidth="120" unit="mm" v-model="item.prepareAbsorbHeight" ></sp>
+                  <sp-input-number label="吸液高度" unit="mm" v-model="item.absorbHeight" ></sp>
+                  <sp-input-number label="喷后混合高度" unit="mm" v-model="item.jetMixingHeight" ></sp>
+                  <sp-input-number label="变距相邻补偿" v-model="item.variableRenewAdjacent" ></sp>
+                </div>
+                <div style="margin-top:10px;">
+                  <sp-input-number label="预喷液高" :labelWidth="120" unit="mm" v-model="item.prepareJetHeight" ></sp>
+                  <sp-input-number label="喷液高度" unit="mm" v-model="item.jetHeight" ></sp>
+                  <span class="span-label" style="margin-left: 10px;">是否自主变距::</span>
+                  <a-checkbox v-model="item.isAutoVariable" style="width:100px;" ></a>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <div>
+                  <sp-input-number label="粘滞系数" :labelWidth="120" :step="0.5"
+                    v-model="item.viscousFrictionCoefficient" ></sp>
+                  <sp-input-number label="喷胶系数" :labelWidth="120" style="margin-left: 10px;" : step="0.5"
+                    v-model="item.jetBMECoefficient" ></sp>
+                  <sp-input-number label="自主变距步长" :step="1" :rightEmpty="true" v-model="item.isAutoVariableStep" ></sp>
+                  <sp-input-number label="一吸多喷行走高度" :labelWidth="130" unit="mm"  v-model="item.one2MoreNormalHeight" ></sp>
+                </div>
+              </div>
+              <div style="margin-top:10px;" v-if="attributeData.isTipBox">
+                <div>
+                  <sp-input-number label="预取枪头高度" :labelWidth="120" unit="mm" v-model="item.prepareTakeTipHeight" ></sp>
+                  <sp-input-number label="取枪头高度" :labelWidth="120" unit="mm" v-model="item.takeTipHeight" ></sp>
+                  <sp-input label="取枪头速度" :labelWidth="138" v-model="item.takeTipSpeedCmd" ></sp>
+                </div>
+                <div style="margin-top:10px;">
+                  <sp-input-number label="重复取枪头次数" :labelWidth="120" :step="1" v-model="item.takeTipRepeatTime" ></sp>
+                  <sp-input-number label="重复取枪头高度" :labelWidth="152" style="margin-left:40px;" unit="mm"
+                    v-model="item.takeTipRepeatHeight" ></sp>
+                  <sp-input-number label="取枪头后预提高度" :labelWidth="126" style="margin-left:10px;" unit="mm"
+                    v-model="item.takeTipAfterPrepareHeight" ></sp>
+                </div>
+                <div style="margin-top:10px;">
+                  <sp-input label="预提高度后执行指令" :labelWidth="140" v-model="item.takeTipAfterPrepareHeightCmd" ></sp>
+                </div>
+              </div>
+            </a-tab-pane>
+          </a-tabs>
+        </a-row>
+        <a-row :gutter="8" v-if="attributeData.useArm">
+          <a-card title="夹抓参数" :bordered="false">
+            <div>
+              <sp-input-number label="行走高度" :labelWidth="90" unit="mm" v-model="armAttribute.normalHeight" ></sp>
+              <sp-input-number label="X偏移" :labelWidth="90" unit="mm" v-model="armAttribute.xOffset" ></sp>
+              <sp-input-number label="Y偏移" :labelWidth="90" unit="mm" v-model="armAttribute.yOffset" ></sp>
+              <sp-input-number label="Z偏移" :labelWidth="90" unit="mm" v-model="armAttribute.zOffset" ></sp>
+            </div>
+            <div style="margin-top:10px;">
+              <sp-input-number label="松开高度" :labelWidth="90" unit="mm" v-model="armAttribute.clipReleaseHeight" ></sp>
+              <sp-input-number label="夹紧高度" :labelWidth="90" unit="mm" v-model="armAttribute.clipCloseHeight" ></sp>
+              <sp-input-number label="开盖高度" :labelWidth="90" unit="mm" v-model="armAttribute.clipOpenHeight" ></sp>
+            </div>
+            <div style="margin-top:10px;">
+              <sp-input-number label="夹子松开" :labelWidth="90" v-model="armAttribute.clipRelease" ></sp>
+              <sp-input-number label="夹子夹紧" :labelWidth="90" v-model="armAttribute.clipClose" ></sp>
+              <sp-input-number label="夹子开启" :labelWidth="90" v-model="armAttribute.clipOpen" ></sp>
+            </div>
+          </a-card>
+        </a-row>
+      </a-form>
+    </a-spin>
+  </a-modal>
+</template>
+
+<script>
+import { exp_consumable_edit, exp_consumable_getArmAttribute, exp_consumable_getParams } from '@/api/modular/experiment/consumableManage'
+import { exp_equipment_list } from '@/api/modular/experiment/equipmentManage'
+import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+import SpInputNumber from '@/components/spInputNumber.vue';
+import SpInput from '@/components/spInput.vue';
+import { doCmd } from '@/api/modular/experiment/debug'
+export default {
+  components: {
+    SpInputNumber,
+    SpInput
+  },
+  data() {
+    return {
+      statusData: [],
+      Data: [],
+      visible: false,
+      formLoading: false,
+      form: this.$form.createForm(this),
+      liquidRanges: [],
+      attributeData: {},
+      params: [],
+      armEquipmentData: [],
+      equipmentData: [],
+      clipEquipmentData: [],
+      errors: {
+        code: false,
+        name: false,
+      },
+      armAttribute: {
+        consumableId: 0,
+        xOffset: 0.0,
+        yOffset: 0.0,
+        zOffset: 0.0,
+        clipOpen: 0.0,
+        clipClose: 0.0,
+        clipEquipmentId: null,
+        equipmentId: null,
+        clipRelease: 0.0,
+        clipReleaseHeight: 0.0,
+        clipCloseHeight: 0.0,
+        clipOpenHeight: 0.0,
+        normalHeight: 0.0,
+        clipCloseAfterWait: 0.0,
+        clipReleaseBeforeWait: 0.0,
+        variableDistanceStep: 0,
+        ConsumableBasalAreaCoefficient: 0.0
+      },
+      clipOpenVisible: false,
+      loadingButton: '',
+    }
+  },
+  created() {
+    this.sysDictTypeDropDown()
+  },
+  methods: {
+    armChange(value) {
+      console.log('=========armChange=========')
+      console.log(value)
+      var arm = this.armEquipmentData.filter(item => item.id === this.armAttribute.equipmentId)[0]
+      if (arm != null && arm.clipEquipmentId != null)
+        this.clipOpenVisible = true;
+      else
+        this.clipOpenVisible = false;
+    },
+    getEquipmentData() {
+      exp_equipment_list({}).then((res) => {
+        if (res.success) {
+          this.equipmentData = res.data;
+          this.armEquipmentData = this.equipmentData.filter(item => item.type === 1);
+        }
+      })
+    },
+    resetAttribute() {
+      this.armAttribute = {
+        consumableId: 0,
+        xOffset: 0.0,
+        yOffset: 0.0,
+        zOffset: 0.0,
+        clipOpen: 0.0,
+        clipClose: 0.0,
+        clipEquipmentId: null,
+        equipmentId: null,
+        clipRelease: 0.0,
+        clipReleaseHeight: 0.0,
+        clipCloseHeight: 0.0,
+        clipOpenHeight: 0.0,
+        normalHeight: 0.0,
+        one2MoreNormalHeight:0.0,
+      }
+      this.errors = {
+        code: false,
+        name: false,
+      }
+
+      this.armEquipmentData = []
+      this.clipEquipmentData = []
+      this.params = []
+      this.clipOpenVisible = false
+    },
+    /**
+     * 获取字典数据
+       */
+    sysDictTypeDropDown(text) {
+      sysDictTypeDropDown({ code: 'liquid_range' }).then((res) => {
+        this.liquidRanges = res.data
+        this.liquidRanges.forEach((item) => {
+          item.code = parseInt(item.code)
+        })
+      })
+    },
+    // 初始化方法
+  edit(record) {
+      this.visible = true
+      console.log(record)
+
+      this.getEquipmentData()
+      this.resetAttribute()
+
+      this.attributeData = { ...record };
+      console.log('===================================')
+      console.log(this.attributeData)
+
+      this.$forceUpdate()
+
+      if (this.attributeData.useArm) {
+        var dd = { id: record.id }
+        exp_consumable_getArmAttribute(dd).then((res) => {
+          this.armAttribute = res.data
+        })
+      }
+
+      var dd1 = { id: record.id }
+      exp_consumable_getParams(dd1).then((res) => {
+        this.params = res.data
+      })
+    },
+    validateFields() {
+      var result = true;
+      this.errors.code = !this.attributeData.code;
+      this.errors.name = !this.attributeData.name;
+      console.log(this.errors)
+      for (const key in this.errors) {
+        if (this.errors[key]) {
+          result = false
+          break;
+        }
+      }
+      return result
+    },
+    handleSubmit() {
+      console.log('=================handleSubmit=================')
+      if (!this.validateFields())
+        return;
+
+      // // this.attributeData.remark=this.form.getFieldsValue().remark
+
+    this.armAttribute.consumableId = this.attributeData.id
+      this.formLoading = true
+      var obj = {
+        ...this.attributeData,
+        armAttribute: this.armAttribute,
+        params: this.params,
+      }
+      console.log('========实际要提交的参数==========')
+      console.log(obj)
+
+      exp_consumable_edit(obj).then((res) => {
+        if (res.success) {
+          this.$message.success('编辑成功')
+          this.resetAttribute()
+          this.$emit('ok', obj)
+          this.handleCancel()
+        }
+      }).finally((res) => {
+        this.formLoading = false
+      })
+    },
+    handleCancel() {
+      this.resetAttribute()
+      this.form.resetFields()
+      this.visible = false
+    },
+    btnGoPos(axle, value) {
+      const data = this.form.getFieldsValue()
+      this.setLoading(axle)
+      data.cmd = axle.substring(0, 2)' + value.toFixed(2)
+      console.log(data.cmd)
+      data.id = this.armAttribute.equipmentId
+      doCmd(data).then((res) => {
+        this.resetLoading()
+        if (res.success) {
+        } else {
+          this.$message.error('执行命令失败::' + res.message)
+        }
+      }).catch((err) => {
+        this.$message.error('执行命令错误::' + err.message)
+      })
+    },
+    btnGoPos(eqid, axle, value) {
+      const data = this.form.getFieldsValue()
+      this.setLoading(axle)
+      data.cmd = axle.substring(0, 2) + value.toFixed(2)
+      console.log(data.cmd)
+      data.id = eqid
+      doCmd(data).then((res) => {
+        this.resetLoading()
+        if (res.success) {
+        } else {
+          this.$message.error('执行命令失败::' + res.message)
+        }
+      }).catch((err) => {
+        this.$message.error('执行命令错误::' + err.message)
+      })
+    },
+    // 设置loading状
+  setLoading(button) { this.loadingButton = button },
+    // 重置loading状
+  resetLoading() { this.loadingButton = '' },
+    // 判断特定按钮是否在loading状
+  isLoading(button) { return this.loadingButton == button },
+    // 判断是否有按钮在loading状
+  isAnyLoading() { return this.loadingButton != '' }
+  }
+}
+</script>
+
+<style scoped>
+.span-unit {
+  margin-left: 5px;
+  color: black;
+}
+
+.span-label {
+  width: 130px;
+  text-align: right;
+  display: inline-block;
+  color: black;
+}
+</style>

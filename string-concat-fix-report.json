@@ -1,0 +1,511 @@
+{
+  "timestamp": "2025-06-26T09:33:17.183Z",
+  "totalFiles": 191,
+  "fixedFiles": 60,
+  "totalFixes": 143,
+  "details": [
+    {
+      "file": "src\\views\\experiment\\consumable\\index.vue",
+      "fixCount": 2,
+      "fixes": [
+        "字符串拼接: ')\"\r\n              placement=\"topRight\"\r\n              title=\"ȷɾ\"\r\n              @confirm=\"() => exp_consumable_delete(record)\"\r\n            >\r\n              <a>ɾ</a>\r\n            </a-popconfirm>\r\n          </span>\r\n        </template>\r\n      </s-table>\r\n      <s-table\r\n        ref=\"table1\"\r\n        :columns=\"newColumns\"\r\n        :data=\"loadData\"\r\n        :alert=\"true\"\r\n        :rowKey=\"(record) => record.id\"\r\n        :customRow=\"customRow\"\r\n        v-show=\"isRemainingVolume\"\r\n      >\r\n        <template #serial=\"{ text, record, index }\">\r\n          <span>\r\n            {{ index + 1  → ')\"\r\n              placement=\"topRight\"\r\n              title=\"ȷɾ\"\r\n              @confirm=\"() => exp_consumable_delete(record)\"\r\n            >\r\n              <a>ɾ</a>\r\n            </a-popconfirm>\r\n          </span>\r\n        </template>\r\n      </s-table>\r\n      <s-table\r\n        ref=\"table1\"\r\n        :columns=\"newColumns\"\r\n        :data=\"loadData\"\r\n        :alert=\"true\"\r\n        :rowKey=\"(record) => record.id\"\r\n        :customRow=\"customRow\"\r\n        v-show=\"isRemainingVolume\"\r\n      >\r\n        <template #serial=\"{ text, record, index }\">\r\n          <span>\r\n            {{ index' + 1",
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugBarcode.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugCamera.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugCentrifuge.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugIncubatorCo2.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugKeyto.vue",
+      "fixCount": 2,
+      "fixes": [
+        "修复单行注释格式",
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugMicroplateReader.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugMicroscope.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\debugView.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\index.vue",
+      "fixCount": 1,
+      "fixes": [
+        "字符串拼接: ')\">新增设备\r\n          </a-button>\r\n        </template>\r\n        <span #serial slot-scope=\"text, record, index\">\r\n          {{ index + 1  → ')\">新增设备\r\n          </a-button>\r\n        </template>\r\n        <span #serial slot-scope=\"text, record, index\">\r\n          {{ index' + 1"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\equipment\\scaleView.vue",
+      "fixCount": 1,
+      "fixes": [
+        "多行注释: /* 使按钮居中*/ → /* 使按钮居中 */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expFlow\\editForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expFlow\\newIndex.vue",
+      "fixCount": 16,
+      "fixes": [
+        "字符串拼接: ')\">新增实验流程\r\n                </a-button>\r\n                <a-button style=\"float: right\" type=\"primary\" @click=\"ImportandExport\">导入/导出</a-button>\r\n                <a-modal :visible=\"importExportModal.visible\" @cancel=\"importExportModal.visible = false\"\r\n                  title=\"导入/导出设置\" width=\"50%\">\r\n                  <div style=\"margin-bottom: 16px; display: flex; align-items: center;\">\r\n                    <span style=\"margin-right: 8px;\">选择流程</template>\r\n                    <a-select v-model:value=\"selectedFlow\" style=\"width: 200px;\">\r\n                      <a-select-option v-for=\"(flow, index) in flows\" :key=\"index\" :value=\"flow.id\">\r\n                        {{ flow.name }}\r\n                      </a-select-option>\r\n                    </a-select>\r\n                  </div>\r\n\r\n                  <a-card title=\"数据迁移\" :bordered=\"false\" class=\"card-container\">\r\n                    <!-- 导入区域 -->\r\n                    <div class=\"action-section\">\r\n                      <a-upload name=\"sqlFile\" accept=\".sql\" :beforeUpload=\"beforeImportUpload\" :showUploadList=\"false\">\r\n                        <a-button type=\"primary\">\r\n                           导入SQL\r\n                        </a-button>\r\n                      </a-upload>\r\n                      <span class=\"tip-text\">支持最?00MB的SQL文件</template>\r\n                    </div>\r\n\r\n                    <!-- 导出区域 -->\r\n                    <div class=\"action-section\">\r\n                      <a-button type=\"primary\" @click=\"handleExport\" :loading=\"exportLoading\">\r\n                         导出SQL\r\n                      </a-button>\r\n                      <span class=\"tip-text\">生成当前系统数据快照</template>\r\n                    </div>\r\n\r\n                    <!-- 状态提?-->\r\n                    <a-alert v-if=\"importResult.visible\" :message=\"importResult.message\" :type=\"importResult.type\"\r\n                      show-icon closable @close=\"() => importResult.visible = false\" />\r\n                  </a-card>\r\n                </a-modal>\r\n\r\n              </template>\r\n              <span #serial slot-scope=\"text, record, index\">\r\n                {{ index + 1  → ')\">新增实验流程\r\n                </a-button>\r\n                <a-button style=\"float: right\" type=\"primary\" @click=\"ImportandExport\">导入/导出</a-button>\r\n                <a-modal :visible=\"importExportModal.visible\" @cancel=\"importExportModal.visible = false\"\r\n                  title=\"导入/导出设置\" width=\"50%\">\r\n                  <div style=\"margin-bottom: 16px; display: flex; align-items: center;\">\r\n                    <span style=\"margin-right: 8px;\">选择流程</template>\r\n                    <a-select v-model:value=\"selectedFlow\" style=\"width: 200px;\">\r\n                      <a-select-option v-for=\"(flow, index) in flows\" :key=\"index\" :value=\"flow.id\">\r\n                        {{ flow.name }}\r\n                      </a-select-option>\r\n                    </a-select>\r\n                  </div>\r\n\r\n                  <a-card title=\"数据迁移\" :bordered=\"false\" class=\"card-container\">\r\n                    <!-- 导入区域 -->\r\n                    <div class=\"action-section\">\r\n                      <a-upload name=\"sqlFile\" accept=\".sql\" :beforeUpload=\"beforeImportUpload\" :showUploadList=\"false\">\r\n                        <a-button type=\"primary\">\r\n                           导入SQL\r\n                        </a-button>\r\n                      </a-upload>\r\n                      <span class=\"tip-text\">支持最?00MB的SQL文件</template>\r\n                    </div>\r\n\r\n                    <!-- 导出区域 -->\r\n                    <div class=\"action-section\">\r\n                      <a-button type=\"primary\" @click=\"handleExport\" :loading=\"exportLoading\">\r\n                         导出SQL\r\n                      </a-button>\r\n                      <span class=\"tip-text\">生成当前系统数据快照</template>\r\n                    </div>\r\n\r\n                    <!-- 状态提?-->\r\n                    <a-alert v-if=\"importResult.visible\" :message=\"importResult.message\" :type=\"importResult.type\"\r\n                      show-icon closable @close=\"() => importResult.visible = false\" />\r\n                  </a-card>\r\n                </a-modal>\r\n\r\n              </template>\r\n              <span #serial slot-scope=\"text, record, index\">\r\n                {{ index' + 1",
+        "字符串拼接: '\">\r\n                    <circle :cx=\"node.x + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\"\r → '\">\r\n                    <circle :cx=\"node.x' + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\"",
+        "字符串拼接: '\" stroke=\"green\" stroke-width=\"3\" />\r\n                    <text :x=\"node.x + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label  → '\" stroke=\"green\" stroke-width=\"3\" />\r\n                    <text :x=\"node.x' + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label",
+        "字符串拼接: '\">\r\n                    <circle :cx=\"node.x + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\"\r → '\">\r\n                    <circle :cx=\"node.x' + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\"",
+        "字符串拼接: '\" stroke=\"red\" stroke-width=\"3\" />\r\n                    <text :x=\"node.x + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label  → '\" stroke=\"red\" stroke-width=\"3\" />\r\n                    <text :x=\"node.x' + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label",
+        "字符串拼接: ' ? node.x + node.w - 10 : node.x + node.w - 10\"\r → ' ? node.x' + node.w - 10 : node.x + node.w - 10\"",
+        "字符串拼接: '\n                    @change=\"e => valueChange(i, e)\" />\r\n                </div>\r\n              </div>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n      </a-spin>\r\n    </a-card>\r\n\r\n    <add-form ref=\"addForm\" @ok=\"handleOk\" @preview-layout=\"handlePreviewLayout\" />\r\n    <edit-form ref=\"editForm\" @ok=\"handleOk\" @preview-layout=\"handlePreviewLayout\" />\r\n    <design-form ref=\"designForm\" @ok=\"handleOk\" />\r\n    <a-modal :title=\"layoutTitle\" :width=\"currentLayout.xSize\" :height=\"currentLayout.ySize + 80\"\r → '\n                    @change=\"e => valueChange(i, e)\" />\r\n                </div>\r\n              </div>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n      </a-spin>\r\n    </a-card>\r\n\r\n    <add-form ref=\"addForm\" @ok=\"handleOk\" @preview-layout=\"handlePreviewLayout\" />\r\n    <edit-form ref=\"editForm\" @ok=\"handleOk\" @preview-layout=\"handlePreviewLayout\" />\r\n    <design-form ref=\"designForm\" @ok=\"handleOk\" />\r\n    <a-modal :title=\"layoutTitle\" :width=\"currentLayout.xSize\" :height=\"currentLayout.ySize' + 80\"",
+        "字符串拼接: ';\r\n              ctx.lineWidth = 2; // 边框宽度\n  \r\n            ctx.strokeRect(rect.xOffset, rect.yOffset, rect.xSize, rect.ySize);\r\n\r\n              // 计算文本位置（居中）\n  \r\n            const textX = rect.xOffset + rect.xSize / 2 → ';\r\n              ctx.lineWidth = 2; // 边框宽度\n  \r\n            ctx.strokeRect(rect.xOffset, rect.yOffset, rect.xSize, rect.ySize);\r\n\r\n              // 计算文本位置（居中）\n  \r\n            const textX = rect.xOffset' + rect.xSize / 2",
+        "修复单行注释格式",
+        "多行注释: /* 更深的颜色以增强可见?*/ → /* 更深的颜色以增强可见? */",
+        "多行注释: /* 鼠标悬停时显示为可点?*/ → /* 鼠标悬停时显示为可点? */",
+        "多行注释: /* 鼠标悬停时改变颜?*/ → /* 鼠标悬停时改变颜? */",
+        "模板字符串: `;\r\n            } else if (startY > nodeTop && endY > nodeTop) {\r\n              // 如果起点和终点都在节点下\n            path += ` → `;\r\n            } else if (startY > nodeTop && endY > nodeTop) {\r\n              // 如果起点和终点都在节点下\n            path${=}`",
+        "模板字符串: `;\r\n            } else if (startX < nodeLeft && endX > nodeRight) {\r\n              // 如果起点在节点左侧，终点在右\n            path += ` → `;\r\n            } else if (startX < nodeLeft && endX > nodeRight) {\r\n              // 如果起点在节点左侧，终点在右\n            path${=}`",
+        "模板字符串: `;\r\n            } else if (startX > nodeRight && endX < nodeLeft) {\r\n              // 如果起点在节点右侧，终点在左\n            path += ` → `;\r\n            } else if (startX > nodeRight && endX < nodeLeft) {\r\n              // 如果起点在节点右侧，终点在左\n            path${=}`",
+        "模板字符串: `;\r\n            }\r\n          }\r\n        }\r\n      });\r\n\r\n      // 连接到终\n    path += ` → `;\r\n            }\r\n          }\r\n        }\r\n      });\r\n\r\n      // 连接到终\n    path${=}`"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expFlowCase\\index.vue",
+      "fixCount": 9,
+      "fixes": [
+        "字符串拼接: '\">\n                        <circle :cx=\"node.x + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\" → '\">\n                        <circle :cx=\"node.x' + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\"",
+        "字符串拼接: '\" stroke=\"green\" stroke-width=\"3\" />\n                        <text :x=\"node.x + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label → '\" stroke=\"green\" stroke-width=\"3\" />\n                        <text :x=\"node.x' + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label",
+        "字符串拼接: '\">\n                        <circle :cx=\"node.x + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\" → '\">\n                        <circle :cx=\"node.x' + node.w / 2\" :cy=\"node.y + node.r\" :r=\"node.r\"",
+        "字符串拼接: '\" stroke=\"red\" stroke-width=\"3\" />\n                        <text :x=\"node.x + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label → '\" stroke=\"red\" stroke-width=\"3\" />\n                        <text :x=\"node.x' + node.w / 2\" :y=\"node.y + node.r + 5\" text-anchor=\"middle\">{{ node.label",
+        "字符串拼接: ' ? node.x + node.w - 10 : node.x + node.w - 10\" → ' ? node.x' + node.w - 10 : node.x + node.w - 10\"",
+        "字符串拼接: '>{{rowIndex+1 → '>{{rowIndex' + 1",
+        "修复单行注释格式",
+        "HTML实体: '&&item → '&&item'",
+        "HTML实体: '&&item → '&&item'"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expFlowStep\\editStepForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expFlowStep\\newIndex.vue",
+      "fixCount": 6,
+      "fixes": [
+        "字符串拼接: ')\">\r\n                    <a-button type=\"primary\" icon=\"copy\" @click=\"copyAllModal.visible=true\">复制所有程序集</a-button>\r\n                </div>\r\n                <a-table\r\n                    ref=\"layoutTable\" size=\"middle\" :pagination=\"false\" :row-key=\"(record, index) => record.id\" :columns=\"layoutColumns\" \r\n                    :dataSource=\"layoutData\" :loading=\"layoutLoading\" :customRow=\"layoutCustomRow\"> \r\n                    <span #serial slot-scope=\"text, record, index\">\r\n                    {{ index + 1  → ')\">\r\n                    <a-button type=\"primary\" icon=\"copy\" @click=\"copyAllModal.visible=true\">复制所有程序集</a-button>\r\n                </div>\r\n                <a-table\r\n                    ref=\"layoutTable\" size=\"middle\" :pagination=\"false\" :row-key=\"(record, index) => record.id\" :columns=\"layoutColumns\" \r\n                    :dataSource=\"layoutData\" :loading=\"layoutLoading\" :customRow=\"layoutCustomRow\"> \r\n                    <span #serial slot-scope=\"text, record, index\">\r\n                    {{ index' + 1",
+        "字符串拼接: ')\" ><template #icon><plus-outlined /></template @click=\"addParentForm\">新增程序?/a-button>\r\n                </div>\r\n                <div>\r\n                    <a-table\r\n                        ref=\"parentTable\" size=\"middle\" :pagination=\"false\" :row-key=\"(record, index) => record.id\" :columns=\"stepParentColumns\" draggable=\"false\"\r\n                        :dataSource=\"stepParentData\" :loading=\"parentLoading\" :customRow=\"stepParentCustomRow\" :expandIconAsCell=\"false\" :expandIconColumnIndex=\"-1\" :scroll=\"{  y: 810 }\"> \r\n                        <span #serial slot-scope=\"text, record, index\">\r\n                        {{ index + 1  → ')\" ><template #icon><plus-outlined /></template @click=\"addParentForm\">新增程序?/a-button>\r\n                </div>\r\n                <div>\r\n                    <a-table\r\n                        ref=\"parentTable\" size=\"middle\" :pagination=\"false\" :row-key=\"(record, index) => record.id\" :columns=\"stepParentColumns\" draggable=\"false\"\r\n                        :dataSource=\"stepParentData\" :loading=\"parentLoading\" :customRow=\"stepParentCustomRow\" :expandIconAsCell=\"false\" :expandIconColumnIndex=\"-1\" :scroll=\"{  y: 810 }\"> \r\n                        <span #serial slot-scope=\"text, record, index\">\r\n                        {{ index' + 1",
+        "字符串拼接: ',\r\n                    layoutId:this.selectLayoutNode.id,\r\n                    type:this.draggedData.code,\r\n                    sort:this.stepData.length+1 → ',\r\n                    layoutId:this.selectLayoutNode.id,\r\n                    type:this.draggedData.code,\r\n                    sort:this.stepData.length' + 1",
+        "修复单行注释格式",
+        "多行注释: /* 设置高亮行的背景?*/ → /* 设置高亮行的背景? */",
+        "多行注释: /* 设置高亮行的背景?*/ → /* 设置高亮行的背景? */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expIncubatorStorage\\index.vue",
+      "fixCount": 3,
+      "fixes": [
+        "字符串拼接: ': col.sampleCode }]\"\r\n              >\r\n                <div class=\"cell-content\" @click=\"getDataDetail(col)\">\r\n                  <div class=\"coordinates\">{{ col.rowIndex + 1  → ': col.sampleCode }]\"\r\n              >\r\n                <div class=\"cell-content\" @click=\"getDataDetail(col)\">\r\n                  <div class=\"coordinates\">{{ col.rowIndex' + 1",
+        "修复单行注释格式",
+        "多行注释: /* 固定行标题宽?*/ → /* 固定行标题宽? */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\expVideo\\index.vue",
+      "fixCount": 2,
+      "fixes": [
+        "字符串拼接: ')\">\r\n          <a-select v-model:value=\"queryParam.cameraId\" allow-clear style=\"width: 200px\" placeholder=\"ѡ\">\r\n            <a-select-option v-for=\"(camera, index) in cameras\" :key=\"index\" :value=\"index + 1\">\r → ')\">\r\n          <a-select v-model:value=\"queryParam.cameraId\" allow-clear style=\"width: 200px\" placeholder=\"ѡ\">\r\n            <a-select-option v-for=\"(camera, index) in cameras\" :key=\"index\" :value=\"index' + 1\">",
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\gantt\\ganttView.vue",
+      "fixCount": 10,
+      "fixes": [
+        "多行注释: /* 使竖线相对于甘特图定?*/ → /* 使竖线相对于甘特图定? */",
+        "多行注释: /* 更深的颜色以增强可见?*/ → /* 更深的颜色以增强可见? */",
+        "多行注释: /* 鼠标悬停时显示为可点?*/ → /* 鼠标悬停时显示为可点? */",
+        "多行注释: /* 鼠标悬停时改变颜?*/ → /* 鼠标悬停时改变颜? */",
+        "多行注释: /* 也可以尝试修改表格单元格的样?*/ → /* 也可以尝试修改表格单元格的样? */",
+        "多行注释: /* 设置单元格行?*/ → /* 设置单元格行? */",
+        "多行注释: /* 也可以尝试修改表格单元格的样?*/ → /* 也可以尝试修改表格单元格的样? */",
+        "多行注释: /* 设置单元格行?*/ → /* 设置单元格行? */",
+        "多行注释: /* 设置表头文本的垂直居?*/ → /* 设置表头文本的垂直居? */",
+        "多行注释: /* 调整内边距以适应新高?*/ → /* 调整内边距以适应新高? */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\layout\\index.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\layout\\previewLayout.vue",
+      "fixCount": 2,
+      "fixes": [
+        "字符串拼接: ';  \n              ctx.lineWidth = 2; // 边框宽度\n  \n            ctx.strokeRect(rect.xOffset, rect.yOffset, rect.xSize, rect.ySize);  \n        \n              // 计算文本位置（居中）\n  \n            const textX = rect.xOffset + rect.xSize / 2 → ';  \n              ctx.lineWidth = 2; // 边框宽度\n  \n            ctx.strokeRect(rect.xOffset, rect.yOffset, rect.xSize, rect.ySize);  \n        \n              // 计算文本位置（居中）\n  \n            const textX = rect.xOffset' + rect.xSize / 2",
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\plan\\index.vue",
+      "fixCount": 7,
+      "fixes": [
+        "修复单行注释格式",
+        "多行注释: /* 增大日期格子的大?*/ → /* 增大日期格子的大? */",
+        "多行注释: /* 修改当前日期的样?*/ → /* 修改当前日期的样? */",
+        "多行注释: /* 当前日期的字体颜?*/ → /* 当前日期的字体颜? */",
+        "多行注释: /* 当前日期的字体加?*/ → /* 当前日期的字体加? */",
+        "多行注释: /* 今天的字体颜?*/ → /* 今天的字体颜? */",
+        "多行注释: /* 今天的字体加?*/ → /* 今天的字体加? */"
+      ]
+    },
+    {
+      "file": "src\\views\\experiment\\sampleInformation\\index.vue",
+      "fixCount": 10,
+      "fixes": [
+        "修复单行注释格式",
+        "多行注释: /* 增加上下内边?*/ → /* 增加上下内边? */",
+        "多行注释: /* 修改时间轴主线颜?*/ → /* 修改时间轴主线颜? */",
+        "多行注释: /* 添加箭头伪元?*/ → /* 添加箭头伪元? */",
+        "多行注释: /* 定位到轴线末端右?*/ → /* 定位到轴线末端右? */",
+        "多行注释: /* 创建三角形箭?*/ → /* 创建三角形箭? */",
+        "多行注释: /* 颜色与轴线一?*/ → /* 颜色与轴线一? */",
+        "多行注释: /* 增加内边?*/ → /* 增加内边? */",
+        "多行注释: /* 增加最大宽?*/ → /* 增加最大宽? */",
+        "多行注释: /* 节点上下布局的样?*/ → /* 节点上下布局的样? */"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\flow\\designForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "HTML实体: '\n  export default {\n    components: {\n      vfd,\n      userListForm,\n      roleListForm\n    },\n    data () {\n      return {\n        labelCol: {\n          xs: { span: 24 },\n          sm: { span: 5 }\n        },\n        wrapperCol: {\n          xs: { span: 24 },\n          sm: { span: 15 }\n        },\n        visible: false,\n        confirmLoading: false,\n        formLoading: true,\n        schemeName:null,\n        fieldNames:[],\n        form: this.$form.createForm(this)\n      }\n    },\n    methods: {\n      /**\n       * 初始化方法\n       */\n      edit (record) {\n        this.visible = true\n        this.formLoading = false\n        this.schemeName=record.schemeName\n        setTimeout(() => {\n          this.form.setFieldsValue(\n            {\n              id: record.id,\n              schemeName: record.schemeName,\n              schemeContent: record.schemeContent,\n              contentParse: record.contentParse,\n              schemeCode: record.schemeCode,\n              frmId: record.frmId,\n              orgId: !!record.orgId&&record → '\n  export default {\n    components: {\n      vfd,\n      userListForm,\n      roleListForm\n    },\n    data () {\n      return {\n        labelCol: {\n          xs: { span: 24 },\n          sm: { span: 5 }\n        },\n        wrapperCol: {\n          xs: { span: 24 },\n          sm: { span: 15 }\n        },\n        visible: false,\n        confirmLoading: false,\n        formLoading: true,\n        schemeName:null,\n        fieldNames:[],\n        form: this.$form.createForm(this)\n      }\n    },\n    methods: {\n      /**\n       * 初始化方法\n       */\n      edit (record) {\n        this.visible = true\n        this.formLoading = false\n        this.schemeName=record.schemeName\n        setTimeout(() => {\n          this.form.setFieldsValue(\n            {\n              id: record.id,\n              schemeName: record.schemeName,\n              schemeContent: record.schemeContent,\n              contentParse: record.contentParse,\n              schemeCode: record.schemeCode,\n              frmId: record.frmId,\n              orgId: !!record.orgId&&record'"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\flow\\editForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "HTML实体: '\r\n  export default {\r\n    data () {\r\n      return {\r\n        labelCol: {\r\n          xs: { span: 24 },\r\n          sm: { span: 5 }\r\n        },\r\n        wrapperCol: {\r\n          xs: { span: 24 },\r\n          sm: { span: 15 }\r\n        },\r\n        orgTree: [],\r\n        selfForms: [],\r\n        visible: false,\r\n        confirmLoading: false,\r\n        formLoading: true,\r\n        webIdShow:false,\r\n        formData:[],\r\n        form: this.$form.createForm(this)\r\n      }\r\n    },\r\n    methods: {\r\n      /**\n       * 初始化方法\n       */\n      edit (record) {\r\n        this.visible = true\r\n        this.orgId = record.orgId\r\n        this.getOrgDate ()\r\n        setTimeout(() => {\r\n          this.form.setFieldsValue(\r\n            {\r\n              id: record.id,\r\n              schemeCode: record.schemeCode,\r\n              schemeName: record.schemeName,\r\n              frmId: record.frmId,\r\n              orgId: !!record.orgId&&record → '\r\n  export default {\r\n    data () {\r\n      return {\r\n        labelCol: {\r\n          xs: { span: 24 },\r\n          sm: { span: 5 }\r\n        },\r\n        wrapperCol: {\r\n          xs: { span: 24 },\r\n          sm: { span: 15 }\r\n        },\r\n        orgTree: [],\r\n        selfForms: [],\r\n        visible: false,\r\n        confirmLoading: false,\r\n        formLoading: true,\r\n        webIdShow:false,\r\n        formData:[],\r\n        form: this.$form.createForm(this)\r\n      }\r\n    },\r\n    methods: {\r\n      /**\n       * 初始化方法\n       */\n      edit (record) {\r\n        this.visible = true\r\n        this.orgId = record.orgId\r\n        this.getOrgDate ()\r\n        setTimeout(() => {\r\n          this.form.setFieldsValue(\r\n            {\r\n              id: record.id,\r\n              schemeCode: record.schemeCode,\r\n              schemeName: record.schemeName,\r\n              frmId: record.frmId,\r\n              orgId: !!record.orgId&&record'"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\form\\designForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "HTML实体: '\n  export default {\n    data () {\n      return {\n        labelCol: {\n          xs: { span: 24 },\n          sm: { span: 5 }\n        },\n        wrapperCol: {\n          xs: { span: 24 },\n          sm: { span: 15 }\n        },\n        visible: false,\n        confirmLoading: false,\n        formLoading: true,\n        name:null,\n        form: this.$form.createForm(this)\n      }\n    },\n    methods: {\n      /**\n       * 初始化方法\n       */\n      edit (record) {\n        this.visible = true\n        this.formLoading = false\n        this.name=record.name\n        setTimeout(() => {\n          this.form.setFieldsValue(\n            {\n              id: record.id,\n              name: record.name,\n              content: record.content,\n              contentParse: record.contentParse,\n              contentData: record.contentData,\n              frmType: record.frmType,\n              webId: record.webId,\n              orgId: !!record.orgId&&record → '\n  export default {\n    data () {\n      return {\n        labelCol: {\n          xs: { span: 24 },\n          sm: { span: 5 }\n        },\n        wrapperCol: {\n          xs: { span: 24 },\n          sm: { span: 15 }\n        },\n        visible: false,\n        confirmLoading: false,\n        formLoading: true,\n        name:null,\n        form: this.$form.createForm(this)\n      }\n    },\n    methods: {\n      /**\n       * 初始化方法\n       */\n      edit (record) {\n        this.visible = true\n        this.formLoading = false\n        this.name=record.name\n        setTimeout(() => {\n          this.form.setFieldsValue(\n            {\n              id: record.id,\n              name: record.name,\n              content: record.content,\n              contentParse: record.contentParse,\n              contentData: record.contentData,\n              frmType: record.frmType,\n              webId: record.webId,\n              orgId: !!record.orgId&&record'"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\form\\editForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "HTML实体: '},{id:1,name:\"自定义表?}],\r\n        visible: false,\r\n        confirmLoading: false,\r\n        formLoading: true,\r\n        webIdShow:false,\r\n        form: this.$form.createForm(this)\r\n      }\r\n    },\r\n    methods: {\r\n      /**\n       * 初始化方法\n       */\n      edit (record) {\r\n        this.visible = true\r\n        this.getOrgDate ()\r\n        this.handleChange(record.frmType)\r\n        setTimeout(() => {\r\n          this.form.setFieldsValue(\r\n            {\r\n              id: record.id,\r\n              name: record.name,\r\n              frmType: record.frmType,\r\n              webId: record.webId,\r\n              orgId: !!record.orgId&&record → '},{id:1,name:\"自定义表?}],\r\n        visible: false,\r\n        confirmLoading: false,\r\n        formLoading: true,\r\n        webIdShow:false,\r\n        form: this.$form.createForm(this)\r\n      }\r\n    },\r\n    methods: {\r\n      /**\n       * 初始化方法\n       */\n      edit (record) {\r\n        this.visible = true\r\n        this.getOrgDate ()\r\n        this.handleChange(record.frmType)\r\n        setTimeout(() => {\r\n          this.form.setFieldsValue(\r\n            {\r\n              id: record.id,\r\n              name: record.name,\r\n              frmType: record.frmType,\r\n              webId: record.webId,\r\n              orgId: !!record.orgId&&record'"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\addForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\done.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\editForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\my.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\previewForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\undone.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\flowCenter\\workflow\\verificationForm.vue",
+      "fixCount": 2,
+      "fixes": [
+        "修复单行注释格式",
+        "HTML实体: ') &&verificationFinally → ') &&verificationFinally'"
+      ]
+    },
+    {
+      "file": "src\\views\\gen\\database\\addColumnForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\gen\\database\\addTableForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\gen\\database\\editColumnForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\gen\\database\\editTableForm.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\gen\\database\\index.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\Home.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\map\\index.vue",
+      "fixCount": 4,
+      "fixes": [
+        "修复单行注释格式",
+        "HTML实体: 'https:// webst0{s}.is.autonavi.com/appmaptilestyle=6&x → 'https:// webst0{s}.is.autonavi.com/appmaptilestyle=6&x'",
+        "HTML实体: 'https:// webst0{s}.is.autonavi.com/appmaptilestyle=8&x → 'https:// webst0{s}.is.autonavi.com/appmaptilestyle=8&x'",
+        "HTML实体: 'https:// webrd0{s}.is.autonavi.com/appmaptilelang=zh_cn&size → 'https:// webrd0{s}.is.autonavi.com/appmaptilelang=zh_cn&size'"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\cards.vue",
+      "fixCount": 1,
+      "fixes": [
+        "字符串拼接: ']\r\n          }\r\n        }))\r\n      },\r\n      randomExtend(minNum, maxNum) {\r\n        if (arguments.length === 1) {\r\n          return parseInt(Math.random() * minNum + 1 → ']\r\n          }\r\n        }))\r\n      },\r\n      randomExtend(minNum, maxNum) {\r\n        if (arguments.length === 1) {\r\n          return parseInt(Math.random() * minNum' + 1"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\left2.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\middle1.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\right1.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\right4.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\topHeader.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\main\\screenMonitor\\TopMiddleCmp.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\account\\center\\Index.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\account\\center\\page\\App.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\account\\center\\page\\Article.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\dashboard\\Analysis.vue",
+      "fixCount": 2,
+      "fixes": [
+        "模板字符串: `${i + 1}月` → `${i${1}月}`",
+        "模板字符串: `${i + 1}月` → `${i${1}月}`"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\dashboard\\Workplace.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\file\\index.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\fileManage\\document\\index.vue",
+      "fixCount": 1,
+      "fixes": [
+        "修复单行注释格式"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\menu\\addForm.vue",
+      "fixCount": 8,
+      "fixes": [
+        "修复单行注释格式",
+        "HTML实体: ' }\" :treeData=\"menuTreeData\"\r\n                  placeholder=\"请选择父级菜单\" treeDefaultExpandAll>\r\n                  <template #title=\"{ id }\">\r\n                    <span>{{ id }}</span>\r\n                  </template>\r\n                </a-tree-select>\r\n              </a-form-item>\r\n            </div>\r\n            <div v-show=\"redirectShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"如需打开首页加载此目录下菜单，请填写加载菜单路由，设为首页后其他设置的主页将被替?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → ' }\" :treeData=\"menuTreeData\"\r\n                  placeholder=\"请选择父级菜单\" treeDefaultExpandAll>\r\n                  <template #title=\"{ id }\">\r\n                    <span>{{ id }}</span>\r\n                  </template>\r\n                </a-tree-select>\r\n              </a-form-item>\r\n            </div>\r\n            <div v-show=\"redirectShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"如需打开首页加载此目录下菜单，请填写加载菜单路由，设为首页后其他设置的主页将被替?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: ']\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"按钮：无，菜单：内链、外链、组?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ']\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"按钮：无，菜单：内链、外链、组?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: '}] }]\">\r\n                <a-radio v-for=\"(item, index) in openTypeData\" :key=\"index\" :value=\"item.code\"\r\n                  @click=\"meneOpenTypeFunc(item.code)\">{{ item.value }}</a-radio>\r\n              </a-radio-group>\r\n            </a-form-item>\r\n\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-divider />\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"componentShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip\r\n                    title=\"前端vue组件 views文件夹下路径，例：system/menu/index。注：目录级填写：RouteView(不带面包?，PageView(带面包屑)，菜单级内链打开http链接填写：Iframe\">\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → '}] }]\">\r\n                <a-radio v-for=\"(item, index) in openTypeData\" :key=\"index\" :value=\"item.code\"\r\n                  @click=\"meneOpenTypeFunc(item.code)\">{{ item.value }}</a-radio>\r\n              </a-radio-group>\r\n            </a-form-item>\r\n\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-divider />\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"componentShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip\r\n                    title=\"前端vue组件 views文件夹下路径，例：system/menu/index。注：目录级填写：RouteView(不带面包?，PageView(带面包屑)，菜单级内链打开http链接填写：Iframe\">\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: '}]}  -->\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"routerShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"浏览器显示的URL，例?menu，对应打开页面为菜单页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → '}]}  -->\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"routerShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"浏览器显示的URL，例?menu，对应打开页面为菜单页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: ' }] }]\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"linkShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"当选择了需要内链或外链打开的选项，此处输入要打开的链接地址，例：http:// www.dilon.vip\">\n\r\n                  <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → ' }] }]\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"linkShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"当选择了需要内链或外链打开的选项，此处输入要打开的链接地址，例：http:// www.dilon.vip\">\n\r\n                  <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: ']\">\r\n                  <template #addonAfter><a-icon @click=\"openIconSele()\" type=\"setting\" /></template>\r\n                </a-input>\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"系统权重：菜单可分配给任何角色，业务权重：菜单对超级管理员不可见\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ']\">\r\n                  <template #addonAfter><a-icon @click=\"openIconSele()\" type=\"setting\" /></template>\r\n                </a-input>\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"系统权重：菜单可分配给任何角色，业务权重：菜单对超级管理员不可见\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: ' }]\" /><!-- defaultChecked -->\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n        <a-row>\r\n          <a-col :md=\"12\">\r\n            <div v-show=\"keepAliveShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"多标签模式下，默认缓存所有页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → ' }]\" /><!-- defaultChecked -->\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n        <a-row>\r\n          <a-col :md=\"12\">\r\n            <div v-show=\"keepAliveShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"多标签模式下，默认缓存所有页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\menu\\editForm.vue",
+      "fixCount": 8,
+      "fixes": [
+        "修复单行注释格式",
+        "HTML实体: ' }\" :treeData=\"menuTreeData\"\r\n                  placeholder=\"请选择父级菜单\" treeDefaultExpandAll @change=\"setPid\">\r\n                  <template #title=\"{ id }\">\r\n                    <span>{{ id }}</span>\r\n                  </template>\r\n                </a-tree-select>\r\n              </a-form-item>\r\n            </div>\r\n            <div v-show=\"redirectShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"如需打开首页加载此目录下菜单，请填写加载菜单路由，设为首页后其他设置的主页将被替?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → ' }\" :treeData=\"menuTreeData\"\r\n                  placeholder=\"请选择父级菜单\" treeDefaultExpandAll @change=\"setPid\">\r\n                  <template #title=\"{ id }\">\r\n                    <span>{{ id }}</span>\r\n                  </template>\r\n                </a-tree-select>\r\n              </a-form-item>\r\n            </div>\r\n            <div v-show=\"redirectShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"如需打开首页加载此目录下菜单，请填写加载菜单路由，设为首页后其他设置的主页将被替?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: ']\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"按钮：无，菜单：内链、外链、组?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ']\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"按钮：无，菜单：内链、外链、组?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: '}] }]\">\r\n                <a-radio v-for=\"(item, index) in openTypeData\" :key=\"index\" :value=\"item.code\"\r\n                  @click=\"meneOpenTypeFunc(item.code)\">{{ item.value }}</a-radio>\r\n              </a-radio-group>\r\n            </a-form-item>\r\n\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-divider />\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"componentShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip\r\n                    title=\"前端vue组件 views文件夹下路径，例：system/menu/index。注：目录级填写：RouteView(不带面包?，PageView(带面包屑)，菜单级内链打开http链接填写：Iframe\">\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → '}] }]\">\r\n                <a-radio v-for=\"(item, index) in openTypeData\" :key=\"index\" :value=\"item.code\"\r\n                  @click=\"meneOpenTypeFunc(item.code)\">{{ item.value }}</a-radio>\r\n              </a-radio-group>\r\n            </a-form-item>\r\n\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-divider />\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"componentShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip\r\n                    title=\"前端vue组件 views文件夹下路径，例：system/menu/index。注：目录级填写：RouteView(不带面包?，PageView(带面包屑)，菜单级内链打开http链接填写：Iframe\">\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: '}] }]\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"routerShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"浏览器显示的URL，例?menu，对应打开页面为菜单页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → '}] }]\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"routerShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"浏览器显示的URL，例?menu，对应打开页面为菜单页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: ' }] }]\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"linkShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"当选择了需要内链或外链打开的选项，此处输入要打开的链接地址，例：https:// www.dilon.vip\">\n\r\n                  <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → ' }] }]\" />\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <div v-show=\"linkShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\" hasFeedback>\r\n                <template #label>\r\n                  <a-tooltip title=\"当选择了需要内链或外链打开的选项，此处输入要打开的链接地址，例：https:// www.dilon.vip\">\n\r\n                  <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'",
+        "HTML实体: ']\">\r\n                  <template #addonAfter><a-icon @click=\"openIconSele()\" type=\"setting\" /></template>\r\n                </a-input>\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"系统权重：菜单可分配给任何角色，业务权重：菜单对超级管理员不可见\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ']\">\r\n                  <template #addonAfter><a-icon @click=\"openIconSele()\" type=\"setting\" /></template>\r\n                </a-input>\r\n              </a-form-item>\r\n            </div>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"系统权重：菜单可分配给任何角色，业务权重：菜单对超级管理员不可见\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: ' }]\" />\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n        <a-row>\r\n          <a-col :md=\"12\">\r\n            <div v-show=\"keepAliveShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"多标签模式下，默认缓存所有页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp; → ' }]\" />\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n        <a-row>\r\n          <a-col :md=\"12\">\r\n            <div v-show=\"keepAliveShow\">\r\n              <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n                <template #label>\r\n                  <a-tooltip title=\"多标签模式下，默认缓存所有页?>\r\n                    <a-icon type=\"question-circle-o\" />\r\n                  </a-tooltip>&nbsp;'"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\timers\\addForm.vue",
+      "fixCount": 4,
+      "fixes": [
+        "修复单行注释格式",
+        "HTML实体: ' }] }]\">\r\n                <a-select-option\r\n                  v-for=\"(item, index) in JobNameData\"\r\n                  :key=\"index\"\r\n                  :value=\"item.jobName\"\r\n                  @click=\"onChangeJobName(item)\">{{ item.jobName }}</a-select-option>\r\n              </a-select>\r\n            </a-form-item>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"Run类型：类?方法名，http类型：URL地址\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ' }] }]\">\r\n                <a-select-option\r\n                  v-for=\"(item, index) in JobNameData\"\r\n                  :key=\"index\"\r\n                  :value=\"item.jobName\"\r\n                  @click=\"onChangeJobName(item)\">{{ item.jobName }}</a-select-option>\r\n              </a-select>\r\n            </a-form-item>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"Run类型：类?方法名，http类型：URL地址\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: '}] }]\" />\r\n                <a href=\"https:// www.bejson.com/othertools/cron/\" target=\"_Blank\">参/a>\r\n              </nobr>\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"新增任务后立即执行，项目启动后立即执?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → '}] }]\" />\r\n                <a href=\"https:// www.bejson.com/othertools/cron/\" target=\"_Blank\">参/a>\r\n              </nobr>\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"新增任务后立即执行，项目启动后立即执?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: ' }]\" />\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"并行执行不会等待当前任务完成，发起执行后立即开始下次任务的倒计时。串行执行会等待当前任务完成才开始下次任务的倒计?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ' }]\" />\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"并行执行不会等待当前任务完成，发起执行后立即开始下次任务的倒计时。串行执行会等待当前任务完成才开始下次任务的倒计?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'"
+      ]
+    },
+    {
+      "file": "src\\views\\system\\timers\\editForm.vue",
+      "fixCount": 4,
+      "fixes": [
+        "修复单行注释格式",
+        "HTML实体: ' }] }]\">\r\n                <a-select-option\r\n                  v-for=\"(item, index) in JobNameData\"\r\n                  :key=\"index\"\r\n                  :value=\"item.jobName\"\r\n                  @click=\"onChangeJobName(item)\">{{ item.jobName }}</a-select-option>\r\n              </a-select>\r\n            </a-form-item>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"Run类型：类?方法名，http类型：URL地址\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ' }] }]\">\r\n                <a-select-option\r\n                  v-for=\"(item, index) in JobNameData\"\r\n                  :key=\"index\"\r\n                  :value=\"item.jobName\"\r\n                  @click=\"onChangeJobName(item)\">{{ item.jobName }}</a-select-option>\r\n              </a-select>\r\n            </a-form-item>\r\n          </a-col>\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"Run类型：类?方法名，http类型：URL地址\">\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: '}] }]\" />\r\n                <a href=\"https:// www.bejson.com/othertools/cron/\" target=\"_Blank\">参/a>\r\n              </nobr>\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"新增任务后立即执行，项目启动后立即执?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → '}] }]\" />\r\n                <a href=\"https:// www.bejson.com/othertools/cron/\" target=\"_Blank\">参/a>\r\n              </nobr>\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"新增任务后立即执行，项目启动后立即执?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'",
+        "HTML实体: ' }]\" />\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"并行执行不会等待当前任务完成，发起执行后立即开始下次任务的倒计时。串行执行会等待当前任务完成才开始下次任务的倒计?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp; → ' }]\" />\r\n            </a-form-item>\r\n          </a-col>\r\n        </a-row>\r\n\r\n        <a-row :gutter=\"24\">\r\n          <a-col :md=\"12\" :sm=\"24\">\r\n            <a-form-item :labelCol=\"labelCol\" :wrapperCol=\"wrapperCol\">\r\n              <template #label>\r\n                <a-tooltip title=\"并行执行不会等待当前任务完成，发起执行后立即开始下次任务的倒计时。串行执行会等待当前任务完成才开始下次任务的倒计?>\r\n                  <a-icon type=\"question-circle-o\" />\r\n                </a-tooltip>&nbsp;'"
+      ]
+    },
+    {
+      "file": "src\\views\\userLoginReg\\Register.vue",
+      "fixCount": 1,
+      "fixes": [
+        "字符串拼接: '] }]\">\r\n          <template #addonBefore>\r\n            <a-select size=\"large\" defaultValue=\"+86\">\r → '] }]\">\r\n          <template #addonBefore>\r\n            <a-select size=\"large\" defaultValue=\"' + 86\">"
+      ]
+    }
+  ]
+}

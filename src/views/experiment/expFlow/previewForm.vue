@@ -1,0 +1,136 @@
+<template>
+  <a-modal :title="'预览实验流程:'+schemeName" :width="'90%'" :height="100" :open="visible" :confirmLoading="confirmLoading" :destroyOnClose="true" @cancel="handleCancel">
+    <a-spin :spinning="formLoading">
+      <a-tabs :default-active-key="defaultActive" @change="callback">
+        <a-tab-pane key="1" tab="表单信息" :force-Render="true">
+          <a-form :form="form" :style="{ width: '900px' }">
+            <a-form-item v-show="false">
+              <a-input v-decorator="['id']" ></a>
+            </a-form-item>
+            <a-form-item v-show="false">
+              <a-input v-decorator="['name']" ></a>
+            </a-form-item>
+            <a-form-item v-show="false">
+              <a-input v-decorator="['content']" ></a>
+            </a-form-item>
+            <a-form-item v-show="webId == 'kfp'" v-if="frmType == 0">
+              <k-form-build :value="jsonData" ref="kfp"></k>
+            </a-form-item>
+            <a-form-item v-else >
+              <component :value="jsonData" :is="webId" ref="cfp"></component>
+            </a-form-item>
+          </a-form>
+        </a-tab-pane>
+        <a-tab-pane key="2" tab="流程信息" :force-Render="true">
+          <expvfd ref="expvfd" style="background-color: white;" :needShow="false" :fieldNames="fieldNames"></expvfd>
+        </a-tab-pane>
+      </a-tabs>
+    </a-spin>
+    <user-list-form ref="userListForm" @ok="handleOk"></user>
+    <role-list-form ref="roleListForm" @ok="handleOk"></role>
+  </a-modal>
+</template>
+
+<script>
+  import { expvfd } from '@/components'
+  import 'k-form-design/styles/k-form-design.less'
+  import userListForm from '@/views/system/user/userListForm'
+  import roleListForm from '@/views/system/role/roleListForm'
+  export default {
+    components: {
+      expvfd,
+      userListForm,
+      roleListForm
+    },
+    data () {
+      return {
+        defaultActive: 1,
+        visible: false,
+        confirmLoading: false,
+        formLoading: true,
+        jsonData: {},
+        frmType: 0,
+        fieldNames: [],
+        nextNodeDesignates: '',
+        nextMakerName: '',
+        webId: null,
+        nextNodeDesignateType: null,
+        schemeName: null,
+        schemeContent: null,
+        form: this.$form.createForm(this)
+      }
+    },
+    methods: {
+      /**
+       * 初始化方法
+       */
+      edit (record) {
+        console.log('==========================')
+        console.log(record)
+        this.schemeName = record.name
+        this.schemeContent = record.content
+        this.jsonData =!!record.content  JSON.parse(record.content) : {};
+        this.webId = 'kfp'
+        setTimeout(() => {
+          this.form.setFieldsValue(
+            {
+              id: record.id,
+              name: record.name
+            }
+          )
+          this.importData(record.content)
+        // this.fieldNames = JSON.parse(record.contentParse)
+
+      }, 100)
+      },
+      importData(value) {
+        if (this.defaultActive == 2 && !!value) {
+          this.$refs.expvfd.loadFlow(value)
+        } else {
+          if (this.$refs.expvfd) {
+            this.$refs.expvfd.clear()
+          }
+        }
+      },
+      callback(key) {
+        this.defaultActive = key
+        setTimeout(() => {
+          this.importData(this.schemeContent)
+        }, 100)
+      },
+      setUser() {
+        if (this.nextNodeDesignateType == 'RUNTIME_SPECIAL_USER') {
+            this.$refs.userListForm.userList();
+        } else if (this.nextNodeDesignateType == 'RUNTIME_SPECIAL_ROLE') {
+            this.$refs.roleListForm.roleList();
+        }
+      },
+      /**
+       * 确认回调
+       */
+      handleOk(value) {
+        const that = this;
+				if (record) {
+					const nodeDesignateData = [];
+					const nodeDesignateName = [];
+					record.forEach(item => {
+						nodeDesignateData.push(item.id);
+						nodeDesignateName.push(item.name);
+					});
+
+					if (nodeDesignateName.length > 0) {
+						that.nextMakerName = nodeDesignateName.join(',');
+						that.nextNodeDesignates = nodeDesignateData.join(',');
+					}
+				}
+      },
+      handleCancel () {
+        this.form.resetFields()
+        this.visible = false
+        if (this.$refs.expvfd) {
+          this.$refs.expvfd.clear()
+        }
+      }
+    }
+  }
+</script>

@@ -1,0 +1,236 @@
+<template>
+  <transition name="showHeader">
+    <div v-if="visible" class="header-animat">
+      <a-layout-header
+        v-if="visible"
+        :class="[fixedHeader && 'ant-header-fixedHeader', sidebarOpened ? 'ant-header-side-opened' : 'ant-header-side-closed', ]"
+        :style="{ padding: '0', height: '55px'}"
+      >
+        <div v-if="mode === 'sidemenu'" class="header">
+          <a-menu
+            :style="{ height: '55px', backgroundColor: headerColor }"
+            mode="horizontal"
+            :default-selected-keys="defApp"
+          >
+            <menu-unfold-outlined v-if="device==='mobile'" class="trigger" @click="toggle"></menu-unfold-outlined>
+            <menu-fold-outlined v-else class="trigger" @click="toggle"></menu-fold-outlined>
+
+            <a-menu-item v-for="(item) in appMenus" :key="item.code" style="top: 0px; line-height: 55px; padding-left: 10px; padding-right: 10px" @click="switchApp(item.code)">
+              {{ item.name }}
+            </a-menu-item>
+            <user-menu></user-menu>
+          </a-menu>
+        </div>
+        <div v-else :class="['top-nav-header-index', theme]">
+          <div class="header-index-wide">
+            <div class="header-index-left">
+              <logo class="top-nav-header" :show-title="device !== 'mobile'"></logo>
+              <s-menu v-if="device !== 'mobile'" mode="horizontal" :menu="menus" :theme="theme"></s-menu>
+              <menu-fold-outlined v-else class="trigger" @click="toggle"></menu-fold-outlined>
+            </div>
+            <user-menu class="header-index-right"></user-menu>
+          </div>
+        </div>
+      </a-layout-header>
+    </div>
+  </transition>
+</template>
+
+<script>
+import UserMenu from '../tools/UserMenu'
+import SMenu from '../Menu/'
+import Logo from '../tools/Logo'
+import { message } from 'ant-design-vue/es'
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons-vue'
+import { mapGetters, mapActions } from 'vuex'
+
+// localStorage辅助函数
+const ls = {
+  get: (key, defaultValue = null) => {
+    try {
+      const item = localStorage.getItem(key)
+      if (!item) return defaultValue
+      const data = JSON.parse(item)
+      if (data.expire && Date.now() > data.expire) {
+        localStorage.removeItem(key)
+        return defaultValue
+      }
+      return data.value
+    } catch {
+      return defaultValue
+    }
+  }
+}
+
+export default {
+  name: 'GlobalHeader',
+  components: {
+    UserMenu,
+    SMenu,
+    Logo,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined
+  },
+  props: {
+    mode: {
+      type: String,
+      // sidemenu, topmenu
+      default: 'sidemenu'
+    },
+    menus: {
+      type: Array,
+      required: true
+    },
+    theme: {
+      type: String,
+      required: false,
+      default: 'dark'
+    },
+    collapsed: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+    device: {
+      type: String,
+      required: false,
+      default: 'desktop'
+    }
+  },
+  data () {
+    return {
+      visible: true,
+      oldScrollTop: 0,
+      defApp: [],
+      settings: {
+        fixedHeader: true,
+        sidebarOpened: true,
+        autoHideHeader: false, // 强制禁用自动隐藏
+        headerColor: '#1890FF'
+      }
+    }
+  },
+  computed: {
+    ...mapGetters(['userInfo']),
+    fixedHeader() {
+      return this.settings.fixedHeader
+    },
+    sidebarOpened() {
+      return this.settings.sidebarOpened
+    },
+    autoHideHeader() {
+      return this.settings.autoHideHeader
+    },
+    headerColor() {
+      return this.settings.headerColor
+    },
+    appMenus() {
+      // 优先从 localStorage 获取(因为切换应用时会更新localStorage),如果没有则从 userInfo.apps 获取
+      const localApps = ls.get('ALL_APPS_MENU', [])
+      if (localApps && localApps.length > 0) {
+        return localApps
+      }
+      if (this.userInfo && this.userInfo.apps && this.userInfo.apps.length > 0) {
+        return this.userInfo.apps
+      }
+      return []
+    }
+  },
+  watch: {
+    userInfo: {
+      handler(newVal) {
+        if (newVal && newVal.apps) {
+          this.setDefaultApp()
+        }
+      },
+      immediate: true
+    }
+  },
+  created () {
+    this.loadSettings()
+    this.$nextTick(() => {
+      this.setDefaultApp()
+    })
+  },
+  mounted () {
+    document.addEventListener('scroll', this.handleScroll, { passive: true })
+  },
+  methods: {
+    ...mapActions(['MenuChange']),
+    loadSettings() {
+      try {
+        const appSettings = localStorage.getItem('appSettings')
+        if (appSettings) {
+          this.settings = { ...this.settings, ...JSON.parse(appSettings) }
+        }
+      } catch (error) {
+        console.error('获取应用设置失败:', error)
+      }
+    },
+    setDefaultApp() {
+      if (this.appMenus && this.appMenus.length > 0) {
+        const activeApp = this.appMenus.find(app => app.active)
+        if (activeApp) {
+          this.defApp = [activeApp.code]
+        } else {
+          this.defApp = [this.appMenus[0].code]
+        }
+      }
+    },
+    switchApp (appCode) {
+      this.defApp = []
+      const applicationData = this.appMenus.filter(item => item.code === appCode)
+      const hideMessage = message.loading('正在切换应用!', 0)
+      this.MenuChange(applicationData[0]).then((res) => {
+        hideMessage()
+      }).catch((err) => {
+        message.error('应用切换异常')
+      })
+    },
+    handleScroll () {
+      if (!this.autoHideHeader) {
+        return
+      }
+      const scrollTop = document.body.scrollTop + document.documentElement.scrollTop
+      if (!this.ticking) {
+        this.ticking = true
+        requestAnimationFrame(() => {
+          if (this.oldScrollTop > scrollTop) {
+            this.visible = true
+          } else if (scrollTop > 300 && this.visible) {
+            this.visible = false
+          } else if (scrollTop < 300 && !this.visible) {
+            this.visible = true
+          }
+          this.oldScrollTop = scrollTop
+          this.ticking = false
+        })
+      }
+    },
+    toggle () {
+      this.$emit('toggle')
+    }
+  },
+  beforeDestroy () {
+    document.body.removeEventListener('scroll', this.handleScroll, true)
+  }
+}
+</script>
+
+<style lang="less">
+@import '../index.less';
+
+.header-animat{
+  position: relative;
+  z-index: @ant-global-header-zindex;
+}
+.showHeader-enter-active {
+  transition: all 0.25s ease;
+}
+.showHeader-leave-active {
+  transition: all 0.5s ease;
+}
+.showHeader-enter, .showHeader-leave-to {
+  opacity: 0;
+}
+</style>

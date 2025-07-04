@@ -1,0 +1,9 @@
+<template>
+  <router-view :key="$route.fullPath" ></router>
+</template>
+
+<script>
+export default {
+  name: 'RouteView'
+}
+</script>

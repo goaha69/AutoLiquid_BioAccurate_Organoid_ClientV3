@@ -1,0 +1,82 @@
+<template>
+  <div :class="[prefixCls, size]">
+    <ul v-if="items && items.length" :class="`${prefixCls}-items`">
+      <li 
+        v-for="(item, index) in displayItems" 
+        :key="index"
+        :class="[`${prefixCls}-item`, size]"
+      >
+        <slot :name="`item-${index}`" :item="item">
+          {{ item }}
+        </slot>
+      </li>
+      <li 
+        v-if="shouldShowExcess"
+        :class="[`${prefixCls}-item`, size]"
+      >
+        <a-avatar :size="avatarSize" :style="excessItemsStyle">
+          +{{ excessCount }}
+        </a-avatar>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import { filterEmpty } from '@/components/_util/util'
+
+export default {
+  name: 'AvatarList',
+  props: {
+    prefixCls: {
+      type: String,
+      default: 'ant-pro-avatar-list'
+    },
+    /**
+       * 头像大小 类型: large、small 、mini, default
+       * 默认 default
+       */
+    size: {
+      type: [String, Number],
+      default: 'default'
+    },
+    /**
+       * 要显示的最大项 */
+    maxLength: {
+      type: Number,
+      default: 0
+    },
+    /**
+       * 多余的项目风 */
+    excessItemsStyle: {
+      type: Object,
+      default: () => {
+        return {
+          color: '#f56a00',
+          backgroundColor: '#fde3cf'
+        }
+      }
+    }
+  },
+  computed: {
+    items() {
+      return filterEmpty(this.$slots.default() || [])
+    },
+    displayItems() {
+      if (this.maxLength > 0 && this.items.length > this.maxLength) {
+        return this.items.slice(0, this.maxLength)
+      }
+      return this.items
+    },
+    shouldShowExcess() {
+      return this.maxLength > 0 && this.items.length > this.maxLength
+    },
+    excessCount() {
+      return this.items.length - this.maxLength
+    },
+    avatarSize() {
+      return this.size !== 'mini' ? this.size : 20
+    }
+  }
+}
+</script>

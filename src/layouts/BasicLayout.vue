@@ -1,0 +1,381 @@
+<template>
+  <a-layout :class="['layout', device]">
+    <!-- SideMenu -->
+    <a-drawer
+      v-if="isMobile()"
+      placement="left"
+      :wrapClassName="`drawer-sider ${navTheme}`"
+      :closable="false"
+      :open="collapsed"
+      @close="drawerClose"
+    >
+      <side-menu
+        mode="inline"
+        :menus="menus"
+        :theme="navTheme"
+        :collapsed="false"
+        :collapsible="true"
+        @menuSelect="menuSelect"
+      ></side-menu>
+    </a-drawer>
+
+    <side-menu
+      v-if="isSideMenu()"
+      mode="inline"
+      :menus="menus"
+      :theme="navTheme"
+      :collapsed="collapsed"
+      :collapsible="true"
+    ></side-menu>
+
+    <div :style="{minWidth: placeholderDivMinWidth}" v-if="!isMobile()"></div>
+    <a-layout :class="[layoutMode, `content-width-${contentWidth}`]" :style="{ minHeight: '100vh' }">
+      <!-- layout header -->
+      <global-header
+        :mode="layoutMode"
+        :menus="menus"
+        :theme="navTheme"
+        :collapsed="collapsed"
+        :device="device"
+        @toggle="toggle"
+        @app-changing="onAppChanging"
+        @app-changed="onAppChanged"
+      ></global-header>
+
+      <!-- layout content -->
+      <a-layout-content :style="{ height: '100%', margin: '24px 24px 0', paddingTop: fixedHeader ? '55px' : '0' }">
+        <multi-tab v-if="multiTab"></multi-tab>
+        <transition name="page-transition">
+          <route-view :key="$route.fullPath" />
+        </transition>
+      </a-layout-content>
+
+      <!-- layout footer -->
+      <a-layout-footer>
+        <global-footer :currentVersion="versionCode"></global-footer>
+      </a-layout-footer>
+
+    </a-layout>
+  </a-layout>
+
+</template>
+
+<script>
+import { triggerWindowResizeEvent } from '@/utils/util'
+import { mapState, mapActions, mapGetters } from 'vuex'
+import { mixin, mixinDevice } from '@/utils/mixin'
+import { DEVICE_TYPE } from '@/utils/device'
+import RouteView from './RouteView'
+import SideMenu from '@/components/Menu/SideMenu'
+import GlobalHeader from '@/components/GlobalHeader/GlobalHeader'
+import GlobalFooter from '@/components/GlobalFooter'
+import MultiTab from '@/components/MultiTab'
+import { convertRoutes } from '@/utils/routeConvert'
+
+export default {
+  name: 'BasicLayout',
+  mixins: [mixin, mixinDevice],
+  components: {
+    RouteView,
+    SideMenu,
+    GlobalHeader,
+    GlobalFooter,
+    MultiTab
+  },
+  data () {
+    return {
+      production: process.env.NODE_ENV === 'production' && process.env.VUE_APP_PREVIEW !== 'true',
+      collapsed: false,
+      menus: [],
+      // 应用设置的默认值
+      settings: {
+        layout: 'sidemenu',
+        theme: 'dark',
+        color: '#1890FF',
+        weak: false,
+        fixedHeader: true,
+        fixSiderbar: true,
+        contentWidth: 'Fluid',
+        autoHideHeader: false,
+        sidebar: true,
+        multiTab: false,
+        headerColor: '#1890FF',
+        menuColor: '#1890FF',
+        sidebarOpened: true,
+        version: '3.1.0'
+      }
+    }
+  },
+  computed: {
+    ...mapState({
+      // 动态主路由
+      mainMenu: state => state.permission.addRouters,
+      backendMenus: state => state.permission.menus
+    }),
+    ...mapGetters(['userInfo']),
+    
+    // 从 settings 中获取配置
+    navTheme() {
+      return this.settings.theme
+    },
+    layoutMode() {
+      return this.settings.layout
+    },
+    fixedHeader() {
+      return this.settings.fixedHeader
+    },
+    fixSiderbar() {
+      return this.settings.fixSiderbar
+    },
+    contentWidth() {
+      return this.settings.contentWidth
+    },
+    autoHideHeader() {
+      return this.settings.autoHideHeader
+    },
+    sidebarOpened() {
+      return this.settings.sidebarOpened
+    },
+    multiTab() {
+      return this.settings.multiTab
+    },
+    headerColor() {
+      return this.settings.headerColor
+    },
+    versionCode() {
+      return this.settings.version
+    },
+    
+    // 设备相关
+    device () {
+      return this.$store.state.app.device
+    },
+    theme () {
+      return this.$store.getters.theme
+    },
+    
+    contentPaddingLeft () {
+      if (!this.fixSiderbar || this.isMobile()) {
+        return '0'
+      }
+      if (this.sidebarOpened) {
+        return '230px'
+      }
+      return '80px'
+    },
+    placeholderDivMinWidth(){
+      let width = this.collapsed ? '80px' : '230px'
+      return width
+    }
+  },
+  watch: {
+    sidebarOpened (val) {
+      this.collapsed = !val
+    },
+    // 菜单变化
+    mainMenu (val) {
+      this.setMenus()
+    },
+    // 监听后端菜单变化(应用切换后)
+    backendMenus (val) {
+      console.log('📋 [BasicLayout] backendMenus 变化:', val)
+      if (val && val.length > 0) {
+        console.log('📋 [BasicLayout] 检测到新的后端菜单数据,重新设置菜单')
+        this.setMenus()
+      }
+    },
+    $route: function(val) {
+      // 可以在这里处理路由变化
+    },
+    // 监听设备变化
+    device (val) {
+      if (val === DEVICE_TYPE.MOBILE) {
+        // 移动设备处理
+      }
+    },
+    // 监听设置变化
+    settings: {
+      handler(newSettings) {
+        // 可以在这里保存设置到localStorage
+        try {
+          localStorage.setItem('appSettings', JSON.stringify(newSettings))
+        } catch (error) {
+          console.error('保存应用设置失败:', error)
+        }
+      },
+      immediate: true,
+      deep: true
+    }
+  },
+  created () {
+    this.loadSettings()
+    this.collapsed = !this.sidebarOpened
+    
+    // 设置菜单
+    this.setMenus()
+  },
+  mounted () {
+    const userAgent = navigator.userAgent
+    if (userAgent.indexOf('Edge') > -1) {
+      this.$nextTick(() => {
+        this.collapsed = !this.collapsed
+        setTimeout(() => {
+          this.collapsed = !this.collapsed
+        }, 16)
+      })
+    }
+  },
+  methods: {
+    ...mapActions(['setSidebar']),
+    // 重新生成菜单
+    setMenus () {
+      console.log('🔧 [BasicLayout] setMenus 开始执行')
+      console.log('🔧 [BasicLayout] backendMenus:', this.backendMenus)
+      console.log('🔧 [BasicLayout] mainMenu:', this.mainMenu)
+      
+      // 优先使用后端菜单数据(应用切换后的新菜单)
+      if (this.backendMenus && this.backendMenus.length > 0) {
+        console.log("📋 [BasicLayout] setMenus - 使用后端菜单数据:", this.backendMenus)
+        // 验证菜单数据结构
+        this.validateMenuData(this.backendMenus)
+        this.menus = this.backendMenus
+        return
+      }
+      
+      // 回退到使用路由配置生成菜单
+      const rootRoute = this.mainMenu.find(item => item.path === '/')
+      
+      if (rootRoute && rootRoute.children) {
+        // 使用convertRoutes处理路由,与旧项目保持一致
+        const convertedRoute = convertRoutes(rootRoute)
+        this.menus = (convertedRoute && convertedRoute.children) || []
+        console.log("📋 [BasicLayout] setMenus - 设置路由菜单完成:", this.menus)
+        // 验证菜单数据结构
+        this.validateMenuData(this.menus)
+      } else {
+        console.warn("⚠️ [BasicLayout] setMenus - 未找到根路由或根路由没有子菜单")
+        this.menus = []
+      }
+    },
+    
+    // 验证菜单数据结构
+    validateMenuData(menus) {
+      console.log('🔍 [BasicLayout] 验证菜单数据结构...')
+      if (!Array.isArray(menus)) {
+        console.error('❌ [BasicLayout] 菜单数据不是数组:', menus)
+        return
+      }
+      
+      menus.forEach((menu, index) => {
+        console.log(`🔍 [BasicLayout] 菜单项 ${index + 1}:`, menu)
+        
+        // 检查必要的字段
+        if (!menu.path && !menu.name) {
+          console.error(`❌ [BasicLayout] 菜单项 ${index + 1} 缺少 path 或 name 字段:`, menu)
+        }
+        
+        if (!menu.meta || !menu.meta.title) {
+          console.warn(`⚠️ [BasicLayout] 菜单项 ${index + 1} 缺少 meta.title:`, menu)
+        }
+        
+        // 检查子菜单
+        if (menu.children && Array.isArray(menu.children)) {
+          console.log(`🔍 [BasicLayout] 菜单项 ${index + 1} 有 ${menu.children.length} 个子菜单`)
+          this.validateMenuData(menu.children)
+        }
+      })
+    },
+    // 加载设置
+    loadSettings() {
+      try {
+        const appSettings = localStorage.getItem('appSettings')
+        if (appSettings) {
+          this.settings = { ...this.settings, ...JSON.parse(appSettings) }
+        }
+      } catch (error) {
+        console.error('获取应用设置失败:', error)
+      }
+    },
+    // 设备检测方法
+    isTopMenu () {
+      return this.layoutMode === 'topmenu'
+    },
+    isSideMenu () {
+      return !this.isTopMenu()
+    },
+    isMobile () {
+      return this.device === DEVICE_TYPE.MOBILE
+    },
+    isDesktop () {
+      return this.device === DEVICE_TYPE.DESKTOP
+    },
+    isTablet () {
+      return this.device === DEVICE_TYPE.TABLET
+    },
+    toggle () {
+      this.collapsed = !this.collapsed
+      this.setSidebar(!this.collapsed)
+      triggerWindowResizeEvent()
+    },
+    paddingCalc () {
+      let left = ''
+      if (this.sidebarOpened) {
+        left = this.isDesktop() ? '256px' : '80px'
+      } else {
+        left = (this.isMobile() && '0') || ((this.fixSidebar && '80px') || '0')
+      }
+      return left
+    },
+    menuSelect () {
+      if (!this.isDesktop()) {
+        this.collapsed = false
+      }
+    },
+    drawerClose () {
+      this.collapsed = false
+    },
+    // 处理应用准备切换事件
+    onAppChanging(appData) {
+      console.log('🚀 [BasicLayout] 收到应用准备切换事件:', appData)
+    },
+    // 处理应用切换事件
+    onAppChanged(appData) {
+      console.log('🎯 [BasicLayout] 收到应用切换事件:', appData)
+      console.log('🎯 [BasicLayout] 当前菜单状态 - backendMenus:', this.backendMenus)
+      console.log('🎯 [BasicLayout] 当前菜单状态 - mainMenu:', this.mainMenu)
+      
+      // 应用切换时,菜单已经通过 store 更新了,这里重新设置菜单
+      this.$nextTick(() => {
+        console.log('🔄 [BasicLayout] 开始重新设置菜单...')
+        this.setMenus()
+        console.log('✅ [BasicLayout] 菜单重新设置完成,当前菜单:', this.menus)
+      })
+    }
+  }
+}
+</script>
+
+<style lang="less">
+/*  
+ * The following styles are auto-applied to elements with
+ * transition="page-transition" when their visibility is toggled
+ * by Vue.js.
+ *
+ * You can easily play with the page transition by editing
+ * these styles.
+ */
+
+.page-transition-enter {
+  opacity: 0;
+}
+
+.page-transition-leave-active {
+  opacity: 0;
+}
+
+.page-transition-enter .page-transition-container,
+.page-transition-leave-active .page-transition-container {
+  -webkit-transform: scale(1.1);
+  transform: scale(1.1);
+}
+</style>

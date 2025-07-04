@@ -1,0 +1,447 @@
+<template>
+  <a-modal
+    title="Ĳ"
+    :width="1300"
+    :open="visible"
+    :maskClosable="false"
+    @ok="handleSubmit"
+    @cancel="handleCancel"
+  >
+    <a-spin :spinning="formLoading">
+      <a-form :form="form">
+        <a-row :gutter="8">
+          <div>
+            <sp-input label="Ĳı" :required="true" :isError="errors.code" v-model:value="attributeData.code"></sp>
+            <sp-input label="Ĳ" :labelWidth="80" :required="true" :isError="errors.name" :inputWidth="200" v-model:value="attributeData.name" ></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number :step="1" label="" :required="true"  v-model:value="attributeData.rowCount"  ></sp>
+            <sp-input-number :step="1" label="" :labelWidth="100" :required="true"  v-model:value="attributeData.colCount"></sp>
+            <sp-input-number label="о" unit="mm" :labelWidth="100" :required="true" v-model:value="attributeData.rowSpace" ></sp>
+            <sp-input-number label="о" unit="mm" :labelWidth="100" :required="true" v-model:value="attributeData.colSpace" ></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number label="Xߴ" unit="mm" :required="true" v-model:value="attributeData.xSize"></sp>
+            <sp-input-number label="Yߴ" :labelWidth="100" unit="mm" :required="true" v-model:value="attributeData.ySize"></sp>
+            <sp-input-number label="Xƫ" :labelWidth="100" unit="mm" :required="true" v-model:value="attributeData.xOffset"></sp>
+            <sp-input-number label="Yƫ" :labelWidth="100" unit="mm" :required="true"  v-model:value="attributeData.yOffset"></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number label="ಽ" :step="1" :rightEmpty="true"  v-model:value="attributeData.variableDistanceStep"></sp>
+            <span class="span-label">ǷǹͷУ</span>
+            <a-checkbox v-model:value="attributeData.isTipBox" style="width:60px;"></a>
+
+            <span class="span-label" style="margin-left:40px;">̣</span>
+            <a-select style="width: 100px" v-model ? value="attributeData.liquidRange" : disabled="!attributeData.isTipBox">
+              <a-select-option v-for="(item, index) in liquidRanges" :key="index" :value="item.code">{{ item.value }}</a-select-option>
+            </a-select>
+            <span class="span-unit">(l)</span>
+          </div>
+          <div style="margin-top:10px;">
+            <span class="span-label" style="width:140px;" >ʹüץ</span>
+            <a-checkbox v-model:value="attributeData.useArm" style="width:100px;" ></a>
+            <span class="span-label" style="width ? 140px; margin-left : 10px;" >еۣ</span>
+            <a-select style="width: 140px;" v-model ? value="armAttribute.equipmentId" : disabled="!attributeData.useArm">
+              <a-select-option v-for="(item, index) in armEquipmentData" :key="index" :value="item.id" >{{ item.name }}</a-select-option>
+            </a-select>
+            <sp-input-number :step="100" label="" :labelWidth="100" unit="l"  v-model:value="attributeData.maxVolume" ></sp>
+            <a-checkbox v-model:value="attributeData.isRemainingVolume" style="margin-left: 10px;color: #000;">ʣ</a-checkbox>
+            <sp-input-number :step="100" label="" :labelWidth="-10" unit="l" v-model:value="attributeData.remainingVolume"></sp>
+          </div>
+          <div style="margin-top:10px;">
+            <sp-input-number :step="0.5" label="ϵ" :labelWidth="140" :right-empty="true" v-model:value="attributeData.basalAreaCoefficient"></sp>
+            <sp-input-number :step="0.5" label="Ĳĸ߶" :labelWidth="90" unit="mm" v-model:value="attributeData.consumableHeight"></sp>
+            <sp-input-number :step="0.5" label="콺ϵ" :labelWidth="100" v-model:value="attributeData.mixBMEModifiedCoefficient" ></sp>
+            <sp-input-number :step="0.5" label="߶ϵ" :labelWidth="150" v-model:value="attributeData.heightModifiedCoefficient"></sp>            
+          </div>
+        </a-row>
+
+        <a-row :gutter="8">
+          <a-tabs type="editable-card" hide-add style="margin-left ? 0px; margin-top : 10px;">
+            <a-tab-pane v-for="item in params" :key="item.id" :tab="item.name" :closable="false">
+              <div>
+                <sp-input-number label="߸߶" :labelWidth="120" unit="mm" :required="true"
+                  :isError="errors.normalHeight" v-model:value="item.normalHeight" ></sp>
+                <sp-input-number label="ಽ" :step="1" :rightEmpty="true" v-model:value="item.variableDistanceStep" ></sp>
+                <sp-input-number label="ǰϸ߶" unit="mm" v-model:value="item.absorbMixingHeight" ></sp>
+                <sp-input-number label="ָ" :step="1" :rightEmpty="true" v-model:value="item.isAutoVariableRenewStep" ></sp>
+                <span class="span-label" style="width:80px;">Һ⣺</span>
+              <a-checkbox v-model:value="item.isDetectLiquid" ></a>
+              </div>
+              <div style="margin-top:10px;" v-if="!attributeData.isTipBox">
+                <div>
+                  <sp-input-number label="ԤҺ߶" :labelWidth="120" unit="mm" v-model:value="item.prepareAbsorbHeight" ></sp>
+                  <sp-input-number label="Һ߶" unit="mm" v-model:value="item.absorbHeight" ></sp>
+                  <sp-input-number label="ϸ߶" unit="mm" v-model:value="item.jetMixingHeight" ></sp>
+                  <sp-input-number label="ڲ" v-model:value="item.variableRenewAdjacent" ></sp>
+                </div>
+                <div style="margin-top:10px;">
+                  <sp-input-number label="ԤҺ߶" :labelWidth="120" unit="mm" v-model:value="item.prepareJetHeight" ></sp>
+                  <sp-input-number label="Һ߶" unit="mm" v-model:value="item.jetHeight" ></sp>
+                  <span class="span-label" style="margin-left: 10px;">Ƿࣺ</span>
+                  <a-checkbox v-model:value="item.isAutoVariable" style="width:100px;" ></a>
+                </div>
+              </div>
+              <div style="margin-top:10px;">
+                <div>
+                  <sp-input-number label="ճϵ" :labelWidth="120" :step="0.5"
+                    v-model:value="item.viscousFrictionCoefficient" ></sp>
+                  <sp-input-number label="罺ϵ" :labelWidth="120" style="margin-left ? 10px;" : step="0.5"
+                    v-model:value="item.jetBMECoefficient" ></sp>
+                  <sp-input-number label="ಽ" :step="1" :rightEmpty="true" v-model:value="item.isAutoVariableStep" ></sp>
+                  <sp-input-number label="һ߸߶" :labelWidth="130" unit="mm"  v-model:value="item.one2MoreNormalHeight" ></sp>
+                </div>
+              </div>
+              <div style="margin-top:10px;" v-if="attributeData.isTipBox">
+                <div>
+                  <sp-input-number label="Ԥȡǹͷ߶" :labelWidth="120" unit="mm" v-model:value="item.prepareTakeTipHeight" ></sp>
+                  <sp-input-number label="ȡǹͷ߶" :labelWidth="120" unit="mm" v-model:value="item.takeTipHeight" ></sp>
+                  <sp-input label="ȡǹͷٶ" :labelWidth="138" v-model:value="item.takeTipSpeedCmd" ></sp>
+                </div>
+                <div style="margin-top:10px;">
+                  <sp-input-number label="ظȡǹͷ" :labelWidth="120" :step="1" v-model:value="item.takeTipRepeatTime" ></sp>
+                  <sp-input-number label="ظȡǹͷ߶" :labelWidth="152" style="margin-left:40px;" unit="mm"
+                    v-model:value="item.takeTipRepeatHeight" ></sp>
+                  <sp-input-number label="ȡǹͷԤ߶" :labelWidth="126" style="margin-left:10px;" unit="mm"
+                    v-model:value="item.takeTipAfterPrepareHeight" ></sp>
+                </div>
+                <div style="margin-top:10px;">
+                  <sp-input label="Ԥ߶Ⱥִָ" :labelWidth="140" v-model:value="item.takeTipAfterPrepareHeightCmd" ></sp>
+                </div>
+              </div>
+            </a-tab-pane>
+          </a-tabs>
+        </a-row>
+        <a-row :gutter="8" v-if="attributeData.useArm">
+          <a-card title="ץ" :bordered="false">
+            <div>
+              <sp-input-number label="߸߶" :labelWidth="90" unit="mm" v-model:value="armAttribute.normalHeight"></sp>
+              <sp-input-number label="Xƫ" :labelWidth="90" unit="mm" v-model:value="armAttribute.xOffset"></sp>
+              <sp-input-number label="Yƫ" :labelWidth="90" unit="mm" v-model:value="armAttribute.yOffset"></sp>
+              <sp-input-number label="Zƫ" :labelWidth="90" unit="mm" v-model:value="armAttribute.zOffset"></sp>
+            </div>
+            <div style="margin-top:10px;">
+              <sp-input-number label="ɿ߶" :labelWidth="90" unit="mm" v-model:value="armAttribute.clipReleaseHeight"></sp>
+              <sp-input-number label="н߶" :labelWidth="90" unit="mm" v-model:value="armAttribute.clipCloseHeight"></sp>
+              <sp-input-number label="Ǹ߶" :labelWidth="90" unit="mm" v-model:value="armAttribute.clipOpenHeight"></sp>
+            </div>
+            <div style="margin-top:10px;">
+              <sp-input-number label="ɿ" :labelWidth="90" v-model:value="armAttribute.clipRelease"></sp>
+              <sp-input-number label="Ӽн" :labelWidth="90" v-model:value="armAttribute.clipClose"></sp>
+              <sp-input-number label="ӿ" :labelWidth="90" v-model:value="armAttribute.clipOpen"></sp>
+            </div>
+          </a-card>
+        </a-row>
+      </a-form>
+    </a-spin>
+  </a-modal>
+</template>
+
+<script>
+import { exp_consumable_add, exp_consumable_getArmAttribute, exp_consumable_getParams } from '@/api/modular/experiment/consumableManage'
+import { exp_equipment_list } from '@/api/modular/experiment/equipmentManage'
+import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+import SpInputNumber from '@/components/spInputNumber.vue';
+import SpInput from '@/components/spInput.vue';
+import { doCmd } from '@/api/modular/experiment/debug'
+export default {
+  components: {
+    SpInputNumber,
+    SpInput
+  },
+  data () {
+    return {
+      statusData: [],
+      Data: [],
+      visible: false,
+      formLoading: false,
+      form: this.$form.createForm(this),
+      params: [],
+      armEquipmentData: [],
+      equipmentData: [],
+      clipEquipmentData: [],
+      liquidRanges: [],
+      attributeData: {
+        id: 0,
+        code: '',
+        name: '',
+        normalHeight: 0.0,
+        rowCount: 1,
+        colCount: 1,
+        rowSpace: 0.0,
+        colSpace: 0.0,
+        xSize: 0.0,
+        ySize: 0.0,
+        xOffset: 0.0,
+        yOffset: 0.0,
+        prepareAbsorbHeight: 0.0,
+        absorbHeight: 0.0,
+        absorbMixingHeight: 0.0,
+        prepareJetHeight: 0.0,
+        jetHeight: 0,
+        jetMixingHeight: 0.0,
+        variableDistanceStep: 0,
+        isTipBox: false,
+        useArm: false,
+        remark: '',
+        prepareTakeTipHeight: 0.0,
+        takeTipHeight: 0.0,
+        takeTipSpeedCmd: '',
+        takeTipRepeatTime: 1,
+        takeTipRepeatHeight: 0.0,
+        takeTipAfterPrepareHeight: 0.0,
+        takeTipAfterPrepareHeightCmd: '',
+        liquidRange: 0,
+        mixBMEModifiedCoefficient: 0.0,
+        heightModifiedCoefficient: 0.0,
+        remainingVolume: 0.0,
+        isRemainingVolume: false,
+        maxVolume: 0.0,
+        consumableHeight: 0.0,
+        isDetectLiquid: false,
+      },
+      errors: {
+        code: false,
+        name: false,
+      },
+      armAttribute: {
+        consumableId: 0,
+        xOffset: 0.0,
+        yOffset: 0.0,
+        zOffset: 0.0,
+        clipRelease: 0.0,
+        clipOpen: 0.0,
+        clipClose: 0.0,
+        clipReleaseHeight: 0.0,
+        clipOpenHeight: 0.0,
+        clipCloseHeight: 0.0,
+        normalHeight: 0.0,
+        clipEquipmentId: null,
+        equipmentId: null,
+      },
+      clipOpenVisible: false,
+      loadingButton: '',
+    }
+  },
+  methods: {
+    armChange (value) {
+      console.log('=========armChange=========')
+      console.log(value)
+      var arm = this.armEquipmentData.filter(item => item.id === this.armAttribute.equipmentId)[0]
+      if (arm != null && arm.clipEquipmentId != null)
+        this.clipOpenVisible = true;
+      else
+        this.clipOpenVisible = false;
+    },
+    getEquipmentData () {
+      exp_equipment_list({}).then((res) => {
+        if (res.success) {
+          this.equipmentData = res.data;
+          this.armEquipmentData = this.equipmentData.filter(item => item.type === 1);
+        }
+      })
+    },
+    resetAttribute () {
+      this.armAttribute = {
+        consumableId: 0,
+        xOffset: 0.0,
+        yOffset: 0.0,
+        zOffset: 0.0,
+        clipRelease: 0.0,
+        clipOpen: 0.0,
+        clipClose: 0.0,
+        clipReleaseHeight: 0.0,
+        clipOpenHeight: 0.0,
+        clipCloseHeight: 0.0,
+        normalHeight: 0.0,
+        clipEquipmentId: null,
+        equipmentId: null,
+      }
+      this.attributeData = {
+        id: 0,
+        code: '',
+        name: '',
+        normalHeight: 0.0,
+        one2MoreNormalHeight:0.0,
+        rowCount: 1,
+        colCount: 1,
+        rowSpace: 0.0,
+        colSpace: 0.0,
+        xSize: 0.0,
+        ySize: 0.0,
+        xOffset: 0.0,
+        yOffset: 0.0,
+        prepareAbsorbHeight: 0.0,
+        absorbHeight: 0.0,
+        absorbMixingHeight: 0.0,
+        prepareJetHeight: 0.0,
+        jetHeight: 0,
+        jetMixingHeight: 0.0,
+        variableDistanceStep: 0,
+        isTipBox: false,
+        useArm: false,
+        remark: '',
+        prepareTakeTipHeight: 0.0,
+        takeTipHeight: 0.0,
+        takeTipSpeedCmd: '',
+        takeTipRepeatTime: 1,
+        takeTipRepeatHeight: 0.0,
+        takeTipAfterPrepareHeight: 0.0,
+        takeTipAfterPrepareHeightCmd: '',
+        liquidRange: 0,
+        mixBMEModifiedCoefficient: 0.0,
+        heightModifiedCoefficient: 0.0,
+        remainingVolume: 0.0,
+        isRemainingVolume: false,
+        maxVolume: 0.0,
+        consumableHeight: 0.0,
+        isDetectLiquid: false,
+      }
+      this.errors = {
+        code: false,
+        name: false,
+      }
+
+      this.armEquipmentData = []
+      this.clipEquipmentData = []
+      this.params = []
+      this.clipOpenVisible = false
+    },
+    onChange (e) {
+      this.isTipBox = e.target.checked
+      this.form.setFieldsValue({ isTipBox: this.isTipBox })
+    },
+    /**
+     * ȡֵ
+       */
+    sysDictTypeDropDown (text) {
+      sysDictTypeDropDown({ code: 'liquid_range' }).then((res) => {
+        this.liquidRanges = res.data
+        this.liquidRanges.forEach((item) => {
+          item.code = parseInt(item.code)
+
+          if (this.attributeData.liquidRange == 0)
+            this.attributeData.liquidRange = parseInt(item.code)
+        })
+      })
+    },
+    /**
+       * ʼ
+       */
+      add (record) {
+      this.visible = true
+      this.resetAttribute()
+      this.getEquipmentData()
+      this.sysDictTypeDropDown()
+
+      var dd1 = { id: record.id }
+      exp_consumable_getParams(dd1).then((res) => {
+        this.params = res.data
+      })
+    },
+    validateFields () {
+      var result = true;
+      this.errors.code = !this.attributeData.code;
+      this.errors.name = !this.attributeData.name;
+      console.log(this.errors)
+      for (const key in this.errors) {
+        if (this.errors[key]) {
+          result = false
+          break;
+        }
+      }
+      return result
+    },
+    handleSubmit () {
+      if(!this.validateFields())
+        return;
+      this.armAttribute.consumableId=this.attributeData.id
+      this.formLoading = true
+      var obj={
+        ...this.attributeData,
+        armAttribute:this.armAttribute,
+        params:this.params,
+      }
+      console.log('========ʵҪύĲ==========')
+      console.log(obj)
+
+      exp_consumable_add(obj).then((res) => {
+        if (res.success) {
+          this.$message.success('ɹ')
+          this.resetAttribute()
+          this.$emit('ok', obj)
+          this.handleCancel()
+        } else {
+          this.$message.error(res.message)
+        }
+      }).finally((res) => {
+        this.formLoading = false
+      })
+    },
+    handleCancel () {
+      this.resetAttribute()
+      this.form.resetFields()
+      this.visible = false
+    },
+    btnGoPos (axle, value) {
+      const data = this.form.getFieldsValue()
+      this.setLoading(axle)
+      data.cmd = axle.substring(0, 2) + value.toFixed(2)
+      console.log(data.cmd)
+      doCmd(data).then((res) => {
+        this.resetLoading()
+        if (res.success) {
+        } else {
+          this.$message.error('ִʧܣ' + res.message)
+        }
+      }).catch((err) => {
+        this.$message.error('ִ' + err.message)
+      })
+    },
+    btnGoPos (eqid, axle, value) {
+      const data = this.form.getFieldsValue()
+      this.setLoading(axle)
+      data.cmd = axle.substring(0, 2) + value.toFixed(2)
+      console.log(data.cmd)
+      data.id = eqid
+      doCmd(data).then((res) => {
+        this.resetLoading()
+        if (res.success) {
+        } else {
+          this.$message.error('ִʧܣ' + res.message)
+        }
+      }).catch((err) => {
+        this.$message.error('ִ' + err.message)
+      })
+    },
+    /**
+       * loading״̬
+       */
+      setLoading (button) { this.loadingButton = button },
+    /**
+       * loading״̬
+       */
+      resetLoading () { this.loadingButton = '' },
+    /**
+       * жضťǷloading״̬
+       */
+      isLoading (button) { return this.loadingButton == button },
+    /**
+       * жǷаťloading״̬
+       */
+      isAnyLoading () { return this.loadingButton != '' }
+  }
+}
+</script>
+
+<style scoped>
+.span-unit {
+  margin-left: 5px;
+}
+.span-label {
+  width: 130px;
+  text-align: right;
+  display: inline-block;
+  color: black;
+}
+</style>

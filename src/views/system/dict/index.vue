@@ -1,0 +1,227 @@
+<template>
+  <div>
+    <a-card :bordered="false">
+      <div class="table-page-search-wrapper">
+        <a-form layout="inline">
+          <a-row :gutter="48">
+            <a-col  md="8" : sm="24">
+              <a-form-item label="类型名称">
+                <a-input v-model  value="queryParam.name" allow-clear placeholder="请输入类型名 : ></a>
+              </a-form-item>
+            </a-col>
+            <a-col" :md="8" :sm="24">
+              <a-form-item label="唯一编码">
+                <a-input v-model="queryParam.code" allow-clear placeholder="请输入唯一编码"></a>
+              </a-form-item>
+            </a-col>
+            <a-col  md="8" : sm="24">
+              <span class="table-page-search-submitButtons">
+                <a-button type="primary" @click="handleSearch">查询</a-button>
+                <a-button style="margin-left: 8px" @click="handleReset">重置</a-button>
+              </span>
+            </a-col>
+          </a-row>
+        </a-form>
+      </div>
+
+      <div class="table-operator">
+        <a-button type="primary" @click="handleAddClick">
+          <template #icon><plus-outlined ></plus-outlined></template>
+          新增类型
+        </a-button>
+        <a-button @click="refreshDicCache" type="primary">
+          <template #icon><redo-outlined ></redo></template>
+          刷新缓存
+        </a-button>
+      </div>
+
+      <a-table
+        :columns="columns"
+        :data-source="dataSource"
+        :loading="loading"
+        :pagination="pagination"
+        :row-key="record => record.id"
+        @change="handleTableChange"
+      >
+        <template #status="{ text }">
+          {{ statusFilter(text) }}
+        </template>
+        <template #action="{ record }">
+          <a @click="handleDictClick(record)">字典</a>
+          <a-divider type="vertical"></a>
+          <a @click="handleEditClick(record)">编辑</a>
+          <a-divider type="vertical"></a>
+          <a-popconfirm placement="topRight" title="确认删除" @confirm="() => handleDelete(record)">
+            <a>删除</a>
+          </a-popconfirm>
+        </template>
+      </a-table>
+    </a-card>
+  </div>
+</template>
+
+<script>
+import { sysDictTypePage, sysDictTypeDelete, sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+import { mapActions } from 'vuex'
+import { DownOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons-vue'
+
+export default {
+  name: "sys_dict_mgr",
+  components: {
+    DownOutlined,
+    PlusOutlined,
+    RedoOutlined
+  },
+  data() {
+    return {
+      queryParam: {},
+      dataSource: [],
+      loading: false,
+      pagination: {
+        current: 1,
+        pageSize: 10,
+        total: 0,
+        showSizeChanger: true,
+        showQuickJumper: true,
+        showTotal: (total, range) => `${range[0]}-${range[1]} :${total} 条`
+      },
+      columns: [
+        {
+          title: '类型名称',
+          dataIndex: 'name'
+        },
+        {
+          title: '唯一编码',
+          dataIndex: 'code'
+        },
+        {
+          title: '排序',
+          dataIndex: 'sort'
+        },
+        {
+          title: '备注',
+          dataIndex: 'remark',
+          width: 200
+        },
+        {
+          title: '状',
+          dataIndex: 'status',
+          slots: { customRender: 'status' }
+        },
+        {
+          title: '操作',
+          width: '150px',
+          dataIndex: 'action',
+          slots: { customRender: 'action' }
+        }
+      ],
+      statusDict: []
+    }
+  },
+  created() {
+    this.loadStatusDict()
+    this.loadData()
+  },
+  methods: {
+    ...mapActions(['dictTypeData']),
+    
+    loadData() {
+      this.loading = true
+      const params = {
+        pageNo: this.pagination.current,
+        pageSize: this.pagination.pageSize,
+        ...this.queryParam
+      }
+      
+      sysDictTypePage(params).then((res) => {
+        if (res.success) {
+          this.dataSource = res.data.records || []
+          this.pagination.total = res.data.total || 0
+        } else {
+          this.$message.error('加载数据失败:' + res.message)
+        }
+      }).catch((err) => {
+        this.$message.error('加载数据错误:' + err.message)
+      }).finally(() => {
+        this.loading = false
+      })
+    },
+    
+    loadStatusDict() {
+      sysDictTypeDropDown({ code: 'common_status' }).then((res) => {
+        if (res.success) {
+          this.statusDict = res.data || []
+        }
+      }).catch((err) => {
+        console.warn('加载状态字典失:', err)
+      })
+    },
+    
+    statusFilter(status) {
+      const values = this.statusDict.filter(item => item.code == status)
+      if (values.length > 0) {
+        return values[0].value
+      }
+      return status
+    },
+    
+    handleSearch() {
+      this.pagination.current = 1
+      this.loadData()
+    },
+    
+    handleReset() {
+      this.queryParam = {}
+      this.pagination.current = 1
+      this.loadData()
+    },
+    
+    handleTableChange(pagination) {
+      this.pagination.current = pagination.current
+      this.pagination.pageSize = pagination.pageSize
+      this.loadData()
+    },
+    
+    handleDelete(record) {
+      sysDictTypeDelete(record).then((res) => {
+        if (res.success) {
+          this.$message.success('删除成功')
+          this.loadData()
+        } else {
+          this.$message.error('删除失败::' + res.message)
+        }
+      }).catch((err) => {
+        this.$message.error('删除错误::' + err.message)
+      })
+    },
+    
+    refreshDicCache() {
+      this.dictTypeData().then(() => {
+        this.$message.success('刷新成功')
+      }).catch((err) => {
+        this.$message.error('刷新失败?' + err.message)
+      })
+    },
+    
+    // 临时处理方法,等待表单组件Vue 3兼容性修
+  handleAddClick() {
+      this.$message.info('新增功能暂时不可用,正在进行Vue 3兼容性修?)
+    },
+    handleEditClick(record) {
+      this.$message.info('编辑功能暂时不可用,正在进行Vue 3兼容性修:')
+    },
+    handleDictClick(record) {
+      this.$message.info('字典数据管理功能暂时不可用,正在进行Vue 3兼容性修:')
+    }
+  }
+}
+</script>
+
+<style lang="less">
+.table-operator {
+  margin-bottom: 18px;
+}
+button {
+  margin-right: 8px;
+}
+</style>

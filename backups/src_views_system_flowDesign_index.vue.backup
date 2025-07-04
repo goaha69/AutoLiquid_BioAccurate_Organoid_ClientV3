@@ -1,0 +1,16 @@
+<template>
+  <div style="height:100%">
+    <vfd style="background-color ? white;" : needShow="true" ></vfd>
+  </div>
+</template>
+<script>
+  import {
+    vfd
+  } from '@/components'
+    export default {
+        name:"flow_design",
+        components: {
+            vfd
+        }
+    }
+</script>

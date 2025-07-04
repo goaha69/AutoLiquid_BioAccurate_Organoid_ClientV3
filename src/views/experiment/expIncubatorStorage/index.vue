@@ -1,0 +1,284 @@
+<template>
+    <div class="container">
+      <div class="table-wrapper">
+        <table class="incubator-table">
+          <thead>
+            <tr>
+              <th class="header-cell corner">层\</th>
+              <th v-for="column in 9" :key="column" class="header-cell">
+                {{ column }}:              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, rowIndex) in incubatorData" :key="rowIndex">
+              <td class="row-header">{{ rowIndex + 1 }}</td>
+              <td 
+                v-for="(col, colIndex) in row" 
+                :key="colIndex"
+                :class="['data-cell', { 'has-data': col.sampleCode }]"
+              >
+                <div class="cell-content" @click="getDataDetail(col)">
+                  <div class="coordinates">{{ col.rowIndex' + 1}}-{{ col.colIndex + 1 }}</div>
+                  <div v-if="col.sampleCode" class="sample-code">
+                    {{ col.sampleCode }}
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  
+      <a-modal 
+      title="实验数据" 
+      :open="visible" 
+      :footer="null" 
+      :maskClosable="false"
+      @cancel="cancelEditForm"
+    >
+      <a-row type="flex">
+        <a-col :span="24">
+          <a-row :gutter="16">
+            <a-col :span="24">
+              <div>
+                <sp-input label="流程" v-model="incubator.flowId" class="input-field"></sp>
+                <a-button type="primary" class="copy-btn" @click="DeleteData">
+                  删除
+                </a-button>
+              </div>
+            </a-col>
+            <a-col :span="24">
+              <div>
+                <sp-input label="样品编码" v-model="incubator.sampleCode" class="input-field"></sp>
+                <a-button type="primary" class="copy-btn" @click="handleCopy">
+                  复制
+                </a-button>
+              </div>
+            </a-col>
+            <a-col :span="24"><sp-input label="节点" v-model="incubator.nodeId" class="input-field"></sp></a-col>
+            <a-col  span="24"><sp-input label="步骤" v-model : value="incubator.stepId" class="input-field"></sp></a-col>
+            <a-col  span="24"><sp-input label="开始时间" v-model : value="incubator.startTime" class="input-field"></sp></a-col>
+            <a-col  span="24"><sp-input label="结束时间" v-model : value="incubator.endTime" class="input-field"></sp></a-col>
+          </a-row>
+        </a-col>
+      </a-row>
+    </a-modal>
+    </div>
+  </template>
+
+<script>
+import { exp_incubator_storage_list, exp_incubator_storage_DeleteData } from '@/api/modular/experiment/expIncubatorStorageManage';
+import SpInput from '@/components/spInput.vue';
+import { Modal, message } from 'ant-design-vue';
+export default {
+    components: {
+        SpInput
+    },
+    data() {
+        return {
+            incubatorData: [],
+            incubator: {},
+            visible: false,
+            test: ''
+        };
+    },
+    mounted() {
+        this.loadData();
+    },
+    methods: {
+        loadData() {
+            exp_incubator_storage_list().then((res) => {
+                const tableData = Array.from({ length: 25 }, () => Array(9).fill(''));
+                const data = res.data;
+                for (let k = 0; k < data.length; k++) {
+                    const e = data[k];
+                    tableData[e.rowIndex][e.colIndex] = e;
+                }
+                this.incubatorData = tableData;
+            });
+            setTimeout(() => {
+                this.loadData();
+            }, 5000);
+        },
+        getDataDetail(item) {
+            this.incubator = {...item};
+            this.visible = true;
+        },
+        cancelEditForm() {
+            this.visible = false;
+        },
+        // 复制
+
+      async handleCopy() {
+            const text = this.incubator.sampleCode
+
+            if (!text) {
+                this.$message.warning('没有可复制的内容')
+                return
+            }
+
+            try {
+                if (navigator.clipboard) {
+                    await navigator.clipboard.writeText(text)
+                } else {
+                    await fallbackCopyTextToClipboard(text)
+                }
+                this.$message.success('复制成功')
+            } catch (err) {
+                console.error('复制失败:', err)
+                this.$message.error('复制失败,请手动复制')
+            }   
+        },
+        // 删除数据
+
+      async DeleteData() {
+            /**
+       * 是否有可删除的数 console.log(this.incubator);
+       */
+      if (!this.incubator.sampleCode && !this.incubator.startTime && !this.incubator.endTime && !this.incubator.flowId) {
+                
+                message.warning('没有可删除的数据');
+                return;
+            }
+            Modal.confirm({
+                title: '确认删除',
+                content: `确定要删除Id:${this.incubator.id} 的数据吗`,
+                okText: '确认删除',
+                cancelText: '取消',
+                onOk: async () => {
+                    try {
+                        const res = await exp_incubator_storage_DeleteData({ 
+                            id: this.incubator.id 
+                        });
+                        if (res.code === 200) {
+                            message.success('删除成功');
+                            this.visible = false;
+                            this.loadData();
+                        } else {
+                            message.error(res.message || '删除失败');
+                        }
+                    } catch (error) {
+                        console.error('删除数据时出错', error);
+                        message.error('删除数据时发生错误');
+                    }
+                }
+            });
+        }
+    }
+};
+</script>
+
+<style scoped>
+.header-cell.corner {
+  width: 100px;  /* 固定首列标题宽度 */
+       */ 
+  min-width: 100px;
+  max-width: 100px;
+}
+/* 保持原有样式 */
+       */
+.incubator-table {
+  table-layout: fixed;
+}
+.container {
+  height: 100vh;
+  padding: 20px;
+  background: #f0f2f5;
+}
+
+.table-wrapper {
+  height: calc(100vh - 100px);
+  overflow: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.incubator-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 1000px;
+}
+
+.header-cell {
+  background: #fafafa;
+  color: rgba(0,0,0,.85);
+  font-weight: 600;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.corner {
+  background: #fafafa;
+  z-index: 3;
+}
+
+.row-header {
+  text-align: center;
+  width: 100px;  /* 固定行标题宽: */
+  height: 130px;
+  background: #fafafa;
+  font-weight: 500;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.data-cell {
+  padding: 8px;
+  border: 1px solid #e8e8e8;
+  text-align: center;
+  transition: all 0.3s;
+  min-width: 120px;
+}
+
+.data-cell:hover {
+  background-color: #f5f5f5;
+}
+
+.has-data {
+  background-color: #e6f7ff;
+}
+
+.cell-content {
+  cursor: pointer;
+  padding: 8px;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.coordinates {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.sample-code {
+  font-size: 14px;
+  color: #1890ff;
+  font-weight: 500;
+  word-break: break-all;
+}
+.input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.input-field {
+  margin: 12px 0;
+}
+
+.copy-btn {
+  height: 40px;
+  margin-left: 10px;
+}
+</style>

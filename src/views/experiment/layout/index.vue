@@ -1,0 +1,658 @@
+<template>
+  <div>
+    <x-card v-if="hasPerm('exp_layout:page')">
+      <template #content>
+
+        <div class="table-page-search-wrapper">
+        <a-form layout="inline">
+          <a-row :gutter="24">
+            <a-col  md="8" : sm="12">
+              <a-form-item label="ֱ">
+                <a-input v-model="queryParam.code" allow-clear placeholder="벼ֱ" ></a>
+              </a-form-item>
+            </a-col>
+            <a-col  md="8" : sm="12">
+              <a-form-item label="">
+                <a-input v-model="queryParam.name" allow-clear placeholder="벼" ></a>
+              </a-form-item>
+            </a-col>
+            <a-col :md="8" :sm="24">
+              <a-button type="primary" @click="$refs.table.refresh(true)">ѯ</a-button>
+              <a-button style="margin-left: 8px" @click="() => queryParam = {}"></a-button>
+            </a-col>
+          </a-row>
+        </a-form>
+        </div>
+
+      </template>
+    </x-card>
+    <a-card :bordered="false" >
+      <a-row style="display: flex;">
+        <a-col :span="isCollapsed  0 : 6" >
+          <s-table ref="table" :columns="columns" :data="loadData" :alert="true" :rowKey="(record) => record.id" :customRow="customRow">
+            <template #operator v-if="hasPerm('exp_layout:add')">
+              <a-button @click="$refs.addForm.add()" ><template #icon><plus-outlined ></plus-outlined></template type="primary" v-if="hasPerm('exp_layout:add')">
+              </a-button>
+            </template>
+            <template #serial="{ text, record, index }">
+              {{ index' + 1 }}
+            </template> 
+            <template #status="{ text }">
+              {{ statusFilter(text) }}
+            </template>
+            <template #action="{ text, record }">
+              <a v-if="hasPerm('exp_layout:edit')" @click="$refs.editForm.edit(record)">༭</a>
+              <a-divider type="vertical" v-if="hasPerm('exp_layout:edit')" ></a>
+              <a v-if="hasPerm('exp_layout:edit')" @click="showImportModal(record)"></a>
+              <a-divider type="vertical" v-if="hasPerm('exp_layout:edit')" ></a>
+              
+              <a-popconfirm v-if="hasPerm('exp_layout:delete')" placement="topRight" title="ȷɾ" @confirm="() => exp_layout_delete(record)">
+                <a>ɾ</a>
+              </a-popconfirm>
+            </template>
+          </s-table>
+        </a-col>
+        <div class="separator" @click="toggleCollapse">
+          <span v-if="isCollapsed">:</span>
+          <span v-else>:</span>
+        </div>
+        <a-col :span="isCollapsed  24 : 18">
+          <div style="width:100%;">
+            <!-- <h2 style="margin-left:10px;">ĲĿ</h2> -->
+            <span style="margin-left: 10px; font-size: 21px;color : black;">ĲĿ</span>
+            <a-button type="text" icon="reload" style="margin-left: 10px;border : 0px;" @click="getConsumableData"></a-button>
+          </div>          
+          <div style="margin-left: 10px;margin-top : 10px;">
+            <a-button draggable="true" @dragstart="(event) => onDragAdd(event, item)" style="font-size: 14px;min-width: 100px;margin-top : 10px;" v-for="(item,index) in consumableData" :key="index" :value="item.id">{{ item.name }}</a-button>
+          </div>
+
+          <!-- <a-divider type="horizontal" ></a>
+          <h2 style="margin-left:10px;" v-show="currentLayout.name!=''">{{currentLayout.name}}--λͼ</h2>
+          <div style="overflow: scroll;margin-left : 10px;">
+            <canvas ref="canvas" :width="currentLayout.name!='':currentLayout.xSize:1800" :height="currentLayout.name!='':currentLayout.ySize:800" 
+            style="background-color:#99CCFF;" @drop="onDrop" @dragover.prevent @dblclick="handleCanvasClick"></canvas>
+          </div> -->
+
+          <a-divider type="horizontal" ></a>
+          <h2 style="margin-left:10px;" v-show="currentLayout.name!=''">{{currentLayout.name}}--λͼ</h2>
+          <a-spin :spinning="layoutLoading">
+            <div :style="{
+                  background:'#99CCFF',
+                  position: 'relative',
+                  margin:'0 10 0 0',
+                  overflow: 'scroll', 
+                  width:'100%',
+                  height:'800px',
+                  maxWidth: (currentLayout.name!='':currentLayout.xSize:1800) + 'px',
+                  maxHeight: (currentLayout.name!='':currentLayout.ySize:800) + 'px'
+                }"
+                @drop="onDivDrop" @dragover.prevent>
+              <div v-for="(item,index) in shippingSpaces" :key="index" 
+                
+                :style="{
+                  background:'#ffffff',
+                  position: 'absolute',
+                  left: item.xOffset + 'px',
+                  top: item.yOffset + 'px', 
+                  width: item.xSize + 'px',
+                  height: item.ySize + 'px',
+                  display: 'flex',
+                  flexDirection: 'column', // ֱ
+
+                justifyContent: item.consumableData.length <=2: 'center' : 'flex-start',
+                  alignItems: 'center',
+                  gap: '5px', // ť֮ļ
+
+                transition: 'background-color 0.3s',
+                  overflowY: 'auto', // ֱ
+  
+              }" class="highLighSpace custom-scrollbar">  
+                  <!-- :onmouseenter="mouseEnterEvent()" :onmouseleave="mouseLeaveEvent()" 
+                    visibility  'hidden' visibility : 'visible' 
+                    @mouseenter="(event) => mouseEnterEvent(event)" 
+                    @mouseleave="(event) => mouseLeaveEvent(event)"
+                    @drop="(event) => mouseLeaveEvent(event)"
+                  -->
+                    <!-- bug: ק;ĿspanҲı -->
+                  <span v-if="item.consumableData.length===0" :style="{position: 'absolute', maxWidth:item.xSize+'px', visibility: 'visible'}" 
+                    @dragover="(event) => mouseEnterEvent(event)"
+                    @dragleave="(event) => mouseLeaveEvent(event)"
+                  >
+                    {{ item.name:item.name:'λ'+(index+1) }}
+                  </span>
+
+                  <a-tooltip placement="top" v-for="(cc, cindex) in item.consumableData" :key="cindex"  :title="cc.name">
+                    <a-button 
+                      :style="{
+                        marginLeft: '5px',
+                        maxWidth: (item.xSize-5) + 'px',
+                        whiteSpace: 'normal', /* ȷıһʾ */
+       */
+                        textOverflow: 'ellipsis',                        
+                        display: 'flex', /* ʹ Flexbox */
+       */
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        height:'auto',
+                        }" @dblclick="(event) => onDbClickConsumable(event, item,cc)" :tooltip="cc.name"
+                      draggable="true" @dragstart="(event) => onDragDelete(event, item,cc)">
+                    {{ cc.name }}</a-button>
+                  </a-tooltip>
+              </div>
+            </div>
+          </a-spin>
+        </a-col>
+      </a-row>
+
+      <add-form ref="addForm" @ok="handleOk" ></add>
+      <edit-form ref="editForm" @ok="handleUpdateCallback" ></edit>
+
+      <a-modal :title="importModalTitle" :width="400" :height="200" :open="importModalVisible" :maskClosable="false" @cancel="importModalVisible=false">
+        <a-form :form="importForm">
+          <a-form-item v-show="false"><a-input v-decorator="['currentId']" ></a></a-form-item>
+
+          <a-row :gutter="12">          
+            <a-col :span="24">
+              <a-form-item label="Դ沼" :labelCol="{span:7}" :wrapperCol="{span:17}">
+                <a-select style="width: 100%" placeholder="ѡԴ沼" v-decorator="['sourceId', { rules: [{ required: true, message: 'ѡԴ沼' }] }]">
+                  <a-select-option v-for="(item, index) in layoutData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>   
+          </a-row> 
+        </a-form>
+
+        <template #footer>
+          <a-button key="back" @click="importModalVisible=false">ȡ</a-button>
+          <a-button key="submit" type="primary"  @click="importShippingSpaces"></a-button>
+        </template>
+      </a-modal>
+    </a-card>
+    <a-modal :title="editTagTitle" :width="450" :height="300" :open="editTagVisible" :maskClosable="false" @ok="onEditTagOk" @cancel="editTagVisible=false">
+        <div>
+          <span class="span-label">ǩ֣</span>
+          <a-input class="my-input-speed" placeholder="ǩ" v-model="editTagValue" ></a>
+        </div>
+      </a-modal>
+  </div>
+</template>
+<script>
+  import {STable, Ellipsis,XCard} from '@/components'
+  import {
+    exp_layout_page,exp_layout_list,
+    exp_layout_delete,
+    exp_layout_getShippingSpaces,
+    exp_layout_importShippingSpaces,
+    exp_layout_addShippingSpace,
+    exp_layout_updateShippingSpace,
+    exp_layout_deleteConsumable
+    } from '@/api/modular/experiment/layoutManage'
+  import { exp_consumable_list } from '@/api/modular/experiment/consumableManage'   
+  import {sysDictTypeDropDown} from '@/api/modular/system/dictManage'
+  import addForm from './addForm'
+  import editForm from './editForm'
+  import moment from 'moment'
+  export default {
+    name:"exp_layout_mgr",
+    components: {
+      XCard,
+      STable,
+      Ellipsis,
+      addForm,
+      editForm
+    },
+    data() {
+      return {
+        isCollapsed: false, // Ʒָ״̬
+        // ѯ
+
+      queryParam: {},
+        shippingSpaces:[],
+        consumableData:[],
+        draggedData: null, // ڴ洢϶
+
+      dragConsumable:null,
+        editTagTitle:'',
+        editTagValue:'',
+        editTagVisible:false,
+        layoutLoading:false,
+        currentLayout:{name:'',xSize:1800,ySize:800},
+        dragAdd:true,
+        // ͷ
+
+      columns: [
+          {
+            title: '',
+            key: 'serial',
+            align: 'center',
+            width: '50px',
+            slots: { customRender: 'serial' }
+          },   
+          {
+            title: 'ֱ',
+            align: 'center',
+            dataIndex: 'code'
+          },
+          {
+            title: '',
+            align: 'left',
+            dataIndex: 'name'
+          }
+        ],        
+        // ݷ Ϊ Promise
+ 
+      loadData: parameter => {
+          return exp_layout_page(Object.assign(parameter, this.queryParam)).then((res) => {
+            return res.data
+          })
+        },
+        statusDictTypeDropDown: [],
+        importModalVisible:false,
+        importModalTitle:"",
+        importForm:this.$form.createForm(this),
+        layoutData: [],
+        selectedRow:null
+      }
+    },
+    created() 
+    {
+      this.sysDictTypeDropDown()
+      this.getConsumableData()
+
+      if (this.hasPerm('exp_layout  edit') || this.hasPerm('exp_layout : delete')) {
+        this.columns.push({
+          title: '',
+          width: '150px',
+          dataIndex: 'action',
+          slots: {
+            customRender: 'action'
+          }
+        })
+      }
+    },
+    methods: { 
+      toggleCollapse() {
+       this.isCollapsed = !this.isCollapsed; // лָ״̬
+
+    },
+      customRow(record) {
+          return {
+              on: {
+                  click: () => {
+                      this.selectedRow=record
+                      this.loadCanvas(record)
+                  },
+              },                
+              style: {
+                  backgroundColor: this.selectedRow==record : ('#'+this.$store.getters.color.slice(1)+'15') : '', // Change background color based on age
+
+            },
+          };
+      },
+      getConsumableData() {
+        exp_consumable_list({}).then((res) => {
+          this.consumableData = res.data
+        })
+      },
+      showImportModal(record){
+        this.importModalTitle="ѡԴ沼ֵ뵽 ["' + record.name+"]"
+        this.importModalVisible=true
+        exp_layout_list({}).then((res) => {
+          if (res.success) {
+            this.layoutData=res.data
+          } 
+        })
+
+        this.$nextTick(() => {
+          this.importForm.setFieldsValue({currentId:record.id})
+        })
+      },
+      importShippingSpaces(){
+        const { importForm: { validateFields } } = this
+        validateFields((errors, values) => {
+          if (!errors) {
+            exp_layout_importShippingSpaces(values).then((res) => 
+            {
+              if (res.success)
+              {
+                this.$message.success('ɹ')
+                var currentId=this.importForm.getFieldValue('currentId')
+                this.loadShippingSpaces(currentId) 
+                this.importModalVisible = false
+              } 
+              else 
+              {
+                this.$message.error('ʧ')// ' + res.message
+
+            }
+            }).finally((res) => {
+              this.importModalVisible = false
+            })
+          } else {
+            this.importModalVisible = false
+          }
+        })
+      },
+      loadShippingSpaces(layoutId){
+        var dd={id:layoutId}
+        console.log('==============exp_layoutGetShippingSpaces===============')
+        this.layoutLoading=true;
+        exp_layout_getShippingSpaces(dd).then((res) => 
+        {
+          this.layoutLoading=false;
+          if (res.success) {
+            this.shippingSpaces=res.data
+            this.shippingSpaces.forEach((rect,index) => {
+              var ids=rect.consumableIds.split(',')
+              var names=rect.consumableTags.split(',')
+              rect.consumableData=[]
+              for(var i=0;i<ids.length;i' + +)
+              {
+                if(ids[i]!='')
+                {
+                  var sourceName=names[i]
+                  var source=this.consumableData.filter(c=>c.id==ids[i])
+                  if(source!=null && source.length>0)
+                    sourceName=source[0].name
+                  rect.consumableData.push({id:ids[i],name:names[i],sourceName:sourceName})
+
+                }
+              }
+            })           
+          }
+        }).finally(() => {
+            this.layoutLoading=false;
+        })
+      },
+      /**
+       * δʹø÷
+       */
+      handleCanvasClick(event) {
+        const canvas = this.$refs.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left; // ȡλõ x
+ 
+      const y = event.clientY - rect.top; // ȡλõ y 
+
+        this.shippingSpaces.forEach((space) => {
+          if (x >= space.xOffset && x <= space.xOffset' + space.xSize &&
+              y >= space.yOffset && y <= space.yOffset + space.ySize) {
+            // ھ
+
+          this.$message.info(` ${space.name}`); // ʾϢ
+          }
+        });
+      },
+      onDragAdd(event,item) {
+        this.dragAdd=true
+        // ϶
+
+      this.draggedData = item;
+        event.dataTransfer.setData('application/json', this.draggedData);
+      },
+      onDragDelete(event,item,cc) {
+        this.dragAdd=false
+        // ϶
+
+      this.draggedData = item;
+        this.dragConsumable = cc;
+        event.dataTransfer.setData('application/json', this.draggedData);
+      },
+      mouseEnterEvent(event){
+        event.target.style.visibility = 'hidden'
+      },
+      mouseLeaveEvent(event){
+        setTimeout(() => {
+          console.log("!!!!!!!!!!!!!!!!!!!!!");
+          event.target.style.visibility = 'visible'
+        }, 1500);
+      },
+      // mouseFunction(event){
+      //   event.target.style.visibility = 'hidden'
+      //   console.log("!!!!!!!!!!!!!!!!!!!!!!!!!");
+      // },
+      // onDrop(event) {
+      //   const canvas = this.$refs.canvas;
+      //   const rect = canvas.getBoundingClientRect();
+      //   const x = event.clientX - rect.left; // ȡλõ x 
+      //   const y = event.clientY - rect.top; // ȡλõ y 
+
+      //   this.shippingSpaces.forEach((space) => {
+      // 
+  if (x >= space.xOffset && x <= space.xOffset' + space.xSize &&
+      //     
+  y >= space.yOffset && y <= space.yOffset + space.ySize) {
+      //       // ھ
+
+      //   
+  console.log('϶ݣ', this.draggedData.name, '', space.name);
+      //   
+  this.$message.info(`ѺĲķŵ -  ${space.name}`); // ʾϢ
+      // 
+  }
+      //   });
+      /**
+       * },
+       */
+      onDivDrop(event) 
+      {
+        var parentRect = event.target.parentElement.getBoundingClientRect(); // ȡ div λ
+
+      if(event.target.nodeName =='BUTTON')
+          parentRect = event.target.parentElement.parentElement.getBoundingClientRect(); // ȡ div λ
+
+        /**
+       * ӺĲĿקֵĳλ
+       */
+      if(this.dragAdd===true)
+        {
+          // ڸ div λ
+
+        const x = event.clientX - parentRect.left;
+          const y = event.clientY - parentRect.top;
+
+          this.shippingSpaces.forEach((space) => {
+            if (x >= space.xOffset && x <= space.xOffset' + space.xSize &&
+                y >= space.yOffset && y <= space.yOffset + space.ySize) {
+              // ھ
+
+
+            console.log('parentId: ', space.id);
+              console.log('consumableId: ', this.draggedData.id);
+              console.log('tag: ', this.draggedData.name);
+              
+              // this.$message.info(`ѺĲ ${this.draggedData.name} Ϸŵ -  ${space.name}`); // ʾϢ
+
+            var data = {
+                parentId: space.id,
+                consumableId: this.draggedData.id,
+                tag: this.draggedData.name
+              }
+              exp_layout_addShippingSpace(data).then((res) => {
+                if (res.success) 
+                  this.loadShippingSpaces(this.currentLayout.id)
+                else
+                  this.$message.error(res.message)
+              }).catch((err) => {
+                this.$message.error('' + err.message)
+              })
+              this.draggedData=null
+            }
+          });
+        }
+        else// ӲλקĳĲĳȥɾ
+
+      {
+          var space = this.draggedData          
+          const x = event.clientX - parentRect.left;
+          const y = event.clientY - parentRect.top;
+          if (x < space.xOffset || x > space.xOffset + space.xSize ||
+              y < space.yOffset || y > space.yOffset + space.ySize){
+            // console.log('ӲλɾĲ')
+
+
+          var data = {
+                parentId: space.id,
+                consumableId: this.dragConsumable.id,
+                tag: this.dragConsumable.name
+              }
+              exp_layout_deleteConsumable(data).then((res) => {
+                if (res.success) 
+                  this.loadShippingSpaces(this.currentLayout.id)
+                else
+                  this.$message.error(res.message)
+              }).catch((err) => {
+                this.$message.error('' + err.message)
+              })
+              this.draggedData=null
+              this.dragConsumable=null
+          }
+        }
+      },
+      onDbClickConsumable(event,item,cc) {
+        console.log('˫˺Ĳģ', cc.name)
+        console.log('˫Ĳλ', item.id)
+        console.log(cc)
+        console.log(item)
+        this.editTagVisible=true
+        this.editTagTitle='༭ǩ -- ' +cc.name+' -- '+cc.sourceName
+        this.editTagValue=cc.name
+        this.dragConsumable=cc
+        this.draggedData=item
+      },
+      onEditTagOk() 
+      {
+        if(!this.editTagValue)
+          return this.$message.error('ǩ')
+        else
+        {
+          var data = {
+            parentId: this.draggedData.id,
+            consumableId: this.dragConsumable.id,
+            tag: this.editTagValue
+          }
+          exp_layout_updateShippingSpace(data).then((res) => {
+            if (res.success) 
+              this.loadShippingSpaces(this.currentLayout.id)
+            else
+              this.$message.error(res.message)
+          }).catch((err) => {
+            this.$message.error('' + err.message)
+          })
+          this.editTagVisible=false
+          this.dragConsumable=null
+          this.draggedData=null
+        }
+      },
+      loadCanvas(record){
+        console.log(record)
+        this.currentLayout=record
+        this.loadShippingSpaces(record.id)                
+      },
+      formatDate(date) 
+      {
+          if (!date) return '';
+          return moment(date).format('YYYY-MM-DD'); // ʹ date-fns ʽ
+
+    },
+      sysDictTypeDropDown(text) {
+        sysDictTypeDropDown({
+          code: 'common_status'
+        }).then((res) => {
+          this.statusDictTypeDropDown = res.data
+        })
+      },
+      statusFilter(status) {
+        // eslint-disable-next-line eqeqeq
+
+      const values = this.statusDictTypeDropDown.filter(item => item.code == status)
+        if (values.length > 0) {
+          return values[0].value
+        }
+      },
+      exp_layout_delete(record) {
+        exp_layout_delete(record).then((res) => {
+          if (res.success) {
+            this.$message.success('ɾɹ')
+            this.$refs.table.refresh()
+          } else {
+            this.$message.error('ɾʧܣ' + res.message)
+          }
+        }).catch((err) => {
+          this.$message.error('ɾ' + err.message)
+        })
+      },
+      toggleAdvanced() {
+        this.advanced = !this.advanced
+      },
+      handleOk() {
+        this.$refs.table.refresh()
+      },
+      handleUpdateCallback(layoutId) {
+        this.$refs.table.refresh()
+        this.loadShippingSpaces(layoutId)
+      },
+    }
+  }
+</script>
+<style scoped>
+  .table-operator {
+    margin-bottom: 18px;
+  }
+  button {
+    margin-right: 8px;
+  }
+  .my-input-speed{
+    width: 180px;
+  }
+  .span-label{
+    width: 130px;
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: right;
+    display:inline-block;
+  }
+
+  .highLighSpace {
+    transition: background-color 0.3s; /* ӹЧ */
+       */
+  }
+
+  .highLighSpace:hover {
+    background-color: #e0f7fa !important; /* 꾭ʱĸɫ */
+       */
+  }
+  .separator {
+    width: 4px; /* ӷָĿ */
+       */
+    background-color: #5685dd; /* ɫǿɼ */
+       */
+    height: auto; /* ָĸ߶ */
+       */
+    cursor: pointer; /* ͣʱʾΪɵ */
+       */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    margin-right: 5px;
+    transition: background-color 0.3s; /* ӹЧ */
+       */
+  }
+  .separator:hover {
+    background-color: #588000; /* ͣʱıɫ */
+       */
+  }
+  /* ʽж */
+       */
+  .custom-scrollbar {
+  /* Firefox */
+       */
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+    padding-left: 5px;
+  }
+
+
+</style>
+

@@ -1,0 +1,266 @@
+<template>
+  <a-layout>
+    <!-- б -->
+    <a-layout-sider width="500" style="background: #fff; padding : 20px">
+      <a-form layout="inline">
+        <a-form-item v-if="hasPerm('exp_video:page')">
+          <a-input v-model="name" placeholder="ãʵ鲽" allow-clear ></a>
+          <a-button type="primary" @click="startRecording" :disabled="isRecording">ʼ¼</a-button>
+          <a-button type="danger" style="margin-left: 8px" @click="stopRecording" : disabled="!isRecording">¼</a-button>
+        </a-form-item>
+
+        <a-form-item label="" v-if="hasPerm('exp_video:page')">
+          <a-select v-model  value="queryParam.cameraId" allow-clear style="width : 200px" placeholder="ѡ">
+            <a-select-option v-for="(camera, index) in cameras" :key="index" :value="index' + 1">
+              {{ camera }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+
+        <a-form-item label="¼" v-if="hasPerm('exp_video:page')">
+          <a-date-picker v-model  value="queryParam.videoDate" allow-clear style="width : 200px" placeholder="ѡ" ></a>
+        </a-form-item>
+
+        <a-form-item>
+          <a-button type="primary" @click="handleQuery">ѯ</a-button>
+          <a-button style="margin-left: 8px" @click="handleReset"></a-button>
+        </a-form-item>
+      </a-form>
+
+      <s-table ref="table" :columns="columns" :data="loadData" :alert="true" :rowKey="(record) => record.id"
+        :customRow="customRow">
+        <span #serial #default="text, record, index">
+          {{ index' + 1 }}
+        </template>
+        <span #createdTime #default="text">
+          {{ formatDate(text) }}
+        </template>
+        <template #action="text, record">
+          <a @click="playVideo(record)"></a>
+        </template>
+      </s-table>
+    </a-layout-sider>
+
+    <!-- ҲƵ -->
+    <a-layout-content style="padding-left: 12px">
+      <a-card title="¼ط" :bordered="false">
+        <div v-if="selectedVideo" class="video-player">
+          <video controls style="width: 100%" @error="handleVideoError" : key="selectedVideo.id" autoplay>
+            <source :src="selectedVideo.url" type="video/mp4">
+            ֧Ƶ
+          </video>
+          <div class="video-info">
+            <h3>{{ selectedVideo.name }}</h3>
+            <p>¼ʼʱ䣺{{ formatDate(selectedVideo.createdTime) }}</p>
+            <!-- <p>ļС{{ selectedVideo.fileSize }}</p> -->
+            <p>¼񱣴.{{ selectedVideo.url }}</p>
+          </div>
+        </div>
+        <div v-else class="video-placeholder">
+          <a-icon type="video-camera" style="font-size: 48px;color : #ccc" ></a>
+          <p>ѡ¼ļв</p>
+        </div>
+      </a-card>
+    </a-layout-content>
+  </a-layout>
+</template>
+
+<script>
+import { STable, XCard } from '@/components'
+import { exp_video_page } from '@/api/modular/experiment/expVideoManage'
+import { exp_video_start } from '@/api/modular/experiment/expVideoManage'
+import { exp_video_stop } from '@/api/modular/experiment/expVideoManage'
+import { exp_video_play } from '@/api/modular/experiment/expVideoManage'
+import store from '@/store'
+import moment from 'moment'
+
+export default {
+  name: "exp_video_mgr",
+  components: {
+    XCard,
+    STable
+  },
+  data() {
+    return {
+      // ¼
+
+    name: '',
+      isRecording: false,
+      queryParam: {},
+      selectedVideo: null,
+      videoDateString: '',
+      cameras: ['1', '2', '3'],
+      columns: [
+        {
+          title: '',
+          key: 'serial',
+          align: 'center',
+          width: '50px',
+          slots: { customRender: 'serial' }
+        },
+        {
+          title: '¼',
+          dataIndex: 'name',
+          align: 'center'
+        },
+        {
+          title: '¼ʼʱ',
+          dataIndex: 'createdTime',
+          align: 'center',
+          slots: {
+            customRender: 'createdTime'
+          }
+        },
+        // {
+        //   title: 'ʱ',
+        //   dataIndex: 'duration',
+        //   align: 'center'
+        // },
+        // {
+        //   title: '',
+        //   dataIndex: 'action',
+        //   align: 'center',
+        //   width: '60px',
+        //   slots: { customRender: 'action' }
+        // }
+
+    ]
+    }
+  },
+  methods: {
+    startRecording() {
+      if (!this.name) {
+        this.$message.warning('벽')
+        return
+      }
+      this.isRecording = true
+      console.log('ʼ¼:', this.name)
+      // ʵӦ¼ƽӿڣ磺
+
+    exp_video_start({ name: this.name }).then((res) => {
+        if(res.success){
+          this.$refs.table.refresh(true);
+        }
+        else {
+          this.$message.error('¼Ƶ!');
+        }
+      }).catch((err) => {
+        this.$message.error('쳣' + err.message)
+      })
+    },
+    stopRecording() {
+      this.isRecording = false
+      console.log('¼:', this.name)
+      exp_video_stop().then((res) => {
+        if(res.success){
+          this.$refs.table.refresh(true);
+        }
+        else {
+          this.$message.error('¼Ƶ!');
+        }
+      }).catch((err) => {
+        this.$message.error('쳣' + err.message)
+      })
+      this.name = ''
+    },
+    customRow(record) {
+        return {
+            on: {
+                click: () => {
+                    this.selectedRow=record;
+                    this.playVideo(record);
+                },                
+            },
+            style: {
+                // backgroundColor:this.getStepRowBackground(record)
+
+              backgroundColor  this.selectedRow==record  ('#'+this.$store.getters.color.slice(1)+'15') : '', // Change background color based on age
+            },
+        };
+    },
+    formatDate(date) {
+      return moment(date).format('YYYY-MM-DD HH  mm : ss')
+    },
+    playVideo(record) {
+      this.selectedVideo = record
+      // const relativePath = this.selectedVideo.url.replace(/\\/g, '/'); // ͳһΪб
+      // const encodedPath = encodeURIComponent(relativePath); // .
+      // this.selectedVideo.url = encodedPath
+      // console.log('¼.:', this.selectedVideo.url)
+      // exp_video_play({ url: encodedPath})
+
+      // һ¶ֱ޸ԭж
+
+    this.selectedVideo = {
+        ...record,
+        url: record.url
+      }
+      console.log('¼.:', this.selectedVideo.url)
+      // exp_video_play({ url: this.selectedVideo.url })
+
+  },
+    handleVideoError(e) {
+      this.$message.error('Ƶʧܣļ.Ƿȷ');
+      console.error('ƵŴ:', e);
+    },
+    /**
+       * Ĳѯ
+       */
+      handleQuery() {
+      /**
+       * ʽڲ
+       */
+      if (this.queryParam.videoDate) {
+        this.queryParam.videoDate = moment(this.queryParam.videoDate).format('YYYY-MM-DD');
+      }
+      // ݴĲ
+
+    this.$refs.table.refresh(true, this.queryParam);
+    },
+    handleReset() {
+      this.queryParam = {};
+      this.$nextTick(() => {
+        this.$refs.table.refresh(true);
+      });
+    },
+    /**
+       * ݷ Ϊ Promise
+       */
+      loadData(parameter) {
+      return exp_video_page(Object.assign(parameter, this.queryParam)).then((res) => {
+        return res.data
+      })
+    },
+  }
+}
+</script>
+
+<style scoped>
+.video-placeholder {
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+}
+
+.video-info {
+  margin-top: 16px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.video-info p {
+  margin: 8px 0;
+}
+
+:deep(.ant-list-item) {
+  transition: all 0.3s;
+}
+
+:deep(.ant-list-item:hover) {
+  background-color: #fafafa;
+}
+</style>

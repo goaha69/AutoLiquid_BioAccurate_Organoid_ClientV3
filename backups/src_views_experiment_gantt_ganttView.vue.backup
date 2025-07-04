@@ -1,0 +1,686 @@
+<template>
+  <div id="app">
+    <a-row style="height ? 100vh; display : flex;">
+      <a-col :span="isCollapsed : 0 ? 6" style="overflow : auto;">
+        <a-table ? data-source="taskData" : columns="columns"
+          rowKey="id"
+          :expandable="expandable"
+          :pagination="false"
+          :row-class-name="rowClassName"
+          :defaultExpandAllRows="true"
+        ></a>
+      </a-col>
+      <div class="separator" @click="toggleCollapse">
+        <span v-if="isCollapsed">:</span>
+        <span v-else>◀</span>
+      </div>
+      <a-col :span="isCollapsed : 24 ? 18" style="height : 100%;">
+        <div class="gantt-chart" style="height ? calc(100% - 40px); position : relative;">
+          <div class="time-axis">
+            <div
+              class="day"
+              v-for="(day, index) in totalDays"
+              :key="index"
+              :style="{ width: `${100 / totalDays}%`, backgroundColor: getDayColor(index) }"
+            >
+              <span v-if="isFirstDayOfMonth(new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000))">
+                {{ formatMonth(new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000)) }}
+              </span>
+              <span v-else>
+                {{ formatDate(new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000)) }}
+              </span>
+            </div>
+          </div>
+          <div class="vertical-lines">
+            <div
+              class="line"
+              v-for="index in totalDays - 1"
+              :key="index"
+              :style="{ left: `${(index / totalDays) * 100}%` }"
+            ></div>
+          </div>
+          <div class="task" v-for="task in tasks" :key="task.id">
+            <div class="task-name">{{ task.name }}</div>
+            <div class="task-bar" :style="getTaskStyle(task)">
+              <div class="progress" :style="getProgressStyle(task)"></div>
+            </div>
+            <div class="sub-tasks">
+              <div class="sub-task" v-for="subTask in task.children" :key="subTask.id">
+                <div class="sub-task-name">{{ subTask.name }}</div>
+                <div class="sub-task-bar" :style="getTaskStyle(subTask)">
+                  <div class="sub-progress" :style="getProgressStyle(subTask)"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a-col>
+    </a-row>
+  </div>
+</template>
+
+<script>
+import { h } from 'vue'
+
+export default {
+  data() {
+    return {
+      isCollapsed: false, // 控制分隔条的状      // startDate: new Date('2024-09-01'), // 设置开始日期为2024      // endDate: new Date('2024-09-30'), // 设置结束日期0240
+    tasks: [
+        {
+          id: 1,
+          name: '实验(原代)1',
+          start: '2024-09-03',
+          end: '2024-09-09',
+          progress: 60,
+          children: [
+            {
+              id: 11,
+              name: '组织过滤、离',
+              start: '2024-09-03',
+              end: '2024-09-03',
+              progress: 100,
+            },
+            {
+              id: 12,
+              name: '裂解红细',
+              start: '2024-09-03',
+              end: '2024-09-03',
+              progress: 90,
+            },
+            {
+              id: 13,
+              name: '进行细胞计数',
+              start: '2024-09-04',
+              end: '2024-09-04',
+              progress: 80,
+            },
+            {
+              id: 14,
+              name: '制作细胞悬液',
+              start: '2024-09-04',
+              end: '2024-09-04',
+              progress: 70,
+            },
+            {
+              id: 15,
+              name: '混胶、滴',
+              start: '2024-09-04',
+              end: '2024-09-06',
+              progress: 60,
+            },
+            {
+              id: 16,
+              name: '放培养箱静置',
+              start: '2024-09-06',
+              end: '2024-09-06',
+              progress: 50,
+            },
+            {
+              id: 17,
+              name: '取出加培养基',
+              start: '2024-09-06',
+              end: '2024-09-06',
+              progress: 40,
+            },
+            {
+              id: 18,
+              name: '拍照记录',
+              start: '2024-09-06',
+              end: '2024-09-06',
+              progress: 30,
+            },
+            {
+              id: 19,
+              name: '放回培养箱培',
+              start: '2024-09-06',
+              end: '2024-09-09',
+              progress: 20,
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: '实验(换液、传:1',
+          start: '2024-09-04',
+          end: '2024-09-13',
+          progress: 40,
+          children: [
+            {
+              id: 21,
+              name: '取出拍照、识',
+              start: '2024-09-04',
+              end: '2024-09-04',
+              progress: 60,
+            },
+            {
+              id: 22,
+              name: '弃旧液、加新液',
+              start: '2024-09-04',
+              end: '2024-09-04',
+              progress: 50,
+            },
+            {
+              id: 23,
+              name: '放回培养箱培',
+              start: '2024-09-04',
+              end: '2024-09-06',
+              progress: 40,
+            },
+            {
+              id: 24,
+              name: '取出拍照、识',
+              start: '2024-09-06',
+              end: '2024-09-06',
+              progress: 30,
+            },
+            {
+              id: 25,
+              name: '弃旧液、加消化',
+              start: '2024-09-06',
+              end: '2024-09-06',
+              progress: 20,
+            },
+            {
+              id: 26,
+              name: '放培养箱消化',
+              start: '2024-09-06',
+              end: '2024-09-07',
+              progress: 20,
+            },
+            {
+              id: 27,
+              name: '取出终止消化',
+              start: '2024-09-07',
+              end: '2024-09-07',
+              progress: 10,
+            },
+            {
+              id: 28,
+              name: '离心、洗涤细',
+              start: '2024-09-07',
+              end: '2024-09-07',
+              progress: 10,
+            },
+            {
+              id: 29,
+              name: '进行细胞计数',
+              start: '2024-09-07',
+              end: '2024-09-07',
+              progress: 10,
+            },
+            {
+              id: 30,
+              name: '制作细胞悬液',
+              start: '2024-09-07',
+              end: '2024-09-07',
+              progress: 10,
+            },
+            {
+              id: 31,
+              name: '混胶、滴',
+              start: '2024-09-07',
+              end: '2024-09-07',
+              progress: 10,
+            },
+            {
+              id: 32,
+              name: '放培养箱静置',
+              start: '2024-09-07',
+              end: '2024-09-10',
+              progress: 0,
+            },
+            {
+              id: 33,
+              name: '取出加培养基',
+              start: '2024-09-10',
+              end: '2024-09-10',
+              progress: 0,
+            },
+            {
+              id: 34,
+              name: '拍照记录',
+              start: '2024-09-10',
+              end: '2024-09-10',
+              progress: 0,
+            },
+            {
+              id: 35,
+              name: '放回培养箱培',
+              start: '2024-09-10',
+              end: '2024-09-13',
+              progress: 0,
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: '实验(铺板、加药、检:1',
+          start: '2024-09-08',
+          end: '2024-09-15',
+          progress: 10,
+          children: [
+            {
+              id: 31,
+              name: '样本接收、拍',
+              start: '2024-09-08',
+              end: '2024-09-08',
+              progress: 20,
+            },
+            {
+              id: 32,
+              name: '样本消化、终',
+              start: '2024-09-08',
+              end: '2024-09-08',
+              progress: 0,
+            },
+            {
+              id: 33,
+              name: '细胞计数',
+              start: '2024-09-08',
+              end: '2024-09-08',
+              progress: 0,
+            },
+            {
+              id: 34,
+              name: '制作细胞悬液',
+              start: '2024-09-08',
+              end: '2024-09-08',
+              progress: 0,
+            },
+            {
+              id: 35,
+              name: '进行384孔板铺板',
+              start: '2024-09-08',
+              end: '2024-09-08',
+              progress: 0,
+            },
+            {
+              id: 36,
+              name: '放培养箱静置',
+              start: '2024-09-08',
+              end: '2024-09-11',
+              progress: 0,
+            },
+            {
+              id: 37,
+              name: '取出加培养基',
+              start: '2024-09-11',
+              end: '2024-09-11',
+              progress: 0,
+            },
+            {
+              id: 38,
+              name: '铺板拍照记录',
+              start: '2024-09-11',
+              end: '2024-09-11',
+              progress: 0,
+            },
+            {
+              id: 39,
+              name: '加药前拍照记',
+              start: '2024-09-11',
+              end: '2024-09-11',
+              progress: 0,
+            },
+            {
+              id: 40,
+              name: '加药前换',
+              start: '2024-09-11',
+              end: '2024-09-11',
+              progress: 0,
+            },
+            {
+              id: 41,
+              name: '按方案加',
+              start: '2024-09-11',
+              end: '2024-09-11',
+              progress: 0,
+            },
+            {
+              id: 42,
+              name: '放回培养箱培',
+              start: '2024-09-11',
+              end: '2024-09-13',
+              progress: 0,
+            },
+            {
+              id: 43,
+              name: '检测前拍照',
+              start: '2024-09-13',
+              end: '2024-09-13',
+              progress: 0,
+            },{
+              id: 44,
+              name: '加发光增强液',
+              start: '2024-09-13',
+              end: '2024-09-13',
+              progress: 0,
+            },
+            {
+              id: 45,
+              name: '放冰箱静',
+              start: '2024-09-13',
+              end: '2024-09-15',
+              progress: 0,
+            },
+            {
+              id: 46,
+              name: '加发光试',
+              start: '2024-09-15',
+              end: '2024-09-15',
+              progress: 0,
+            },
+            {
+              id: 47,
+              name: '酶标仪检',
+              start: '2024-09-15',
+              end: '2024-09-15',
+              progress: 0,
+            },
+            {
+              id: 48,
+              name: '孔板、试剂回',
+              start: '2024-09-15',
+              end: '2024-09-15',
+              progress: 0,
+            },
+          ],
+        },
+      ]
+    };
+  },
+  computed: {
+    startDate() {
+      if (this.tasks.length === 0) {
+        // 如果没有任务数据,返回当前月份的第一
+      const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), 1);
+      }
+      // 计算最早的开始日期并提前2
+    const earliestStart = new Date(Math.min(...this.tasks.map(task => new Date(task.start))));
+      earliestStart.setDate(earliestStart.getDate() - 2); // 提前2
+    return earliestStart;
+    },
+    endDate() {
+      if (this.tasks.length === 0) {
+        // 如果没有任务数据,返回当前月份的最后一
+      const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth()' + 1, 0); // 当前月份的最后一
+    }
+      // 计算最晚的结束日期
+
+    return new Date(Math.max(...this.tasks.map(task => new Date(task.end))));
+    },
+    totalDays() {
+      return Math.ceil((this.endDate - this.startDate) / (1000 * 60 * 60 * 24)) + 1;
+    },
+    taskData() {
+      // 将任务数据转换为表格格式
+
+    return this.tasks.map(task => ({
+        id: task.id,
+        name: task.name,
+        start: task.start,
+        end: task.end,
+        progress: task.progress,
+        children: task.children.map(subTask => ({
+          id: subTask.id,
+          name: subTask.name,
+          start: subTask.start,
+          end: subTask.end,
+          progress: subTask.progress,
+        })),
+      }));
+    },
+    columns() {
+      return [
+        {
+          title: '任务名称',
+          dataIndex: 'name',
+          key: 'name',
+          ellipsis: true,
+        },
+        {
+          title: '开始日',
+          dataIndex: 'start',
+          key: 'start',
+          ellipsis: true,
+        },
+        {
+          title: '结束日期',
+          dataIndex: 'end',
+          key: 'end',
+          ellipsis: true,
+        },
+        {
+          title: '进度(%)',
+          dataIndex: 'progress',
+          key: 'progress',
+        },
+      ];
+    },
+    expandable() {
+      return {
+        expandedRowRender: (record) => {
+          return h('ul', 
+            record.children.map(subTask => 
+              h('li', { key: subTask.id }, `${subTask.name} (进度: ${subTask.progress}%)`)
+            )
+          );
+        },
+        defaultExpandAllRows: true, // 默认展开所有行
+
+    };
+    },
+  },
+  methods: {
+    toggleCollapse() {
+      this.isCollapsed = !this.isCollapsed; /**
+       * 切换分隔条状 },
+       */
+      formatDate(date) {
+      return date.getDate(); /**
+       * 只显示日 },
+       */
+      formatMonth(date) {
+      return date.toLocaleString('default', { month: 'long' }); // 显示月份名称
+
+  },
+    isFirstDayOfMonth(date) {
+      return date.getDate() === 1; /**
+       * 判断是否为每月第一 },
+       */
+      getTaskStyle(task) {
+      const startDate = new Date(task.start);
+      const endDate = new Date(task.end);
+      const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24)' + 1; // 包含结束
+    const offsetDays = (startDate - this.startDate) / (1000 * 60 * 60 * 24);
+      
+      // 计算重叠任务的数
+    const overlapCount = this.tasks.filter(t => t.start === task.start && t.end === task.end).length;
+      
+      return {
+        width: `${(totalDays / this.totalDays) * 100}%`,
+        marginLeft: `${(offsetDays / this.totalDays) * 100}%`,
+        zIndex: 10 - overlapCount, // 确保后面的任务在前面
+
+      position: 'relative', // 确保任务相对定位
+        left: `${(overlapCount - 1) * 5}px`, // 为每个重叠任务添加偏移量
+
+    };
+    },
+    getProgressStyle(task) {
+      return {
+        width: `${task.progress}%`,
+        backgroundColor: 'green',
+        height: '100%',
+      };
+    },
+    getDayColor(index) {
+      const currentDate = new Date();
+      const currentDay = new Date(this.startDate.getTime()' + index * 24 * 60 * 60 * 1000);
+      // 为今天的日期设置不同的背景色
+
+    if (currentDate.toDateString() === currentDay.toDateString()) {
+        return '#ffeb3b'; // 今天的颜
+    }
+      return index % 2 === 0 ? '#f9f9f9' : '#ffffff'; /**
+       * 交替背景 },
+       */
+      rowClassName(record, index) {
+      return index % 2 === 0 ? 'even-row' : 'odd-row'; // 根据行索引返回不同的类名
+
+  },
+  },
+};
+</script>
+
+<style>
+#gantt-chart {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative; /* 使竖线相对于甘特图定? */
+}
+
+.time-axis {
+  display: flex;
+  height: 30px;
+  background-color: #f0f0f0;
+}
+
+.day {
+  text-align: center;
+  padding: 5px 0;
+  position: relative;
+}
+
+.vertical-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* 使竖线覆盖整个甘特图 */
+       */
+}
+
+.line {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%; /* 竖线从上到下 */
+       */
+  background-color: #ccc;
+}
+
+.task {
+  margin: 10px 10px 0;
+}
+
+.task-name {
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.60);
+}
+
+.task-bar {
+  background-color: #e0e0e0;
+  position: relative;
+  height: 20px;
+  border-radius: 5px;
+  margin-top: -22px;
+}
+
+.progress {
+  background-color: green;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.sub-tasks {
+  margin-left: 20px; /* Indent sub-tasks */
+       */
+}
+
+.sub-task {
+  margin: 5px 5px 0;  
+}
+
+.sub-task-name {
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.60);
+}
+
+.sub-task-bar {
+  background-color: #e0e0e0;
+  position: relative;
+  height: 15px;
+  border-radius: 5px;
+  margin-top: -20px;
+}
+
+.sub-progress {
+  background-color: blue;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.separator {
+  width: 4px; /* 增加分隔条的宽度 */
+       */
+  background-color: #5685dd; /* 更深的颜色以增强可见? */
+  height: 100%; /* 分隔条的高度 */
+       */
+  cursor: pointer; /* 鼠标悬停时显示为可点? */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+  margin-right: 5px;
+  transition: background-color 0.3s; /* 添加过渡效果 */
+       */
+}
+
+.separator:hover {
+  background-color: #588000; /* 鼠标悬停时改变颜: */
+}
+
+/* 隔行不同底色 */
+       */
+.even-row {
+  background-color: #f9f9f9; /* 偶数行背景色 */
+       */
+}
+
+.odd-row {
+  background-color: #ffffff; /* 奇数行背景色 */
+       */
+}
+
+/* 也可以尝试修改表格单元格的样: */
+.ant-table-tbody > tr.odd-row > td {
+  height: 30px !important; /* 设置单元格行: */
+  line-height: 30px !important; /* 设置单元格文本的垂直居中 */
+       */
+  padding: 0 !important; /* 去掉内边距,确保行高生效 */
+       */
+}
+
+/* 也可以尝试修改表格单元格的样: */
+.ant-table-tbody > tr.even-row > td {
+  height: 30px !important; /* 设置单元格行: */
+  line-height: 30px !important; /* 设置单元格文本的垂直居中 */
+       */
+  padding: 0 !important; /* 去掉内边距,确保行高生效 */
+       */
+}
+
+/* 还可以设置表头的行高 */
+       */
+.ant-table-thead > tr > th {
+  height: 30px !important; /* 设置表头行高 */
+       */
+  line-height: 30px !important; /* 设置表头文本的垂直居: */
+  padding: 0 16px; /* 调整内边距以适应新高: */
+}
+</style>
