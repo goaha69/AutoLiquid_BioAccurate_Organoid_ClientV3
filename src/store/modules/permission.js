@@ -64,6 +64,7 @@ const permission = {
     },
     SET_MENUS: (state, menus) => {
       console.log('📋 [permission.js] SET_MENUS 被调用，新菜单数据长度:', menus ? menus.length : 0)
+      console.log('📋 [permission.js] SET_MENUS 接收到的菜单数据:', menus)
       
       // 确保menus是数组
       if (menus && Array.isArray(menus)) {
@@ -71,14 +72,13 @@ const permission = {
         const oldLength = state.menus ? state.menus.length : 0
         console.log(`📋 [permission.js] 菜单更新: ${oldLength} -> ${menus.length}`)
         
-        // 清空并重新设置menus，确保Vue能检测到变化
-        state.menus = []
-        setTimeout(() => {
-          state.menus = menus
-          console.log('📋 [permission.js] state.menus 更新完成，新长度:', state.menus.length)
-        }, 0)
+        // 直接更新state.menus，确保立即生效
+        state.menus = [...menus]
+        console.log('📋 [permission.js] state.menus 更新完成，新长度:', state.menus.length)
+        console.log('📋 [permission.js] 更新后的 state.menus:', state.menus)
       } else {
-        console.warn('⚠️ [permission.js] SET_MENUS 收到非数组数据，忽略更新:', menus)
+        console.warn('⚠️ [permission.js] SET_MENUS 收到非数组数据，清空菜单:', menus)
+        state.menus = []
       }
     }
   },
