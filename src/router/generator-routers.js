@@ -208,18 +208,14 @@ const rootRouter = {
  * @returns {Promise<Router>}
  */
 export const generatorDynamicRouter = (data) => {
-  console.log('🔍 generatorDynamicRouter 开始生成路由, 输入数据:', data)
   return new Promise((resolve, reject) => {
     try {
       const { antDesignmenus } = data
       const menuNav = []
       const childrenNav = []
 
-      console.log('🔍 后端返回的菜单数据:', antDesignmenus)
-
       // 验证输入数据
       if (!antDesignmenus || !Array.isArray(antDesignmenus)) {
-        console.error('❌ 菜单数据无效，应该是数组:', antDesignmenus)
         // 如果没有菜单数据，创建默认菜单
         const defaultMenus = [
           {
@@ -246,75 +242,12 @@ export const generatorDynamicRouter = (data) => {
           }
         ]
         
-        console.log('🔧 使用默认菜单:', defaultMenus)
         listToTree(defaultMenus, childrenNav, 0)
       } else {
-        console.log('🔍 [generatorDynamicRouter] 原始菜单数据:', JSON.stringify(antDesignmenus, null, 2));
-        console.log('🔍 [generatorDynamicRouter] 菜单数据统计:');
-        console.log(`   - 总菜单数量: ${antDesignmenus.length}`);
-        
-        // 统计各级别菜单数量
-        const levelStats = {};
-        const pidStats = {};
-        antDesignmenus.forEach(item => {
-          const pid = item.pid;
-          pidStats[pid] = (pidStats[pid] || 0) + 1;
-          
-          if (pid == 0) {
-            levelStats['一级菜单'] = (levelStats['一级菜单'] || 0) + 1;
-          } else {
-            const parentExists = antDesignmenus.some(p => p.id == pid);
-            if (parentExists) {
-              levelStats['二级或更深菜单'] = (levelStats['二级或更深菜单'] || 0) + 1;
-            } else {
-              levelStats['孤立菜单(找不到父级)'] = (levelStats['孤立菜单(找不到父级)'] || 0) + 1;
-            }
-          }
-        });
-        
-        console.log('   - 菜单层级统计:', levelStats);
-        console.log('   - 按父ID统计:', pidStats);
-
-        // 先检查一级菜单
-        const topLevelMenus = antDesignmenus.filter(item => item.pid == 0);
-        console.log('🏆 [generatorDynamicRouter] 一级菜单列表:');
-        topLevelMenus.forEach((menu, index) => {
-          const subMenus = antDesignmenus.filter(item => item.pid == menu.id);
-          console.log(`   ${index + 1}. ${menu.name} (id: ${menu.id}, pid: ${menu.pid}) - 预期子菜单: ${subMenus.length} 个`);
-          if (subMenus.length > 0) {
-            subMenus.forEach((sub, subIndex) => {
-              console.log(`      ${subIndex + 1}. ${sub.name} (id: ${sub.id}, pid: ${sub.pid})`);
-            });
-          }
-        });
-
         // 遍历后端返回的菜单数据，按 PID 构建树形结构
-        console.log('🔄 [generatorDynamicRouter] 开始构建树形结构...');
         listToTree(antDesignmenus, childrenNav, 0);
-
-        console.log('🔍 [generatorDynamicRouter] 构建的树形菜单数据:', JSON.stringify(childrenNav, null, 2));
-        
-        // 检查构建后的一级菜单
-        console.log('🔍 [generatorDynamicRouter] 构建后的一级菜单:');
-        childrenNav.forEach((menu, index) => {
-          const childCount = menu.children ? menu.children.length : 0;
-          console.log(`   ${index + 1}. ${menu.name} (id: ${menu.id}) - 实际子菜单数量: ${childCount}`);
-          if (menu.children && menu.children.length > 0) {
-            menu.children.forEach((child, childIndex) => {
-              const grandChildCount = child.children ? child.children.length : 0;
-              console.log(`      ${childIndex + 1}. ${child.name} (id: ${child.id}) - 三级菜单: ${grandChildCount} 个`);
-            });
-          }
-        });
       }
   
-      // 检查每个一级菜单是否有对应的二级菜单
-      childrenNav.forEach(menu => {
-        if (!menu.children || menu.children.length === 0) {
-          console.warn(`⚠️ 一级菜单 "${menu.name}" 没有加载到二级菜单`);
-        }
-      });
-
       // 添加静态个人中心页面
       listToTree(userAccount, childrenNav, 0)
       
@@ -326,7 +259,6 @@ export const generatorDynamicRouter = (data) => {
       )
       
       if (!hasWelcome) {
-        console.log('🔧 添加默认welcome路由')
         childrenNav.unshift({
           name: 'welcome',
           path: 'welcome', // 不要以 / 开头，因为会作为rootRouter的子路由
@@ -335,19 +267,14 @@ export const generatorDynamicRouter = (data) => {
         })
       }
 
-      console.log('🔍 转换后的树形路由结构 (childrenNav):', JSON.parse(JSON.stringify(childrenNav)))
-
       rootRouter.children = childrenNav
       menuNav.push(rootRouter)
 
       const routers = generator(menuNav)
       routers.push(notFoundRouter)
 
-      console.log('🔍 最终生成的路由 (routers):', JSON.parse(JSON.stringify(routers)))
-
       resolve(routers)
     } catch (error) {
-      console.error('❌ 路由生成失败:', error);
       reject(error);
     }
   });
@@ -378,11 +305,8 @@ export const generator = (routerMap, parent) => {
       name: item.name || item.key || '',
       component: (constantRouterComponents[item.component || item.key]) || (item.component === 'RouteView' ? constantRouterComponents['RouteView'] : item.component === 'PageView' ? constantRouterComponents['PageView'] : markRaw(defineAsyncComponent({
         loader: () => {
-          console.log('🔍 尝试加载组件:', item.component || item.key, '路径:', item.path)
-          
           // 特别处理设备管理页面
           if (item.component === 'experiment/equipment' || item.component === 'equipment') {
-            console.log('⚠️ 设备管理特殊处理:', item.component)
             return import('@/views/experiment/equipment/index.vue')
           }
           
@@ -397,7 +321,6 @@ export const generator = (routerMap, parent) => {
                   import(`@/views/${item.component}/index.vue`)
                     .then(component => resolve(component))
                     .catch(() => {
-                      console.warn(`找不到组件: @/views/${item.component} 或其 index.vue`)
                       // 最后尝试404
                       import('@/views/system/exception/404.vue').then(resolve)
                     })
@@ -413,20 +336,18 @@ export const generator = (routerMap, parent) => {
                   import(`@/views/${item.component}.vue`)
                     .then(component => resolve(component))
                     .catch(() => {
-                      console.warn(`找不到组件: @/views/${item.component}/index.vue 或 @/views/${item.component}.vue`)
                       // 最后尝试404
                       import('@/views/system/exception/404.vue').then(resolve)
                     })
                 })
             })
           } else {
-            console.warn('组件路径为空，返回404页面')
             return import('@/views/system/exception/404.vue')
           }
         },
         // 添加错误处理和加载状态
         onError: (error) => {
-          console.error('组件加载错误:', error, item.component || item.key)
+          // 组件加载错误处理
         },
         loadingComponent: {
           template: '<div class="loading-component">正在加载组件...</div>'
@@ -467,22 +388,12 @@ export const generator = (routerMap, parent) => {
  * @param parentId 父ID
  */
 const listToTree = (list, tree, parentId) => {
-  console.log(`🔍 [listToTree] 构建树形结构，父ID: ${parentId}, 列表长度: ${list.length}`);
-  
   // 过滤当前父级下的菜单项
   const currentLevelMenus = list.filter(item => item.pid == parentId);
-  console.log(`🔍 [listToTree] 当前层级菜单数量: ${currentLevelMenus.length}`);
   
   if (currentLevelMenus.length === 0) {
-    console.log(`📝 [listToTree] 父ID ${parentId} 下没有找到子菜单`);
     return;
   }
-
-  // 打印当前层级的所有菜单
-  console.log(`🔍 [listToTree] 父ID ${parentId} 下的菜单:`)
-  currentLevelMenus.forEach((item, index) => {
-    console.log(`   ${index + 1}. ${item.name} (id: ${item.id}, pid: ${item.pid}, path: ${item.path || 'no-path'}, app: ${item.application || 'no-app'}, hidden: ${item.hidden})`);
-  });
   
   // 不进行分组，直接处理每个菜单项，避免路径冲突导致的分组错误
   // 按照菜单项的优先级排序
@@ -509,11 +420,8 @@ const listToTree = (list, tree, parentId) => {
   sortedMenus.forEach((item, index) => {
     // 如果已经处理过，跳过
     if (processedIds.has(item.id)) {
-      console.log(`⏩ [listToTree] 菜单 "${item.name}" (id: ${item.id}) 已处理，跳过`);
       return;
     }
-    
-    console.log(`✅ [listToTree] 处理菜单 ${index + 1}: ${item.name} (id: ${item.id}, path: ${item.path || 'no-path'})`);
     
     // 标记为已处理
     processedIds.add(item.id);
@@ -526,23 +434,14 @@ const listToTree = (list, tree, parentId) => {
     };
     
     // 递归查找子菜单
-    console.log(`🔄 [listToTree] 为 "${item.name}" (id: ${item.id}) 递归查找子菜单`);
     listToTree(list, menuItem.children, item.id);
     
     // 如果没有子菜单，删除 children 属性
     if (menuItem.children.length === 0) {
       delete menuItem.children;
-      console.log(`📝 [listToTree] "${item.name}" 没有子菜单`);
-    } else {
-      console.log(`📋 [listToTree] "${item.name}" 包含 ${menuItem.children.length} 个子菜单:`);
-      menuItem.children.forEach((child, index) => {
-        console.log(`      ${index + 1}. ${child.name} (id: ${child.id})`);
-      });
     }
     
     // 添加到当前树中
     tree.push(menuItem);
   });
-  
-  console.log(`🔍 [listToTree] 父ID ${parentId} 层级构建完成，树节点数量: ${tree.length}`);
 }

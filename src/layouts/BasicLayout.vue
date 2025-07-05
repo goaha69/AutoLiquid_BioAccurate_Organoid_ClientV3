@@ -190,7 +190,6 @@ export default {
     // 监听主菜单变化
     mainMenu: {
       handler(val) {
-        console.log('🔄 [BasicLayout] mainMenu 发生变化，重新设置菜单')
         this.setMenus()
       },
       deep: true
@@ -198,9 +197,7 @@ export default {
     // 监听权限模块的菜单变化
     permissionMenus: {
       handler(val) {
-        console.log('🔄 [BasicLayout] permissionMenus 发生变化:', val)
         if (val && val.length > 0) {
-          console.log('🔄 [BasicLayout] 从permissionMenus更新左侧菜单')
           this.updateSideMenus()
         }
       },
@@ -222,7 +219,7 @@ export default {
         try {
           localStorage.setItem('appSettings', JSON.stringify(newSettings))
         } catch (error) {
-          console.error('保存应用设置失败:', error)
+          // 保存失败时静默处理
         }
       },
       immediate: true,
@@ -230,30 +227,18 @@ export default {
     }
   },
   created () {
-    console.log('🚀🚀🚀 [BasicLayout] 组件 created 开始执行')
-    console.log('🚀🚀🚀 [BasicLayout] 当前路由:', this.$route.path, this.$route.name)
     this.loadSettings()
     this.collapsed = !this.sidebarOpened
     
     // 设置菜单
-    console.log('🚀🚀🚀 [BasicLayout] 准备设置菜单')
-    
     // 检查是否有permission菜单数据
     if (this.permissionMenus && this.permissionMenus.length > 0) {
-      console.log('🚀🚀🚀 [BasicLayout] 使用permission菜单数据')
       this.updateSideMenus()
     } else {
-      console.log('🚀🚀🚀 [BasicLayout] 使用mainMenu设置菜单')
       this.setMenus()
     }
-    
-    console.log('🚀🚀🚀 [BasicLayout] created 执行完成，menus长度:', this.menus?.length)
   },
   mounted () {
-    console.log('🚀🚀🚀 [BasicLayout] 组件 mounted 开始执行')
-    console.log('🚀🚀🚀 [BasicLayout] 当前 menus 数据:', this.menus)
-    console.log('🚀🚀🚀 [BasicLayout] 当前 mainMenu 数据:', this.mainMenu)
-    
     const userAgent = navigator.userAgent
     if (userAgent.indexOf('Edge') > -1) {
       this.$nextTick(() => {
@@ -263,18 +248,13 @@ export default {
         }, 16)
       })
     }
-    console.log('🚀🚀🚀 [BasicLayout] mounted 执行完成')
   },
   methods: {
     ...mapActions(['setSidebar']),
     // 重新生成菜单 - 与旧版项目保持一致
     setMenus () {
-      console.log('🔧 [BasicLayout] setMenus 开始执行')
-      console.log('🔧 [BasicLayout] mainMenu:', this.mainMenu)
-      
       // 检查permission模块中是否有菜单数据
       if (this.permissionMenus && this.permissionMenus.length > 0) {
-        console.log('🔍 [BasicLayout] 发现permission模块中有菜单数据，优先使用')
         this.updateSideMenus()
         return
       }
@@ -294,54 +274,41 @@ export default {
         }
 
         if (rootRoute) {
-          console.log('🔍 [BasicLayout] 找到根路由:', rootRoute)
           // 强制显示菜单容器，即使没有有效菜单
           document.querySelector('.ant-layout-sider')?.setAttribute('style', 'display: block !important; position: fixed; left: 0; top: 0; height: 100vh; z-index: 100;')
           
           const routes = convertRoutes(rootRoute)
-          console.log('🔍 [BasicLayout] 转换后的路由:', routes)
 
           if (routes && routes.children) {
             this.menus = routes.children
           } else {
-            console.warn('⚠️ [BasicLayout] 转换后的路由没有 children，设置空菜单')
             this.menus = []
           }
         } else {
-          console.warn('⚠️ [BasicLayout] 未找到根路由，设置空菜单')
           this.menus = []
         }
       } else {
-        console.warn('⚠️ [BasicLayout] mainMenu 为空或未定义，检查 permissionMenus')
-        
         // 尝试从permissionMenus获取菜单数据
         if (this.permissionMenus && this.permissionMenus.length > 0) {
           this.updateSideMenus()
         } else {
-          console.warn('⚠️ [BasicLayout] permissionMenus 也为空，设置空菜单')
           this.menus = []
         }
       }
 
-      console.log("📋 [BasicLayout] setMenus - 设置菜单完成:", this.menus)
-
       if (!this.menus || this.menus.length === 0) {
-        console.error('❌ [BasicLayout] menus 为空，可能导致侧边栏和顶部菜单无法渲染')
         // 尝试从路由中获取菜单
         try {
           const routes = this.$router.getRoutes()
-          console.log('🔍 [BasicLayout] 尝试从路由中获取菜单:', routes)
           const layoutRoute = routes.find(r => r.name === 'MenuIndex.vue' || r.name === 'BasicLayout')
           if (layoutRoute && layoutRoute.children) {
-            console.log('✅ [BasicLayout] 从路由中找到布局路由:', layoutRoute)
             this.menus = layoutRoute.children.map(child => ({
               ...child,
               meta: child.meta || { title: child.name }
             }))
-            console.log('✅ [BasicLayout] 从路由生成的菜单:', this.menus)
           }
         } catch (err) {
-          console.error('❌ [BasicLayout] 从路由生成菜单失败:', err)
+          // 从路由生成菜单失败时静默处理
         }
       }
 
@@ -350,27 +317,13 @@ export default {
     
     // 验证菜单数据结构
     validateMenuData(menus) {
-      console.log('🔍 [BasicLayout] 验证菜单数据结构...')
       if (!Array.isArray(menus)) {
-        console.error('❌ [BasicLayout] 菜单数据不是数组:', menus)
         return
       }
       
       menus.forEach((menu, index) => {
-        console.log(`🔍 [BasicLayout] 菜单项 ${index + 1}:`, menu)
-        
-        // 检查必要的字段
-        if (!menu.path && !menu.name) {
-          console.error(`❌ [BasicLayout] 菜单项 ${index + 1} 缺少 path 或 name 字段:`, menu)
-        }
-        
-        if (!menu.meta || !menu.meta.title) {
-          console.warn(`⚠️ [BasicLayout] 菜单项 ${index + 1} 缺少 meta.title:`, menu)
-        }
-        
         // 检查子菜单
         if (menu.children && Array.isArray(menu.children)) {
-          console.log(`🔍 [BasicLayout] 菜单项 ${index + 1} 有 ${menu.children.length} 个子菜单`)
           this.validateMenuData(menu.children)
         }
       })
@@ -383,7 +336,7 @@ export default {
           this.settings = { ...this.settings, ...JSON.parse(appSettings) }
         }
       } catch (error) {
-        console.error('获取应用设置失败:', error)
+        // 获取应用设置失败时静默处理
       }
     },
     // 设备检测方法
@@ -426,31 +379,19 @@ export default {
     },
     // 处理应用准备切换事件
     onAppChanging(appCode) {
-      console.log('🚀 [BasicLayout] 收到应用准备切换事件:', appCode);
-      console.log('🔄 [BasicLayout] 应用切换开始，清空当前菜单');
-      
       // 清空当前菜单，显示加载状态
       this.menus = [];
     },
     // 处理应用切换事件
     onAppChanged(appCode) {
-      console.log('🎯 [BasicLayout] 收到应用切换事件:', appCode)
-      console.log('✅ [BasicLayout] 应用切换完成，等待菜单数据更新')
-      
       // 等待一个Vue tick，确保store中的数据已经更新
       this.$nextTick(() => {
-        console.log('🔄 [BasicLayout] 延迟执行菜单更新，当前 permissionMenus:', this.permissionMenus)
-        
         // 检查菜单数据是否已经更新
         if (this.permissionMenus && this.permissionMenus.length > 0) {
-          console.log('✅ [BasicLayout] 菜单数据已更新，开始设置左侧菜单')
           this.updateSideMenus()
         } else {
-          console.log('⚠️ [BasicLayout] 菜单数据暂未更新，等待500ms后重试')
-          
           // 如果菜单数据还没有更新，等待一段时间后重试
           setTimeout(() => {
-            console.log('🔄 [BasicLayout] 重试获取菜单数据，当前 permissionMenus:', this.permissionMenus)
             this.updateSideMenus()
           }, 500)
         }
@@ -459,23 +400,15 @@ export default {
     
     // 从permissionMenus更新左侧菜单
     updateSideMenus() {
-      console.log('🔄 [BasicLayout] updateSideMenus 执行...')
-      console.log('🔄 [BasicLayout] 当前 permissionMenus 状态:', this.permissionMenus)
-      console.log('🔄 [BasicLayout] permissionMenus 长度:', this.permissionMenus ? this.permissionMenus.length : 0)
       
       if (this.permissionMenus && this.permissionMenus.length > 0) {
-        console.log('📋 [BasicLayout] 从permission模块获取菜单数据，长度:', this.permissionMenus.length)
-        console.log('📋 [BasicLayout] permissionMenus 详细数据:', JSON.stringify(this.permissionMenus, null, 2))
-        
         // 直接使用 permissionMenus 作为左侧菜单数据
         // 不需要复杂的转换，因为菜单数据已经在 generator-routers.js 中处理过了
         try {
-          const oldMenuCount = this.menus ? this.menus.length : 0
-          
           // 直接将 permissionMenus 设置为左侧菜单
           this.menus = [...this.permissionMenus]
           
-          console.log(`✅ [BasicLayout] 左侧菜单更新成功: 从${oldMenuCount}项更新到${this.menus.length}项`)
+
           console.log('� [BasicLayout] 更新后的菜单数据:', this.menus)
           
           // 强制Vue重新渲染菜单组件
@@ -483,28 +416,17 @@ export default {
           
           // 确保菜单组件收到新数据
           this.$nextTick(() => {
-            console.log('🔄 [BasicLayout] nextTick后验证菜单状态')
-            if (this.menus && this.menus.length > 0) {
-              console.log('✅ [BasicLayout] 菜单数据已成功传递给左侧菜单组件')
-            } else {
-              console.warn('⚠️ [BasicLayout] 菜单数据传递可能失败')
-            }
+            // 验证菜单状态
           })
           
         } catch (error) {
-          console.error('❌ [BasicLayout] 设置菜单数据失败:', error)
           this.menus = []
         }
       } else {
-        console.warn('⚠️ [BasicLayout] permissionMenus为空，尝试从mainMenu获取菜单')
-        console.log('🔄 [BasicLayout] 当前 mainMenu 状态:', this.mainMenu)
-        
         // 尝试从mainMenu获取菜单作为后备
         if (this.mainMenu && this.mainMenu.length > 0) {
-          console.log('📋 [BasicLayout] 使用 mainMenu 作为后备菜单')
           this.setMenus()
         } else {
-          console.warn('⚠️ [BasicLayout] mainMenu 也为空，显示空菜单状态')
           this.menus = []
         }
       }

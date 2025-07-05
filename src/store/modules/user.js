@@ -59,7 +59,6 @@ const user = {
   state: {
     token: (() => {
       const token = ls.get(ACCESS_TOKEN, '')
-      console.log('🔍 Store初始化时读取的token:', token)
       return token
     })(),
     name: '',
@@ -74,7 +73,6 @@ const user = {
 
   mutations: {
     SET_TOKEN: (state, token) => {
-      console.log('🔧 Store SET_TOKEN:', token)
       state.token = token
     },
     SET_NAME: (state, {
@@ -128,31 +126,24 @@ const user = {
       commit
     }, userInfo) {
       return new Promise((resolve, reject) => {
-        console.log('🔐 开始登录请求...', userInfo)
         login(userInfo).then(response => {
-          console.log('🔐 登录接口返回:', response)
           if (!response.success) {
-            console.log('❌ 登录失败，原因:', response.message)
             reject(response.message)
             return
           }
           const result = response.data
-          console.log('🔑 提取的 token 数据:', result)
           
           // 保存到 localStorage
           ls.set(ACCESS_TOKEN, result, 7 * 24 * 60 * 60 * 1000)
           
           // 验证是否保存成功
           const savedToken = ls.get(ACCESS_TOKEN)
-          console.log('💾 保存后立即读取的 token:', savedToken)
           
           // 提交到 store
           commit('SET_TOKEN', result)
-          console.log('✅ 已提交 token 到 store')
           
           resolve()
         }).catch(error => {
-          console.error('❌ 登录接口调用失败:', error)
           reject('后端未启动或代理错误')
         })
       })
@@ -163,9 +154,7 @@ const user = {
       commit
     }) {
       return new Promise((resolve, reject) => {
-        console.log('🔄 开始获取用户信息...')
         getLoginUser().then(response => {
-          console.log('👤 获取用户信息响应:', response)
           if (response.success) {
             const data = response.data
             commit('SET_ADMINTYPE', data.adminType)
@@ -182,21 +171,12 @@ const user = {
               }).then((res) => {
                 commit('SET_AVATAR', window.URL.createObjectURL(new Blob([res])))
               }).catch((err) => {
-                console.error('预览头像错误：' + err.message)
+                // 头像预览失败，继续执行
               })
             }
             
-            // 确保返回的数据包含菜单信息，与旧版保持一致
-            console.log('🔍 检查返回数据是否包含菜单信息:', {
-              menus: data.menus,
-              apps: data.apps,
-              hasMenus: !!data.menus,
-              hasApps: !!data.apps
-            })
-            
             // 设置默认应用列表
             if (data.apps && Array.isArray(data.apps) && data.apps.length > 0) {
-              console.log('📱 设置默认应用列表:', data.apps)
               // 确保第一个应用是激活状态
               const appList = data.apps.map((app, index) => ({
                 ...app,
@@ -213,18 +193,14 @@ const user = {
                 { code: 'experiment', name: '实验管理', active: false, path: '/experiment' },
                 { code: 'workflow', name: '流程中心', active: false, path: '/workflow' }
               ]
-              console.log('📱 使用默认应用列表:', defaultApps)
               ls.set(ALL_APPS_MENU, defaultApps, 7 * 24 * 60 * 60 * 1000)
             }
             
-            console.log('✅ 用户信息设置完成')
             resolve(data)
           } else {
-            console.error('❌ 获取用户信息失败:', response.message)
             reject(new Error(response.message))
           }
         }).catch(error => {
-          console.error('❌ 获取用户信息接口调用失败:', error)
           reject(error)
         })
       })
@@ -236,17 +212,15 @@ const user = {
       state
     }) {
       return new Promise((resolve) => {
-        console.log('🚪 开始登出...')
         logout(state.token).then(() => {
-          console.log('✅ 登出接口调用成功')
+          // 登出成功
         }).catch(err => {
-          console.log('⚠️ 登出接口调用失败，但继续清理本地数据:', err.message)
+          // 登出接口调用失败，但继续清理本地数据
         }).finally(() => {
           commit('SET_TOKEN', '')
           commit('SET_ROLES', [])
           ls.remove(ACCESS_TOKEN)
           ls.remove(ALL_APPS_MENU)
-          console.log('🧹 本地数据清理完成')
           resolve()
         })
       })

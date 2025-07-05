@@ -171,11 +171,8 @@ export default {
       return this.settings.headerColor
     },
     appMenus() {
-      console.log('🔍 [GlobalHeader] 计算 appMenus...')
-      
       // 优先从 localStorage 获取，如果没有则从 userInfo.apps 获取，最后使用默认值
       let allApps = ls.get(ALL_APPS_MENU, null)
-      console.log('🔍 [GlobalHeader] 从 localStorage 获取的应用列表:', allApps)
       
       // 直接使用默认列表，用于测试
       const testApps = [
@@ -189,7 +186,6 @@ export default {
       
       // 如果localStorage中没有数据，检查userInfo
       if ((!allApps || allApps.length === 0) && this.userInfo && this.userInfo.apps) {
-        console.log('🔍 [GlobalHeader] 使用 userInfo.apps:', this.userInfo.apps)
         allApps = this.userInfo.apps
         
         // 保存到localStorage
@@ -198,24 +194,14 @@ export default {
       
       // 如果仍然没有，强制使用默认的应用列表
       if (!allApps || allApps.length === 0) {
-        console.warn('⚠️ [GlobalHeader] 没有找到应用数据，强制使用默认值')
-        
         // 保存默认应用到 localStorage
         ls.set(ALL_APPS_MENU, testApps, 7 * 24 * 60 * 60 * 1000)
-        
-        console.log('📱 [GlobalHeader] 返回默认应用:', testApps)
         return testApps
       }
       
       // 确保返回的数据每个项都有 code 和 name 属性
       const validApps = allApps.filter(app => app && app.code && app.name)
-      if (validApps.length !== allApps.length) {
-        console.warn('⚠️ [GlobalHeader] 发现无效的应用数据，已过滤')
-        console.log('原始数据:', allApps)
-        console.log('过滤后数据:', validApps)
-      }
       
-      console.log('📱 [GlobalHeader] 返回应用列表:', validApps.length > 0 ? validApps : testApps)
       return validApps.length > 0 ? validApps : testApps
     }
   },
@@ -231,8 +217,6 @@ export default {
     // 监听appMenus变化，重新创建静态菜单
     appMenus: {
       handler(newVal) {
-        console.log('🔄 [GlobalHeader] appMenus 数据变化，重新创建静态菜单')
-        console.log('🔄 [GlobalHeader] newVal:', newVal)
         if (newVal && newVal.length > 0) {
           this.$nextTick(() => {
             this.createStaticMenu()
@@ -248,10 +232,8 @@ export default {
     
     // 强制确保加载默认应用
     let allApps = ls.get(ALL_APPS_MENU, null)
-    console.log('📱 [GlobalHeader] created - 检查应用列表:', allApps)
     
     if (!allApps || allApps.length === 0) {
-      console.log('📱 [GlobalHeader] created - 创建默认应用列表')
       const defaultApps = [
         { code: 'platform', name: '平台管理', active: true, path: '/welcome' },
         { code: 'system', name: '系统管理', active: false, path: '/system' },
@@ -271,13 +253,9 @@ export default {
     // 确保我们总是能看到至少一个顶部菜单
     // 不要立即处理，等待DOM完全渲染
     setTimeout(() => {
-      console.log('🚀 [GlobalHeader] mounted 完成，检查状态')
-      
       // 检查DOM，确保没有多余的header
       const headers = document.querySelectorAll('.header-animat')
       if (headers.length > 1) {
-        console.warn(`检测到${headers.length}个GlobalHeader组件！`)
-        
         // 检查哪些header可见
         let visibleHeaders = Array.from(headers).filter(header => {
           const style = window.getComputedStyle(header)
@@ -288,7 +266,6 @@ export default {
         if (visibleHeaders.length > 1) {
           for (let i = 1; i < visibleHeaders.length; i++) {
             visibleHeaders[i].style.display = 'none'
-            console.log(`隐藏额外的GlobalHeader ${i+1}`)
           }
         }
       }
@@ -297,7 +274,6 @@ export default {
       this.$nextTick(() => {
         // 延迟一些时间，确保计算属性appMenus已经准备好
         setTimeout(() => {
-          console.log('🔧 [GlobalHeader] 准备创建静态菜单，当前appMenus:', this.appMenus)
           this.createStaticMenu()
         }, 500)
       })
@@ -315,7 +291,7 @@ export default {
           this.settings = { ...this.settings, ...JSON.parse(appSettings) }
         }
       } catch (error) {
-        console.error('获取应用设置失败:', error)
+        // 获取应用设置失败，使用默认配置
       }
     },
     setDefaultApp() {
@@ -329,26 +305,15 @@ export default {
       }
     },
     switchApp(appCode) {
-      console.log('🖱️ [GlobalHeader] switchApp 被调用，appCode:', appCode)
-      console.log('🔍 [GlobalHeader] 当前 appMenus:', this.appMenus)
-      console.log('🔍 [GlobalHeader] appMenus 长度:', this.appMenus ? this.appMenus.length : 0)
-      
-      // 详细输出每个应用的code，帮助调试
-      if (this.appMenus && this.appMenus.length > 0) {
-        console.log('🔍 [GlobalHeader] 所有可用的应用代码:')
-        this.appMenus.forEach((app, index) => {
-          console.log(`  ${index}: { code: "${app.code}", name: "${app.name}" }`)
-        })
+      // 检查当前appCode是否有效
+      if (!appCode || !this.appMenus || this.appMenus.length === 0) {
+        return
       }
       
       this.defApp = []
       const applicationData = this.appMenus.filter(item => item.code === appCode)
-      console.log('🔍 [GlobalHeader] 过滤后的 applicationData:', applicationData)
       
       if (!applicationData || applicationData.length === 0) {
-        console.error('❌ [GlobalHeader] 找不到对应的应用:', appCode)
-        console.error('❌ [GlobalHeader] 可用的应用列表:', this.appMenus.map(app => app.code))
-        
         // 尝试备用匹配方案：通过名称匹配
         const nameMap = {
           'platform': '平台管理',
@@ -363,7 +328,6 @@ export default {
         if (targetName) {
           const fallbackApp = this.appMenus.find(app => app.name === targetName)
           if (fallbackApp) {
-            console.log('✅ [GlobalHeader] 通过名称找到备用应用:', fallbackApp)
             applicationData.push(fallbackApp)
           }
         }
@@ -375,24 +339,18 @@ export default {
         }
       }
       
-      console.log('✅ [GlobalHeader] 找到应用数据:', applicationData[0])
-      
       // 发出应用切换开始事件
-      console.log('🔄 [GlobalHeader] 触发 app-changing 事件')
       this.$emit('app-changing', appCode)
       
       const hideMessage = message.loading('正在切换应用!', 0)
       this.MenuChange(applicationData[0]).then(() => {
         hideMessage()
         
-        console.log('✅ [GlobalHeader] MenuChange 完成，准备更新UI')
-        
         // 设置默认选中的菜单并触发左侧菜单更新
         this.$nextTick(() => {
           // 更新顶部菜单选中状态
           this.defApp = [appCode]
           
-          console.log('🔄 [GlobalHeader] 触发 app-changed 事件')
           // 发出应用切换完成事件，让BasicLayout更新左侧菜单
           this.$emit('app-changed', appCode)
           
@@ -400,12 +358,11 @@ export default {
           setTimeout(() => {
             // 根据应用代码跳转到对应的默认页面
             const targetRoute = this.getDefaultRouteByApp(appCode)
-            console.log('🔄 [GlobalHeader] 准备跳转到', targetRoute)
             
             if (targetRoute) {
               this.$router.push(targetRoute).catch(err => {
                 if (err.name !== 'NavigationDuplicated') {
-                  console.error('路由跳转失败:', err)
+                  // 路由跳转失败的处理
                 }
               })
             }
@@ -413,7 +370,6 @@ export default {
         })
       }).catch((err) => {
         hideMessage()
-        console.error('❌ [GlobalHeader] MenuChange 失败:', err)
         message.error('应用切换异常: ' + (err.message || ''))
       })
     },
@@ -462,12 +418,9 @@ export default {
     
     // 强制创建静态菜单，绕过Vue渲染
     createStaticMenu() {
-      console.log('🔧 [GlobalHeader] 准备创建静态菜单')
-      
       // 找到需要添加菜单的容器
       const header = document.querySelector('.header')
       if (!header) {
-        console.warn('⚠️ [GlobalHeader] 找不到header容器，无法创建静态菜单')
         return
       }
       
@@ -527,14 +480,6 @@ export default {
         { code: 'workflow', name: '流程中心', active: false }
       ]
       
-      console.log('🔍 [GlobalHeader] createStaticMenu 使用的菜单数据:', menuItems)
-      
-      // 输出用于调试的菜单代码对比
-      console.log('🔍 [GlobalHeader] 静态菜单将使用的代码:')
-      menuItems.forEach((item, index) => {
-        console.log(`  静态菜单 ${index}: { code: "${item.code}", name: "${item.name}" }`)
-      })
-      
       // 创建菜单项
       menuItems.forEach(item => {
         const menuItem = document.createElement('div')
@@ -557,7 +502,6 @@ export default {
         
         // 添加点击事件
         menuItem.addEventListener('click', () => {
-          console.log('🖱️ [GlobalHeader] 点击静态菜单项:', item.code)
           this.switchApp(item.code)
           
           // 更新激活状态
@@ -572,7 +516,6 @@ export default {
       
       // 添加到DOM
       header.appendChild(menuContainer)
-      console.log('✅ [GlobalHeader] 静态菜单创建完成')
     }
   },
   beforeDestroy () {

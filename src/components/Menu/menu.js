@@ -95,15 +95,11 @@ export default {
       }
     },
     onSelect ({ item, key, selectedKeys }) {
-      console.log('🎯 [Menu] 菜单点击事件:', { item, key, selectedKeys })
-      console.log('🎯 [Menu] 当前路由:', this.$route.path)
-      
       this.selectedKeys = selectedKeys
       this.$emit('select', { item, key, selectedKeys })
       
       // 手动处理路由跳转
       if (key && key !== this.$route.path) {
-        console.log('🔄 [Menu] 准备跳转到路由:', key)
         
         // 检查路由是否存在
         const router = this.$router
@@ -111,32 +107,24 @@ export default {
         const targetRoute = routes.find(route => route.path === key)
         
                  if (!targetRoute) {
-           console.error('❌ [Menu] 路由不存在:', key)
-           console.log('📋 [Menu] 当前所有路由:', routes.map(r => r.path))
            message.error(`路由不存在: ${key}`)
            return
          }
         
-        console.log('✅ [Menu] 找到目标路由:', targetRoute)
         
         this.$router.push(key).catch(err => {
-          console.error('❌ [Menu] 路由跳转失败:', err)
           
           // 如果是重复导航错误，忽略
           if (err.name === 'NavigationDuplicated') {
-            console.log('⚠️ [Menu] 重复导航，忽略错误')
             return
           }
           
           // 尝试使用 name 进行路由跳转
           if (targetRoute.name) {
-            console.log('🔄 [Menu] 尝试使用 name 跳转:', targetRoute.name)
                          this.$router.push({ name: targetRoute.name }).catch(nameErr => {
-               console.error('❌ [Menu] 使用 name 跳转也失败:', nameErr)
                message.error(`页面跳转失败: ${err.message}`)
              })
            } else {
-             console.error('❌ [Menu] 路由跳转失败且无法使用 name 跳转:', err)
              message.error(`页面跳转失败: ${err.message}`)
            }
         })

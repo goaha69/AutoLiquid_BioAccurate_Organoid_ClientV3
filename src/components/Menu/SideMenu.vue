@@ -9,13 +9,7 @@
     style="background: #001529 !important; position: fixed; left: 0; top: 0; height: 100vh; z-index: 1000; display: block !important;">
     
     <logo></logo>
-    
-    <!-- 添加调试信息显示 -->
-    <div v-if="!menus || menus.length === 0" style="color: #fff; padding: 20px; background: red;">
-      <div>❌ 菜单数据为空</div>
-      <div>menus: {{ menus }}</div>
-      <div>menus.length: {{ menus?.length }}</div>
-    </div>
+     
     
     <!-- 添加静态菜单作为备用，当动态菜单为空时显示 -->
     <template v-if="!menus || menus.length === 0">
@@ -88,14 +82,12 @@ export default {
     }
   },
   mounted() {
-    console.log('🔍 [SideMenu] 组件挂载，接收到的 menus:', this.menus)
-    console.log('🔍 [SideMenu] menus 是否为数组:', Array.isArray(this.menus))
-    console.log('🔍 [SideMenu] menus 长度:', this.menus?.length)
+    // 组件挂载，初始化菜单
   },
   watch: {
     menus: {
       handler(newMenus) {
-        console.log('🔍 [SideMenu] menus 数据变化:', newMenus)
+        // 监听菜单数据变化
       },
       immediate: true
     }

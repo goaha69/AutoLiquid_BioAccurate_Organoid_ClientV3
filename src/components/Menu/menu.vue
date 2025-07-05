@@ -1,11 +1,8 @@
 <template>
   <div>
-    <!-- 调试信息 -->
-    <div v-if="!menuTree || menuTree.length === 0" style="color: #fff; padding: 10px; background: orange; margin: 10px;">
-      <div>🔍 菜单树为空</div>
-      <div>props.menu: {{ props.menu }}</div>
-      <div>menuTree: {{ menuTree }}</div>
-      <div>menuTree.length: {{ menuTree?.length }}</div>
+    <!-- 菜单为空时的提示 -->
+    <div v-if="!menuTree || menuTree.length === 0" style="color: #fff; padding: 10px; margin: 10px;">
+      <div>暂无可用菜单</div>
     </div>
     
     <a-menu
@@ -104,15 +101,9 @@ export default {
     const selectedKeys = ref([])
     const cachedOpenKeys = ref([])
     
-    // 添加调试信息
-    console.log('🔍 [menu.vue] 接收到的 props.menu:', props.menu)
-    console.log('🔍 [menu.vue] props.menu 是否为数组:', Array.isArray(props.menu))
-    console.log('🔍 [menu.vue] props.menu 长度:', props.menu?.length)
-    
     const rootSubmenuKeys = computed(() => {
       const keys = []
       const menuArray = Array.isArray(props.menu) ? props.menu : []
-      console.log('🔍 [menu.vue] rootSubmenuKeys 计算中，menuArray:', menuArray)
       menuArray.forEach(item => keys.push(item.path))
       return keys
     })
@@ -121,8 +112,6 @@ export default {
     const menuTree = computed(() => {
       const menuArray = Array.isArray(props.menu) ? props.menu : []
       const filteredMenu = menuArray.filter(item => !item.hidden && !item.hideInMenu)
-      console.log('🔍 [menu.vue] menuTree 计算结果:', filteredMenu)
-      console.log('🔍 [menu.vue] 原始菜单数组长度:', menuArray.length, '过滤后长度:', filteredMenu.length)
       return filteredMenu
     })
     

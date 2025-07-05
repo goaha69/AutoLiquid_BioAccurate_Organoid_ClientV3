@@ -60,51 +60,35 @@ const permission = {
     SET_ROUTERS: (state, routers) => {
       state.addRouters = routers
       state.routers = constantRouterMap.concat(routers)
-      console.log("SET_ROUTERS",routers)
     },
     SET_MENUS: (state, menus) => {
-      console.log('📋 [permission.js] SET_MENUS 被调用，新菜单数据长度:', menus ? menus.length : 0)
-      console.log('📋 [permission.js] SET_MENUS 接收到的菜单数据:', menus)
-      
       // 确保menus是数组
       if (menus && Array.isArray(menus)) {
-        // 在更新前发出变更通知
-        const oldLength = state.menus ? state.menus.length : 0
-        console.log(`📋 [permission.js] 菜单更新: ${oldLength} -> ${menus.length}`)
-        
         // 直接更新state.menus，确保立即生效
         state.menus = [...menus]
-        console.log('📋 [permission.js] state.menus 更新完成，新长度:', state.menus.length)
-        console.log('📋 [permission.js] 更新后的 state.menus:', state.menus)
       } else {
-        console.warn('⚠️ [permission.js] SET_MENUS 收到非数组数据，清空菜单:', menus)
         state.menus = []
       }
     }
   },
   actions: {
     GenerateRoutes ({ commit }, data) {
-       console.log("GenerateRoutes",data)
       return new Promise(resolve => {
         const { roles, antDesignmenus } = data
         
         if (antDesignmenus && Array.isArray(antDesignmenus) && antDesignmenus.length > 0) {
           // 如果有后端菜单数据，使用generator-routers.js生成路由
-          console.log('🔄 [permission.js] 使用 antDesignmenus 生成路由:', antDesignmenus)
           
           import('@/router/generator-routers').then(module => {
             module.generatorDynamicRouter(data).then(routers => {
-              console.log('🔄 动态生成的路由:', routers)
               commit('SET_ROUTERS', routers)
               resolve()
             }).catch(err => {
-              console.error('生成路由失败:', err)
               resolve()
             })
           })
         } else {
           // 如果没有后端菜单数据或为空，使用本地路由配置 - 与旧版项目保持一致
-          console.log('🔄 [permission.js] 使用本地路由配置 (asyncRouterMap)')
           const mockRoles = roles || { permissionList: [] }
           const accessedRouters = filterAsyncRouter(asyncRouterMap, mockRoles)
           commit('SET_ROUTERS', accessedRouters)

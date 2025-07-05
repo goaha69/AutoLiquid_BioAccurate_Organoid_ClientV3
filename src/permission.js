@@ -10,21 +10,14 @@ import { ACCESS_TOKEN, ALL_APPS_MENU } from '@/store/mutation-types'
 import { Modal, notification } from 'ant-design-vue' // NProgress Configuration
 import { timeFix } from '@/utils/util'
 
-console.log('🔍 Permission.js - Router实例:', router)
-console.log('🔍 Permission.js - Store实例:', store)
-
 // 确保router存在且有beforeEach方法
 if (!router) {
-  console.error('❌ Router实例为空')
   throw new Error('Router instance is null')
 }
 
 if (typeof router.beforeEach !== 'function') {
-  console.error('❌ Router实例没有beforeEach方法:', router)
   throw new Error('Router instance does not have beforeEach method')
 }
-
-console.log('✅ Router实例验证通过')
 
 NProgress.configure({ showSpinner: false })
 const whiteList = ['login', 'register', 'registerResult'] // no redirect whitelist
@@ -62,7 +55,6 @@ router.beforeEach(async (to, from, next) => {
   try {
     // 避免重复进入导航守卫
     if (to._handled) {
-      console.log('⚠️ 路由已被处理过，避免循环重定向');
       next();
       return;
     }
@@ -72,19 +64,14 @@ router.beforeEach(async (to, from, next) => {
     to.meta && (typeof to.meta.title !== 'undefined' && setDocumentTitle(`${domTitle} - ${to.meta.title}`))
     
     const token = ls.get(ACCESS_TOKEN)
-    console.log('🔍 路由守卫检查token:', token)
-    console.log('🔍 当前路由:', to.path, to.name)
-    console.log('🔍 来源路由:', from.path, from.name)
   
   if (token) {
     /* has token */
     if (to.path === '/user/login') {
-      console.log('🚀 已有token，跳转到工作台')
       next({ path: defaultRoutePath })
       NProgress.done()
     } else {
       if (store.getters.roles.length === 0) {
-        console.log('🔄 获取用户信息...')
         try {
           const res = await store.dispatch('GetInfo')
           if (res.menus.length < 1) {
@@ -110,7 +97,6 @@ router.beforeEach(async (to, from, next) => {
             
             // 检查后端是否返回了菜单数据
             if (res.apps && res.apps.length > 0) {
-              console.log('🔍 使用后端返回的菜单数据')
               res.apps.forEach(item => {
                 const apps = { 'code': '', 'name': '', 'active': '', 'menu': '' }
                 if (item.active) {
@@ -128,7 +114,6 @@ router.beforeEach(async (to, from, next) => {
                 applocation.push(apps)
               })
             } else {
-              console.log('⚠️ 后端未返回菜单数据，使用本地路由配置作为 fallback')
               // 使用本地路由配置作为 fallback
               const defaultApp = {
                 'code': 'default',
@@ -151,11 +136,9 @@ router.beforeEach(async (to, from, next) => {
           } else {
             antDesignmenus = ls.get(ALL_APPS_MENU)[0].menu
           }
-          console.log("后端返回的路由", antDesignmenus)
           
           // 确保后端返回的菜单数据结构正确
           if (!Array.isArray(res.menus) || res.menus.length === 0) {
-            console.error('❌ 后端返回的菜单数据无效:', res.menus);
             Modal.error({
               title: '提示：',
               content: '无有效菜单数据，请联系管理员',
@@ -177,8 +160,6 @@ router.beforeEach(async (to, from, next) => {
             };
           });
 
-          console.log('🔍 处理后的菜单数据:', antDesignmenus);
-
           // 修复 antDesignmenus 数据的 path 字段，确保子路由 path 不以 '/' 开头
           function fixMenuPaths(menus) {
             return menus.map(menu => {
@@ -194,44 +175,38 @@ router.beforeEach(async (to, from, next) => {
 
           // 在 GenerateRoutes 调用前修复菜单数据
           antDesignmenus = fixMenuPaths(antDesignmenus);
-          console.log('🔍 修复后的菜单数据:', antDesignmenus);
 
           // 调用 GenerateRoutes 动态生成路由
           await store.dispatch('GenerateRoutes', { antDesignmenus });
 
           // 修复动态路由注册逻辑，确保 /welcome 路由正确挂载到 BasicLayout 的子路由中，并修复组件加载问题
           const addRouters = store.getters.addRouters;
-          console.log('🔍 准备添加的路由:', JSON.parse(JSON.stringify(addRouters)));
 
           // 先获取当前所有路由
           const currentRoutes = router.getRoutes();
-          console.log('🔍 添加路由前的所有路由:', JSON.stringify(currentRoutes, null, 2));
           
           // 安全地动态查找 BasicLayout 的 name
           let rootRouteName = '';
           try {
             // 确保 currentRoutes 存在且是数组
             if (currentRoutes && Array.isArray(currentRoutes)) {
-              // 查找 BasicLayout 路由
               const rootRoute = currentRoutes.find(route => 
                 route && (route.name === 'BasicLayout' || 
                          route.name === 'MenuIndex.vue' || 
                          route.path === '/' || 
                          (route.name && route.name.includes('Layout'))));
               rootRouteName = rootRoute ? rootRoute.name : '';
-              console.log('🔍 找到根路由:', rootRouteName || '未找到');
             } else {
-              console.warn('⚠️ currentRoutes 不是有效数组，无法查找根路由');
+              // currentRoutes 不是有效数组，无法查找根路由
             }
           } catch (err) {
-            console.error('❌ 查找根路由时出错:', err);
+            // 查找根路由时出错，继续执行
           }
 
           // 先添加常规路由，后添加 welcome 路由，确保依赖关系正确
           try {
             // 安全地检查 addRouters 是否存在
             if (!addRouters || !Array.isArray(addRouters)) {
-              console.error('❌ addRouters 不是有效数组');
               // 创建一个紧急路由作为备用
               const emergencyRoute = {
                 path: '/',
@@ -248,10 +223,7 @@ router.beforeEach(async (to, from, next) => {
                 ]
               };
               router.addRoute(emergencyRoute);
-              console.log('✅ 紧急路由添加成功');
             } else {
-              console.log(`🔍 处理 ${addRouters.length} 个动态路由...`);
-              
               // 检查是否有根路由
               const rootRouter = addRouters.find(route => 
                 route.path === '/' || 
@@ -259,7 +231,6 @@ router.beforeEach(async (to, from, next) => {
                 route.name === 'BasicLayout');
               
               if (!rootRouter) {
-                console.warn('⚠️ 未找到根路由，尝试自动创建');
                 // 创建根路由
                 const newRootRouter = {
                   path: '/',
@@ -279,48 +250,37 @@ router.beforeEach(async (to, from, next) => {
                 
                 // 添加根路由
                 router.addRoute(newRootRouter);
-                console.log('✅ 创建并添加根路由成功');
               } else {
                 // 有根路由，直接添加
-                console.log('🔍 找到根路由:', rootRouter);
-                
                 // 先添加根路由
                 router.addRoute(rootRouter);
-                console.log('✅ 根路由添加成功');
                 
                 // 再添加其他路由
                 addRouters.forEach((route, index) => {
                   if (route !== rootRouter) {
                     try {
                       router.addRoute(route);
-                      console.log(`✅ 路由 '${route.path}' 添加成功`);
                     } catch (err) {
-                      console.error(`❌ 路由 '${route.path}' 添加失败:`, err);
+                      // 路由添加失败，继续处理其他路由
                     }
                   }
                 });
               }
             }
           } catch (err) {
-            console.error('❌ 处理路由时发生错误:', err);
+            // 处理路由时发生错误，继续执行
           }
 
-          console.log('🔍 所有路由已添加完成');
-
           // 验证动态路由是否正确注册
-          console.log('🔍 验证动态路由注册...')
           const updatedRoutes = router.getRoutes();
-          console.log('🔍 当前所有路由:', JSON.stringify(updatedRoutes, null, 2));
 
           // 进行最终的路由验证
-          console.log('🔍 进行最终路由验证...');
           let welcomeRouteExists = false;
           let finalRedirect = '/welcome'; // 默认重定向目标
           
           try {
             // 获取最新路由列表
             const finalRoutes = router.getRoutes();
-            console.log(`🔍 最终路由数量: ${finalRoutes.length}`);
             
             // 尝试查找 welcome 相关路由
             const welcomeRoutes = finalRoutes.filter(r => 
@@ -330,14 +290,11 @@ router.beforeEach(async (to, from, next) => {
             );
             
             if (welcomeRoutes.length > 0) {
-              console.log('✅ 找到 welcome 相关路由:', welcomeRoutes.map(r => r.path));
               welcomeRouteExists = true;
               
               // 使用找到的第一个 welcome 路由作为跳转目标
               finalRedirect = welcomeRoutes[0].path;
             } else {
-              console.warn('⚠️ 未找到任何 welcome 相关路由');
-              
               // 尝试查找首页或仪表盘相关路由
               const homeRoutes = finalRoutes.filter(r => 
                 r.path === '/' || 
@@ -347,11 +304,8 @@ router.beforeEach(async (to, from, next) => {
               );
               
               if (homeRoutes.length > 0) {
-                console.log('✅ 找到备用首页路由:', homeRoutes[0].path);
                 finalRedirect = homeRoutes[0].path;
               } else {
-                console.warn('⚠️ 未找到任何合适的首页路由，尝试使用任意有效路由');
-                
                 // 选择第一个不是登录页的路由
                 const anyValidRoute = finalRoutes.find(r => 
                   !r.path.includes('login') && 
@@ -360,7 +314,6 @@ router.beforeEach(async (to, from, next) => {
                 );
                 
                 if (anyValidRoute) {
-                  console.log('✅ 找到应急路由:', anyValidRoute.path);
                   finalRedirect = anyValidRoute.path;
                 }
               }
@@ -368,7 +321,6 @@ router.beforeEach(async (to, from, next) => {
             
             // 如果仍然没有找到可用路由，最后的手段是动态创建一个
             if (!welcomeRouteExists) {
-              console.log('🔧 尝试最后的应急方案: 创建临时 welcome 路由');
               try {
                 const lastResortRoute = {
                   path: '/welcome',
@@ -377,10 +329,9 @@ router.beforeEach(async (to, from, next) => {
                   meta: { title: '首页' }
                 };
                 router.addRoute(lastResortRoute);
-                console.log('✅ 最终应急路由添加成功');
                 finalRedirect = '/welcome';
               } catch (err) {
-                console.error('❌ 最终应急路由添加失败:', err);
+                // 最终应急路由添加失败，使用默认路径
               }
             }
             
@@ -390,42 +341,34 @@ router.beforeEach(async (to, from, next) => {
             }
             
           } catch (err) {
-            console.error('❌ 路由验证过程出错:', err);
+            // 路由验证过程出错，使用默认路径
           }
           
           // 处理重定向逻辑
-          console.log(`🚀 准备跳转到: ${finalRedirect}`);
-          
           // 防止无限重定向
           if (to.path === finalRedirect) {
-            console.log('⚠️ 检测到可能的重定向循环，尝试使用 replace 模式');
             try {
               // 执行替换式导航
               next({ path: finalRedirect, replace: true });
               return; // 重要：阻止后续代码执行
             } catch (err) {
-              console.error('❌ replace 模式导航失败:', err);
+              // replace 模式导航失败，使用默认导航
             }
           } else {
             try {
               // 执行普通导航
-              console.log(`🔍 正常导航到 ${finalRedirect}`);
               next({ path: finalRedirect });
               return; // 重要：阻止后续代码执行
             } catch (err) {
-              console.error('❌ 导航执行失败:', err);
+              // 导航执行失败，使用默认导航
             }
           }
           
           // 如果上述所有逻辑都失败，尝试最简单的导航方式
-          console.warn('⚠️ 尝试最基本的导航方法');
           next();
         } catch (error) {
-          console.error('❌ 获取用户信息或生成路由时出错:', error)
-          
           // 尝试创建紧急欢迎路由作为最后的手段
           try {
-            console.log('🔧 尝试在错误处理中创建紧急欢迎路由');
             const emergencyWelcomeRoute = {
               path: '/welcome',
               name: 'welcome_emergency_error',
@@ -449,7 +392,6 @@ router.beforeEach(async (to, from, next) => {
             next({ path: '/welcome', replace: true });
             
           } catch (emergencyErr) {
-            console.error('❌ 紧急处理失败，将退出登录:', emergencyErr);
             notification.error({
               message: '错误',
               description: '系统初始化失败，请重新登录'
@@ -475,7 +417,6 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   } catch (globalErr) {
-    console.error('❌ 路由导航守卫全局错误:', globalErr);
     // 确保导航能继续，尽管发生了错误
     next({ path: '/user/login' });
     NProgress.done();
