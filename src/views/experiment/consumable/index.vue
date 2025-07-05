@@ -4,22 +4,22 @@
       <div class="table-page-search-wrapper">
         <a-form layout="inline">
           <a-row :gutter="48">
-            <a-col  md="8" : sm="12">
+            <a-col :md="8" :sm="12">
               <a-form-item label="耗材编号">
                 <a-input
-                  v-model="queryParam.code"
+                  v-model:value="queryParam.code"
                   allow-clear
                   placeholder="请输入耗材编号"
-                ></a>
+                />
               </a-form-item>
             </a-col>
-            <a-col  md="8" : sm="12">
+            <a-col :md="8" :sm="12">
               <a-form-item label="耗材名称">
                 <a-input
-                  v-model="queryParam.name"
+                  v-model:value="queryParam.name"
                   allow-clear
                   placeholder="请输入耗材名称"
-                ></a>
+                />
               </a-form-item>
             </a-col>
             <a-col :md="8" :sm="24">
@@ -34,8 +34,8 @@
 
     <a-card :bordered="false">
       <!-- 耗材基本信息表格 -->
-      <div style="margin-bottom: 10px; color : #666;">
-        调试信息: 表格列数: {{ columns.length }}, 操作列: {{ columns.find(col => col.key === 'action')  '已添加' : '未找到' }}
+      <div style="margin-bottom: 10px; color: #666;">
+        调试信息: 表格列数: {{ columns.length }}, 操作列: {{ columns.find(col => col.key === 'action') ? '已添加' : '未找到' }}
       </div>
       <a-table
         v-show="isConsumable"
@@ -65,7 +65,7 @@
             {{ index + 1 }}
           </template>
           <template v-else-if="column.key === 'status'">
-            <a-tag :color="record.status == 0  'green' : 'red'">
+            <a-tag :color="record.status == 0 ? 'green' : 'red'">
               {{ statusFilter(record.status) }}
             </a-tag>
           </template>
@@ -90,15 +90,15 @@
             {{ index + 1 }}
           </template>
           <template v-else-if="column.key === 'remainingVolume'">
-            <div style="display: flex; height: 45px; cursor : pointer;">
+            <div style="display: flex; height: 45px; cursor: pointer;">
               <div style="margin-top: 10px;">
                 <a-input-number
-                  v-model="record.remainingVolume"
+                  v-model:value="record.remainingVolume"
                   :step="100"
                   :min="0"
                   :max="record.maxVolume"
                   style="width: 120px"
-                ></a>
+                />
               </div>
               <!-- 液体体积显示器 -->
               <div class="container">
@@ -145,67 +145,67 @@
             <a-row :gutter="8">
               <a-col :span="12">
                 <a-form-item label="耗材编号" :required="true">
-                  <a-input v-model="attributeData.code" placeholder="请输入耗材编号" ></a>
+                  <a-input v-model:value="attributeData.code" placeholder="请输入耗材编号" />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="耗材名称" :required="true">
-                  <a-input v-model="attributeData.name" placeholder="请输入耗材名称" ></a>
+                  <a-input v-model:value="attributeData.name" placeholder="请输入耗材名称" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="行数" :required="true">
-                  <a-input-number v-model="attributeData.rowCount" :min="1" :step="1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.rowCount" :min="1" :step="1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="列数" :required="true">
-                  <a-input-number v-model="attributeData.colCount" :min="1" :step="1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.colCount" :min="1" :step="1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="行距(mm)" :required="true">
-                  <a-input-number v-model="attributeData.rowSpace" :min="0" :step="0.1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.rowSpace" :min="0" :step="0.1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="列距(mm)" :required="true">
-                  <a-input-number v-model="attributeData.colSpace" :min="0" :step="0.1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.colSpace" :min="0" :step="0.1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="X尺寸(mm)" :required="true">
-                  <a-input-number v-model="attributeData.xSize" :min="0" :step="0.1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.xSize" :min="0" :step="0.1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="Y尺寸(mm)" :required="true">
-                  <a-input-number v-model="attributeData.ySize" :min="0" :step="0.1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.ySize" :min="0" :step="0.1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="X偏移(mm)" :required="true">
-                  <a-input-number v-model="attributeData.xOffset" :min="0" :step="0.1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.xOffset" :min="0" :step="0.1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="Y偏移(mm)" :required="true">
-                  <a-input-number v-model="attributeData.yOffset" :min="0" :step="0.1" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.yOffset" :min="0" :step="0.1" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="最大体积(μl)">
-                  <a-input-number v-model="attributeData.maxVolume" :min="0" :step="100" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.maxVolume" :min="0" :step="100" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="6">
                 <a-form-item label="剩余体积(μl)">
-                  <a-input-number v-model="attributeData.remainingVolume" :min="0" :step="100" style="width: 100%" ></a>
+                  <a-input-number v-model:value="attributeData.remainingVolume" :min="0" :step="100" style="width: 100%" />
                 </a-form-item>
               </a-col>
               <a-col :span="12">
                 <a-form-item label="状态">
-                  <a-select v-model  value="attributeData.status" style="width : 100%">
+                  <a-select v-model:value="attributeData.status" style="width: 100%">
                     <a-select-option :value="0">正常</a-select-option>
                     <a-select-option :value="1">停用</a-select-option>
                   </a-select>
@@ -439,12 +439,12 @@ export default defineComponent({
 
     // 计算属性
     const consumableTitle = computed(() => {
-      return isConsumable.value  '切换体积界面' : '切换耗材界面'
+      return isConsumable.value ? '切换体积界面' : '切换耗材界面'
     })
 
     // 状态过滤器
     const statusFilter = (status) => {
-      return status === 0  '正常' : '停用'
+      return status === 0 ? '正常' : '停用'
     }
 
     // 加载数据(调用后端接口)
@@ -487,7 +487,7 @@ export default defineComponent({
           selectedRow.value = record
         },
         style: {
-          backgroundColor: selectedRow.value === record  '#e6f7ff' : ''
+          backgroundColor: selectedRow.value === record ? '#e6f7ff' : ''
         }
       }
     }
@@ -552,7 +552,7 @@ export default defineComponent({
     // 权限检查日志
     console.log('🔍 权限检查:', {
       edit: hasPerm('exp_consumable:edit'),
-      delete  hasPerm('exp_consumable : delete')
+      delete: hasPerm('exp_consumable:delete')
     })
 
     onMounted(() => {
