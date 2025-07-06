@@ -45,15 +45,15 @@
 
       <!-- layout content -->
       <a-layout-content :style="{ height: '100%', margin: '24px 24px 0', paddingTop: fixedHeader ? '55px' : '0' }">
-        <multi-tab v-if="multiTab"></multi-tab>
+        <multi-tab v-if="$store.state.app.multiTab" style="margin-bottom: 16px;"></multi-tab>
         <div class="content-container">
           <!-- 使用router-view确保Vue 3正确渲染 -->
           <router-view v-slot="{ Component }">
             <transition name="page-transition" mode="out-in">
               <keep-alive v-if="keepAliveRoute">
-                <component :is="Component" :key="$route.fullPath" />
+                <component :is="Component" />
               </keep-alive>
-              <component v-else :is="Component" :key="$route.fullPath" />
+              <component v-else :is="Component" />
             </transition>
           </router-view>
         </div>
@@ -79,7 +79,7 @@ import SideMenu from '@/components/Menu/SideMenu'
 // 从components/GlobalHeader导入，而不是直接从GlobalHeader.vue导入，避免重复组件
 import GlobalHeader from '@/components/GlobalHeader'
 import GlobalFooter from '@/components/GlobalFooter'
-import MultiTab from '@/components/MultiTab'
+import MultiTab from '@/components/MultiTab/MultiTab.vue'
 import { convertRoutes } from '@/utils/routeConvert'
 
 export default {
@@ -108,7 +108,6 @@ export default {
         contentWidth: 'Fluid',
         autoHideHeader: false,
         sidebar: true,
-        multiTab: true, // 启用多标签功能
         headerColor: '#1890FF',
         menuColor: '#1890FF',
         sidebarOpened: true,
@@ -125,37 +124,34 @@ export default {
     }),
     ...mapGetters(['userInfo']),
     
-    // 从 settings 中获取配置
+    // 从 Vuex store 中获取配置
     navTheme() {
-      return this.settings.theme
+      return this.$store.state.app.theme || this.settings.theme
     },
     layoutMode() {
-      return this.settings.layout
+      return this.$store.state.app.layout || this.settings.layout
     },
     fixedHeader() {
-      return this.settings.fixedHeader
+      return this.$store.state.app.fixedHeader !== undefined ? this.$store.state.app.fixedHeader : this.settings.fixedHeader
     },
     fixSiderbar() {
-      return this.settings.fixSiderbar
+      return this.$store.state.app.fixSiderbar !== undefined ? this.$store.state.app.fixSiderbar : this.settings.fixSiderbar
     },
     contentWidth() {
-      return this.settings.contentWidth
+      return this.$store.state.app.contentWidth || this.settings.contentWidth
     },
     // 检查当前路由是否需要keep-alive
     keepAliveRoute() {
       return this.$route.meta && this.$route.meta.keepAlive
     },
     autoHideHeader() {
-      return this.settings.autoHideHeader
+      return this.$store.state.app.autoHideHeader !== undefined ? this.$store.state.app.autoHideHeader : this.settings.autoHideHeader
     },
     sidebarOpened() {
-      return this.settings.sidebarOpened
-    },
-    multiTab() {
-      return this.settings.multiTab
+      return this.$store.state.app.sidebar !== undefined ? this.$store.state.app.sidebar : this.settings.sidebarOpened
     },
     headerColor() {
-      return this.settings.headerColor
+      return this.$store.state.app.headerColor || this.settings.headerColor
     },
     versionCode() {
       return this.settings.version
@@ -224,6 +220,13 @@ export default {
       },
       immediate: true,
       deep: true
+    },
+    // 监听多标签状态变化
+    multiTab: {
+      handler(newVal) {
+        console.log('✅ [BasicLayout] multiTab 状态变化:', newVal)
+      },
+      immediate: true
     }
   },
   created () {
@@ -248,113 +251,62 @@ export default {
         }, 16)
       })
     }
+
+    // first update color
+    // this.updateTheme()
+
+    this.autoHideHeader && this.triggerResizeEvent()
   },
   methods: {
     ...mapActions(['setSidebar']),
-    // 重新生成菜单 - 与旧版项目保持一致
-    setMenus () {
-      // 检查permission模块中是否有菜单数据
-      if (this.permissionMenus && this.permissionMenus.length > 0) {
-        this.updateSideMenus()
-        return
-      }
-
-      if (this.mainMenu && this.mainMenu.length > 0) {
-        // 先尝试找到根路由（path为'/'或''或undefined的路由）
-        let rootRoute = this.mainMenu.find(item => item.path === '/' || item.path === '' || item.path === undefined)
-        
-        // 如果没找到根路由，尝试找到第一个有children的路由作为备选
-        if (!rootRoute) {
-          rootRoute = this.mainMenu.find(item => item.children && item.children.length > 0)
-        }
-        
-        // 如果还是没找到，就使用第一个路由
-        if (!rootRoute && this.mainMenu.length > 0) {
-          rootRoute = this.mainMenu[0]
-        }
-
-        if (rootRoute) {
-          // 强制显示菜单容器，即使没有有效菜单
-          document.querySelector('.ant-layout-sider')?.setAttribute('style', 'display: block !important; position: fixed; left: 0; top: 0; height: 100vh; z-index: 100;')
-          
-          const routes = convertRoutes(rootRoute)
-
-          if (routes && routes.children) {
-            this.menus = routes.children
-          } else {
-            this.menus = []
-          }
-        } else {
-          this.menus = []
-        }
-      } else {
-        // 尝试从permissionMenus获取菜单数据
-        if (this.permissionMenus && this.permissionMenus.length > 0) {
-          this.updateSideMenus()
-        } else {
-          this.menus = []
-        }
-      }
-
-      if (!this.menus || this.menus.length === 0) {
-        // 尝试从路由中获取菜单
-        try {
-          const routes = this.$router.getRoutes()
-          const layoutRoute = routes.find(r => r.name === 'MenuIndex.vue' || r.name === 'BasicLayout')
-          if (layoutRoute && layoutRoute.children) {
-            this.menus = layoutRoute.children.map(child => ({
-              ...child,
-              meta: child.meta || { title: child.name }
-            }))
-          }
-        } catch (err) {
-          // 从路由生成菜单失败时静默处理
-        }
-      }
-
-      this.validateMenuData(this.menus)
-    },
     
-    // 验证菜单数据结构
-    validateMenuData(menus) {
-      if (!Array.isArray(menus)) {
-        return
-      }
-      
-      menus.forEach((menu, index) => {
-        // 检查子菜单
-        if (menu.children && Array.isArray(menu.children)) {
-          this.validateMenuData(menu.children)
-        }
-      })
-    },
     // 加载设置
     loadSettings() {
       try {
-        const appSettings = localStorage.getItem('appSettings')
-        if (appSettings) {
-          this.settings = { ...this.settings, ...JSON.parse(appSettings) }
+        const savedSettings = localStorage.getItem('appSettings')
+        if (savedSettings) {
+          this.settings = { ...this.settings, ...JSON.parse(savedSettings) }
         }
       } catch (error) {
-        // 获取应用设置失败时静默处理
+        // 加载失败时使用默认设置
       }
     },
-    // 设备检测方法
-    isTopMenu () {
-      return this.layoutMode === 'topmenu'
+    
+    // 设置菜单 - 从动态路由或permission路由生成菜单
+    setMenus() {
+      if (this.mainMenu && this.mainMenu.length > 0) {
+        // 过滤出需要在菜单中显示的路由
+        const menuRoutes = this.mainMenu.filter(item => {
+          // 过滤掉hidden的路由和重定向路由
+          return !item.hidden && item.path !== '*'
+        })
+        
+        // 使用转换工具将路由转换为菜单项
+        this.menus = convertRoutes(menuRoutes)
+      } else {
+        // 如果没有动态路由，使用默认菜单
+        this.menus = []
+      }
     },
-    isSideMenu () {
-      return !this.isTopMenu()
+    
+    // 更新侧边菜单 - 从permission模块获取
+    updateSideMenus() {
+      if (this.permissionMenus && this.permissionMenus.length > 0) {
+        this.menus = this.permissionMenus
+      }
     },
-    isMobile () {
-      return this.device === DEVICE_TYPE.MOBILE
+    
+    onAppChanging(activeApp) {
+      // 应用切换中的处理
     },
-    isDesktop () {
-      return this.device === DEVICE_TYPE.DESKTOP
+    
+    onAppChanged(activeApp) {
+      // 应用切换完成的处理
+      if (activeApp && activeApp.menu) {
+        this.menus = activeApp.menu
+      }
     },
-    isTablet () {
-      return this.device === DEVICE_TYPE.TABLET
-    },
+
     toggle () {
       this.collapsed = !this.collapsed
       this.setSidebar(!this.collapsed)
@@ -363,9 +315,9 @@ export default {
     paddingCalc () {
       let left = ''
       if (this.sidebarOpened) {
-        left = this.isDesktop() ? '256px' : '80px'
+        left = this.isDesktop() ? '230px' : '0'
       } else {
-        left = (this.isMobile() && '0') || ((this.fixSidebar && '80px') || '0')
+        left = (this.isMobile() && '0') || ((this.fixSiderbar && '80px') || '0')
       }
       return left
     },
@@ -377,85 +329,122 @@ export default {
     drawerClose () {
       this.collapsed = false
     },
-    // 处理应用准备切换事件
-    onAppChanging(appCode) {
-      // 清空当前菜单，显示加载状态
-      this.menus = [];
-    },
-    // 处理应用切换事件
-    onAppChanged(appCode) {
-      // 等待一个Vue tick，确保store中的数据已经更新
-      this.$nextTick(() => {
-        // 检查菜单数据是否已经更新
-        if (this.permissionMenus && this.permissionMenus.length > 0) {
-          this.updateSideMenus()
-        } else {
-          // 如果菜单数据还没有更新，等待一段时间后重试
-          setTimeout(() => {
-            this.updateSideMenus()
-          }, 500)
-        }
-      })
-    },
-    
-    // 从permissionMenus更新左侧菜单
-    updateSideMenus() {
-      
-      if (this.permissionMenus && this.permissionMenus.length > 0) {
-        // 直接使用 permissionMenus 作为左侧菜单数据
-        // 不需要复杂的转换，因为菜单数据已经在 generator-routers.js 中处理过了
-        try {
-          // 直接将 permissionMenus 设置为左侧菜单
-          this.menus = [...this.permissionMenus]
-          
-
-          console.log('� [BasicLayout] 更新后的菜单数据:', this.menus)
-          
-          // 强制Vue重新渲染菜单组件
-          this.$forceUpdate()
-          
-          // 确保菜单组件收到新数据
-          this.$nextTick(() => {
-            // 验证菜单状态
-          })
-          
-        } catch (error) {
-          this.menus = []
-        }
-      } else {
-        // 尝试从mainMenu获取菜单作为后备
-        if (this.mainMenu && this.mainMenu.length > 0) {
-          this.setMenus()
-        } else {
-          this.menus = []
-        }
-      }
+    triggerResizeEvent () {
+      triggerWindowResizeEvent()
     }
   }
 }
 </script>
 
 <style lang="less">
-/*  
- * The following styles are auto-applied to elements with
- * transition="page-transition" when their visibility is toggled
- * by Vue.js.
- *
- * You can easily play with the page transition by editing
- * these styles.
+/*
+ * The following styles are auto-applied to components with
+ * <style scoped> attribute. Update them if you change something.
  */
+.trigger {
+  font-size: 18px;
+  line-height: 64px;
+  padding: 0 24px;
+  cursor: pointer;
+  transition: color 0.3s;
 
-.page-transition-enter {
-  opacity: 0;
+  &:hover {
+    color: #1890ff;
+  }
 }
 
+.trigger.trigger {
+  color: #fff;
+}
+
+.layout {
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  &.ant-layout-has-sider {
+    flex-direction: row;
+  }
+
+  .trigger {
+    font-size: 20px;
+    line-height: 64px;
+    padding: 0 24px;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+
+  .header {
+    height: 64px;
+    padding: 0 12px 0 0;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+    position: relative;
+  }
+
+  .layout {
+    padding: 0 24px 24px;
+
+    .content {
+      background: #fff;
+      margin: 0;
+      padding: 24px;
+      min-height: 280px;
+    }
+  }
+
+  // 兼容性
+  .ant-layout-sider-collapsed .anticon {
+    font-size: 16px;
+  }
+
+  .ant-layout-sider-collapsed .nav-text {
+    display: none;
+  }
+
+  .ant-layout-sider-collapsed .ant-menu-submenu-vertical > .ant-menu-submenu-title:after {
+    display: none;
+  }
+
+  .drawer-sider {
+    .sider {
+      box-shadow: none;
+    }
+
+    &.dark {
+      .ant-menu-dark .ant-menu-inline.ant-menu-sub {
+        background: #000c17;
+      }
+    }
+
+    &.light {
+      .ant-menu-light .ant-menu-inline.ant-menu-sub {
+        background: #fff;
+      }
+
+      .ant-menu-light .ant-menu-item-group-title {
+        color: rgba(0, 0, 0, 0.43);
+      }
+    }
+
+    .ant-menu-item .sider-menu-item-icon + span {
+      transition: opacity 0.3s cubic-bezier(0.645, 0.045, 0.355, 1), width 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      opacity: 1;
+    }
+  }
+}
+
+/* 页面切换动画 */
+.page-transition-enter-active,
 .page-transition-leave-active {
+  transition: opacity 0.2s;
+}
+
+.page-transition-enter,
+.page-transition-leave-to {
   opacity: 0;
 }
 
-.page-transition-enter .page-transition-container,
-.page-transition-leave-active .page-transition-container {
-  -webkit-transform: scale(1.1);
-  transform: scale(1.1);
+.content-container {
+  min-height: calc(100vh - 134px);
 }
 </style>

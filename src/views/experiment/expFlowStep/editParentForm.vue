@@ -5,17 +5,17 @@
       <a-form>
         <a-row :gutter="8">
           <div>            
-            <sp-input label="程序集编号" :required="true" :isError="errors.code" v-model="attributeData.code" ></sp>          
+            <sp-input label="程序集编号" :required="true" :isError="errors.code" v-model:modelValue="attributeData.code" />          
           </div> 
         </a-row>
         <a-row :gutter="8">
           <div style="margin-top:10px;">
-            <sp-input label="程序集名称" :required="true" :isError="errors.name" :inputWidth="200" v-model="attributeData.name" ></sp>            
+            <sp-input label="程序集名称" :required="true" :isError="errors.name" :inputWidth="200" v-model:modelValue="attributeData.name" />            
           </div>   
         </a-row>
         <a-row :gutter="8">
           <div style="margin-top:15px;">
-            <sp-input-number label="排序" v-model  value="attributeData.sort" : step="1"></sp>
+            <sp-input-number label="排序" v-model="attributeData.sort" :step="1"/>
           </div>       
         </a-row>
       </a-form>
@@ -24,10 +24,13 @@
 </template>
 
 <script>
+  import { defineComponent } from 'vue'
+  import { message } from 'ant-design-vue'
   import {exp_flow_step_add,exp_flow_step_edit} from '@/api/modular/experiment/expFlowStepManage'
   import SpInputNumber from '@/components/spInputNumber.vue';
   import SpInput from '@/components/spInput.vue';
-  export default {
+  
+  export default defineComponent({
     components: {
       SpInputNumber,
       SpInput
@@ -90,11 +93,11 @@
         {
           exp_flow_step_add(this.attributeData).then((res) => {
             if (res.success) {
-              this.$message.success('新增成功')
+              message.success('新增成功')
               this.$emit('ok', this.attributeData)
               this.handleCancel()
             } else {
-              this.$message.error(res.message)
+              message.error(res.message)
             }
           }).finally((res) => {
             this.formLoading = false
@@ -104,11 +107,11 @@
         {
           exp_flow_step_edit(this.attributeData).then((res) => {
             if (res.success) {
-              this.$message.success('编辑成功')
+              message.success('编辑成功')
               this.$emit('ok', this.attributeData)
               this.handleCancel()
             } else {
-              this.$message.error(res.message)
+              message.error(res.message)
             }
           }).finally((res) => {
             this.formLoading = false
@@ -119,7 +122,7 @@
         this.visible = false
       }
     }
-  }
+  })
 </script>
 <style scoped>
 .ant-row{
