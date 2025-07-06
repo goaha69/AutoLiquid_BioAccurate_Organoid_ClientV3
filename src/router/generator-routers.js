@@ -25,20 +25,51 @@ const constantRouterComponents = {
   'BindingSettings': markRaw(() => import('@/views/system/account/settings/Binding.vue')),
   'NotificationSettings': markRaw(() => import('@/views/system/account/settings/Notification.vue')),
 
-  // 实验管理相关页面
-  'ConsumableIndex': markRaw(() => import('@/views/experiment/consumable/index.vue')),
+  // 实验管理相关页面 - 根据后端实际返回的component字段精确匹配
+  // 后端返回的完整路径格式：experiment/xxx/index 或 experiment/xxx/newIndex
+  'experiment/equipment/index': markRaw(() => import('@/views/experiment/equipment/index.vue')),
+  'experiment/layout/index': markRaw(() => import('@/views/experiment/layout/index.vue')),
+  'experiment/consumable/index': markRaw(() => import('@/views/experiment/consumable/index.vue')),
+  'experiment/liquid/index': markRaw(() => import('@/views/experiment/liquid/index.vue')),
+  'experiment/expFlowStep/newIndex': markRaw(() => import('@/views/experiment/expFlowStep/test.vue')),
+  'experiment/expFlow/newIndex': markRaw(() => import('@/views/experiment/expFlow/test.vue')),
+  'experiment/expFlowCase/index': markRaw(() => import('@/views/experiment/expFlowCase/test.vue')),
+  'experiment/gantt/ganttView': markRaw(() => import('@/views/experiment/gantt/test.vue')),
+  'experiment/expIncubatorStorage/index': markRaw(() => import('@/views/experiment/expIncubatorStorage/test.vue')),
+  'experiment/plan/index': markRaw(() => import('@/views/experiment/plan/test.vue')),
+  'experiment/expVideo/index': markRaw(() => import('@/views/experiment/expVideo/test.vue')),
+  'experiment/sampleInformation/index': markRaw(() => import('@/views/experiment/sampleInformation/test.vue')),
+  'experiment/expVersion/index': markRaw(() => import('@/views/experiment/expVersion/index.vue')),
+  
+  // 兼容性映射 - 短路径格式 (使用测试页面)
+  'equipment': markRaw(() => import('@/views/experiment/equipment/index.vue')),
+  'layout': markRaw(() => import('@/views/experiment/layout/index.vue')),
+  'consumable': markRaw(() => import('@/views/experiment/consumable/index.vue')),
+  'liquid': markRaw(() => import('@/views/experiment/liquid/index_final.vue')),
+  'expFlowStep': markRaw(() => import('@/views/experiment/expFlowStep/index.vue')),
+  'expFlow': markRaw(() => import('@/views/experiment/expFlow/index.vue')),
+  'expFlowCase': markRaw(() => import('@/views/experiment/expFlowCase/index.vue')),
+  'gantt': markRaw(() => import('@/views/experiment/gantt/index.vue')),
+  'expIncubatorStorage': markRaw(() => import('@/views/experiment/expIncubatorStorage/test.vue')),
+  'plan': markRaw(() => import('@/views/experiment/plan/test.vue')),
+  'expVideo': markRaw(() => import('@/views/experiment/expVideo/index.vue')),
+  'sampleInformation': markRaw(() => import('@/views/experiment/sampleInformation/test.vue')),
+  'expVersion': markRaw(() => import('@/views/experiment/expVersion/index.vue')),
+  
+  // Index后缀格式兼容 (使用测试页面)
   'EquipmentIndex': markRaw(() => import('@/views/experiment/equipment/index.vue')),
-  'equipment': markRaw(() => import('@/views/experiment/equipment/index.vue')), // 设备管理特殊处理
-  'LiquidIndex': markRaw(() => import('@/views/experiment/liquid/index.vue')),
   'LayoutIndex': markRaw(() => import('@/views/experiment/layout/index.vue')),
-  'ExpFlowIndex': markRaw(() => import('@/views/experiment/expFlow/newIndex.vue')),
+  'ConsumableIndex': markRaw(() => import('@/views/experiment/consumable/index.vue')),
+  'LiquidIndex': markRaw(() => import('@/views/experiment/liquid/index.vue')),
+  'ExpFlowStepIndex': markRaw(() => import('@/views/experiment/expFlowStep/index.vue')),
+  'ExpFlowIndex': markRaw(() => import('@/views/experiment/expFlow/index.vue')),
   'ExpFlowCaseIndex': markRaw(() => import('@/views/experiment/expFlowCase/index.vue')),
-  'ExpFlowStepIndex': markRaw(() => import('@/views/experiment/expFlowStep/newIndex.vue')),
-  'ExpIncubatorStorageIndex': markRaw(() => import('@/views/experiment/expIncubatorStorage/index.vue')),
-  'PlanIndex': markRaw(() => import('@/views/experiment/plan/index.vue')),
-  'ExpVersionIndex': markRaw(() => import('@/views/experiment/expVersion/index.vue')),
+  'GanttIndex': markRaw(() => import('@/views/experiment/gantt/index.vue')),
+  'ExpIncubatorStorageIndex': markRaw(() => import('@/views/experiment/expIncubatorStorage/test.vue')),
+  'PlanIndex': markRaw(() => import('@/views/experiment/plan/test.vue')),
   'ExpVideoIndex': markRaw(() => import('@/views/experiment/expVideo/index.vue')),
-  'SampleInformationIndex': markRaw(() => import('@/views/experiment/sampleInformation/index.vue')),
+  'SampleInformationIndex': markRaw(() => import('@/views/experiment/sampleInformation/test.vue')),
+  'ExpVersionIndex': markRaw(() => import('@/views/experiment/expVersion/index.vue')),
 
   // 系统管理相关页面
   'UserIndex': markRaw(() => import('@/views/system/user/index.vue')),
@@ -273,8 +304,21 @@ export const generatorDynamicRouter = (data) => {
       const routers = generator(menuNav)
       routers.push(notFoundRouter)
 
+      // 同时设置菜单数据到store中，供BasicLayout使用
+      import('@/store').then(storeModule => {
+        const store = storeModule.default
+        if (store && store.commit) {
+          // 将菜单数据设置到permission模块中
+          store.commit('SET_MENUS', childrenNav)
+          console.log('📋 [generator-routers] 设置菜单数据到store:', childrenNav)
+        }
+      }).catch(err => {
+        console.warn('⚠️ [generator-routers] 无法导入store:', err)
+      })
+
       resolve(routers)
     } catch (error) {
+      console.error('❌ [generator-routers] 生成路由时出错:', error)
       reject(error);
     }
   });
@@ -303,58 +347,31 @@ export const generator = (routerMap, parent) => {
     const currentRouter = {
       path: currentPath,
       name: item.name || item.key || '',
-      component: (constantRouterComponents[item.component || item.key]) || (item.component === 'RouteView' ? constantRouterComponents['RouteView'] : item.component === 'PageView' ? constantRouterComponents['PageView'] : markRaw(defineAsyncComponent({
-        loader: () => {
-          // 特别处理设备管理页面
-          if (item.component === 'experiment/equipment' || item.component === 'equipment') {
-            return import('@/views/experiment/equipment/index.vue')
-          }
-          
-          // 改进的路径处理逻辑：支持多种路径格式和嵌套模式
-          if (item.component && item.component.includes('/')) {
-            // 处理形如 'system/user' 的路径
-            return new Promise((resolve, reject) => {
-              import(`@/views/${item.component}.vue`)
-                .then(component => resolve(component))
-                .catch(() => {
-                  // 尝试加载 index.vue
-                  import(`@/views/${item.component}/index.vue`)
-                    .then(component => resolve(component))
-                    .catch(() => {
-                      // 最后尝试404
-                      import('@/views/system/exception/404.vue').then(resolve)
-                    })
-                })
-            })
-          } else if (item.component) {
-            // 处理形如 'user' 的路径
-            return new Promise((resolve, reject) => {
-              import(`@/views/${item.component}/index.vue`)
-                .then(component => resolve(component))
-                .catch(() => {
-                  // 尝试直接加载.vue文件
-                  import(`@/views/${item.component}.vue`)
-                    .then(component => resolve(component))
-                    .catch(() => {
-                      // 最后尝试404
-                      import('@/views/system/exception/404.vue').then(resolve)
-                    })
-                })
-            })
-          } else {
-            return import('@/views/system/exception/404.vue')
-          }
-        },
-        // 添加错误处理和加载状态
-        onError: (error) => {
-          // 组件加载错误处理
-        },
-        loadingComponent: {
-          template: '<div class="loading-component">正在加载组件...</div>'
-        },
-        delay: 200, // 延迟显示加载组件的时间
-        timeout: 10000 // 超时时间
-      }))),
+      component: (() => {
+        // 首先检查是否在预定义组件中
+        const predefComponent = constantRouterComponents[item.component || item.key]
+        if (predefComponent) {
+          console.log('✅ [generator-routers] 使用预定义组件:', item.component || item.key)
+          return predefComponent
+        }
+        
+        // 检查特殊布局组件
+        if (item.component === 'RouteView') {
+          console.log('✅ [generator-routers] 使用RouteView组件')
+          return constantRouterComponents['RouteView']
+        }
+        if (item.component === 'PageView') {
+          console.log('✅ [generator-routers] 使用PageView组件')
+          return constantRouterComponents['PageView']
+        }
+        
+        // 记录未找到的组件，便于调试
+        console.error('❌ [generator-routers] 未找到预定义组件:', item.component, '可用组件列表:', Object.keys(constantRouterComponents).filter(key => key.includes('experiment')))
+        
+        // 如果没有找到预定义组件，直接返回404，避免动态导入的复杂性
+        console.warn('⚠️ [generator-routers] 未找到预定义组件，使用404:', item.component)
+        return constantRouterComponents['404']
+      })(),
       meta: {
         title: title,
         icon: icon || undefined,

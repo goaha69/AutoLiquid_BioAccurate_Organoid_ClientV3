@@ -108,7 +108,7 @@ export default {
         contentWidth: 'Fluid',
         autoHideHeader: false,
         sidebar: true,
-        multiTab: false,
+        multiTab: true, // 启用多标签功能
         headerColor: '#1890FF',
         menuColor: '#1890FF',
         sidebarOpened: true,

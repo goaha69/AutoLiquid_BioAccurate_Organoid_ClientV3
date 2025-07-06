@@ -1,24 +1,24 @@
 <template>
-  <div style="width: 90vw;height : 90vh;">
-    <a-row  gutter="8" style="height : 90vh;">
+  <div style="width: 90vw; height: 90vh;">
+    <a-row :gutter="8" style="height: 90vh;">
         <a-col :span="4">            
-            <a-card title="布局列表" :bordered="false" style="height:110vh;">
+            <a-card title="布局列表" :bordered="false" style="height: 110vh;">
                 <div class="table-operator" v-if="hasPerm('exp_flow_step:add')">
                     <a-button type="primary" icon="copy" @click="copyAllModal.visible=true">复制所有程序集</a-button>
                 </div>
                 <a-table
                     ref="layoutTable" size="middle" :pagination="false" :row-key="(record, index) => record.id" :columns="layoutColumns" 
                     :dataSource="layoutData" :loading="layoutLoading" :customRow="layoutCustomRow"> 
-                    <span #serial #default="text, record, index">
+                    <template #serial="{ text, record, index }">
                     {{ index + 1}}
                     </template> 
                 </a-table>
             </a-card>
         </a-col>
         <a-col :span="7">
-            <a-card title="程序集列:" :bordered="false" style="height: auto; min-height : 700px;">
+            <a-card title="程序集列:" :bordered="false" style="height: auto; min-height: 700px;">
                 <div class="table-operator" v-if="hasPerm('exp_flow_step:add')">
-                    <a-button type="primary" v-if="hasPerm('exp_flow_step:add')" ><template #icon><plus-outlined ></plus-outlined></template @click="addParentForm">新增程序</a-button>
+                    <a-button type="primary" v-if="hasPerm('exp_flow_step:add')" @click="addParentForm"><template #icon><plus-outlined></plus-outlined></template>新增程序</a-button>
                 </div>
                 <div>
                     <a-table
