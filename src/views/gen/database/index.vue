@@ -31,13 +31,13 @@
               <a-button @click="$refs.addColumnForm.add(queryParam.tableName)" ><template #icon><plus-outlined ></plus-outlined></template type="primary"
                 v-if="hasPerm('column  add')">新增({{queryParam.tableName}})数据 : </a-button>
             </template>
-            <template #isPrimarykey #default="text, record">
+            <template #isPrimarykey="{ text, record }">
               <span>{{record.isPrimarykey:'::''}}</template>
             </template>
-            <template #isIdentity #default="text, record">
+            <template #isIdentity="{ text, record }">
               <span>{{record.isIdentity:'::''}}</template>
             </template>
-            <template #isNullable #default="text, record">
+            <template #isNullable="{ text, record }">
               <span>{{record.isNullable:'::''}}</template>
             </template>
             <template #action="text, record">

@@ -48,25 +48,25 @@
           <a-col :span="24">
             <a-table size="middle" :columns="columns" :dataSource="attributeData.attributes" :pagination="false" :loading="attributeLoading" rowKey="key" :scroll="{  y: 320 }">   
               <!-- Զ -->
-              <span #serial #default="text, record, index">
+              <template #serial="{ text, record, index }"><span>
                 {{ index + 1 }}
-              </span>
-              <span #name #default="text, record">
+              </span></template>
+              <template #name="{ text, record }"><span>
                   <a-input v-model="record.name" placeholder=""></a>
-              </span>
-              <span #type #default="text, record">
+              </span></template>
+              <template #type="{ text, record }"><span>
                   <a-select v-model  value="record.type" key="dataType" style="width : 100%" placeholder="ѡ">
                   <a-select-option v-for="(item, index) in dataTypeSelectData" :key="index" :value="item.value">
                     {{ item.value }}</a-select-option>
                 </a-select>
-              </span>   
-              <span #value #default="text, record">
+              </span></template>   
+              <template #value="{ text, record }"><span>
                   <a-input v-model="record.value" placeholder="ֵ"></a>
-              </span>
-              <span #keyStr #default="text, record">
+              </span></template>
+              <template #keyStr="{ text, record }"><span>
                 <a-input v-model="record.keyStr" placeholder="ؼ"></a>
-              </span> 
-              <template #operation #default="text, record">
+              </span></template> 
+              <template #operation="{ text, record }">
                 <a @click="removeAttribute(record.key)">ɾ</a>
               </template>
             </a-table>

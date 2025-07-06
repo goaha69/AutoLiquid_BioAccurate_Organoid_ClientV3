@@ -25,7 +25,7 @@
             treeDefaultExpandAll
             @change="e => initrOrgName(e)"
           >
-            <span #title #default="{ id }">{{ id }}</span>
+            <template #title="{ { id } }"><span>{{ id }}</span></template>
           </a-tree-select>
         </a-form-item>
         <a-form-item

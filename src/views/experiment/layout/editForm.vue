@@ -25,32 +25,32 @@
             <a-form-item>
               <a-table size="middle" :columns="columns" :dataSource="shippingSpaces" :pagination="false" :loading="shippingSpaceLoading" rowKey="key" :scroll="{  y: 320 }">   
                 <!-- Զ -->
-                <span #serial #default="text, record, index">
+                <template #serial="{ text, record, index }"><span>
                   {{ index' + 1 }}
-                </span>
-                <span #name #default="text, record">
+                </span></template>
+                <template #name="{ text, record }"><span>
                    <a-input v-model="record.name" placeholder=""></a>
-                </span>
-                <span #isStorage #default="text, record">
+                </span></template>
+                <template #isStorage="{ text, record }"><span>
                    <a-checkbox v-model="record.isStorage" ></a>
-                </span>   
-                <span #xSize #default="text, record">
+                </span></template>   
+                <template #xSize="{ text, record }"><span>
                    <sp-input-number v-model="record.xSize" placeholder="Xߴ"></sp>
-                </span>
-                <span #ySize #default="text, record">
+                </span></template>
+                <template #ySize="{ text, record }"><span>
                    <sp-input-number v-model="record.ySize" placeholder="Yߴ"></sp>
-                </span>
-                <span #xOffset #default="text, record">
+                </span></template>
+                <template #xOffset="{ text, record }"><span>
                    <sp-input-number v-model="record.xOffset" placeholder="Xƫ"></sp>
-                </span>
-                <span #yOffset #default="text, record">
+                </span></template>
+                <template #yOffset="{ text, record }"><span>
                    <sp-input-number v-model="record.yOffset" placeholder="Yƫ"></sp>
-                </span>
-                <span #zOffset #default="text, record">
+                </span></template>
+                <template #zOffset="{ text, record }"><span>
                    <sp-input-number v-model="record.zOffset" placeholder="λ߶"></sp>
-                </span>
+                </span></template>
                 
-                <template #operation #default="text, record">
+                <template #operation="{ text, record }">
                   <a @click="removeShippingSpace(record.key)">ɾ</a>
                 </template>
               </a-table>

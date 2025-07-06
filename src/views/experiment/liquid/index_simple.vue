@@ -239,28 +239,6 @@ export default {
         this.loading = false
       }
     },
-            code: 'LIQUID001',
-            name: '试剂A',
-            absorbOffset: 1.5,
-            jetOffset: 2.0,
-            status: 0,
-            remark: '测试试剂'
-          },
-          {
-            id: 2,
-            code: 'LIQUID002',
-            name: '试剂B',
-            absorbOffset: 1.8,
-            jetOffset: 2.2,
-            status: 1,
-            remark: '备用试剂'
-          }
-        ]
-        this.total = 2
-      } finally {
-        this.loading = false
-      }
-    },
     
     handleQuery() {
       this.pageNum = 1

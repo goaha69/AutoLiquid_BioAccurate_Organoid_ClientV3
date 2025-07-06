@@ -68,7 +68,7 @@
 						<a-form-item label="实验步骤" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
 							<a-tree-select v-model="setInfo.flowStepId" style="width: 100%"  @change="(value,lable) => flowStepChange(value,lable)"
 								:dropdownStyle="{ maxHeight: '500px', overflow: 'auto' }" :treeData="flowStepTreeData" placeholder="请选择实验步骤" treeDefaultExpandAll>
-								<span #title #default="{ id }">{{ id }}</span>
+								<template #title="{ { id } }"><span>{{ id }}</span></template>
 							</a-tree-select>
 						</a-form-item>
 						<!-- <a-form-item label="执行权限" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">

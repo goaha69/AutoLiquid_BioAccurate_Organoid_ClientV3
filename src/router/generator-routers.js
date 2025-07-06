@@ -367,12 +367,32 @@ export const generator = (routerMap, parent) => {
           return constantRouterComponents['PageView']
         }
         
-        // 记录未找到的组件，便于调试
-        console.error('❌ [generator-routers] 未找到预定义组件:', item.component, '可用组件列表:', Object.keys(constantRouterComponents).filter(key => key.includes('experiment')))
-        
-        // 如果没有找到预定义组件，直接返回404，避免动态导入的复杂性
-        console.warn('⚠️ [generator-routers] 未找到预定义组件，使用404:', item.component)
-        return constantRouterComponents['404']
+        // 动态尝试按路径加载组件（与 Vue2 项目一致）。
+        try {
+          const asyncComp = markRaw(defineAsyncComponent(() => import(`@/views/${item.component}.vue`)))
+          constantRouterComponents[item.component] = asyncComp
+          console.log('✨ [generator-routers] 动态 import:', item.component)
+          return asyncComp
+        } catch (err1) {
+          // 再尝试 system/<component>/index.vue
+          try {
+            const asyncCompSys = markRaw(defineAsyncComponent(() => import(`@/views/system/${item.component}/index.vue`)))
+            constantRouterComponents[item.component] = asyncCompSys
+            console.log('✨ [generator-routers] 动态 import(system):', item.component)
+            return asyncCompSys
+          } catch (err2) {
+            // 再尝试无前缀 <component>/index.vue （与业务目录结构兼容）
+            try {
+              const asyncCompIdx = markRaw(defineAsyncComponent(() => import(`@/views/${item.component}/index.vue`)))
+              constantRouterComponents[item.component] = asyncCompIdx
+              console.log('✨ [generator-routers] 动态 import(index):', item.component)
+              return asyncCompIdx
+            } catch (err3) {
+              console.error('❌ [generator-routers] 动态 import 多次失败:', item.component)
+              return constantRouterComponents['404']
+            }
+          }
+        }
       })(),
       meta: {
         title: title,

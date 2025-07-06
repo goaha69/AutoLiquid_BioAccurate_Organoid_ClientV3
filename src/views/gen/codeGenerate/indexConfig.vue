@@ -6,15 +6,15 @@
     </div>
     <a-table ref="table" size="middle" :columns="columns" :dataSource="loadData" :pagination="false" :alert="true"
       :loading="tableLoading" :rowKey="(record) => record.id">
-      <template #columnComment #default="text, record">
+      <template #columnComment="{ text, record }">
         <a-input v-model="record.columnComment" ></a>
       </template>
-      <!--      <template #javaType #default="text, record">
+      <!--      <template #javaType="{ text, record }">
         <a-select style="width: 120px" v-model  value="record.javaType" : disabled="judgeColumns(record)">
           <a-select-option v-for="(item,index) in javaTypeData" :key="index" :value="item.code">{{ item.name }}</a-select-option>
         </a-select>
       </template> -->
-      <template #effectType #default="text, record">
+      <template #effectType="{ text, record }">
         <a-select style="width: 120px" v-model  value="record.effectType" : disabled="judgeColumns(record)"
           @change="effectTypeChange(record, $event)">
           <a-select-option v-for="(item, index) in effectTypeData" :key="index" :value="item.code">{{
@@ -22,7 +22,7 @@
           }}</a-select-option>
         </a-select>
       </template>
-      <template #dictTypeCode #default="text, record">
+      <template #dictTypeCode="{ text, record }">
         <a-select style="width: 120px" v-model  value="record.dictTypeCode" : disabled="record.effectType !== 'radio' && record.effectType !== 'select' && record.effectType !== 'checkbox'
           ">
           <a-select-option v-for="(item, index) in dictDataAll" :key="index" :value="item.code">{{
@@ -30,25 +30,25 @@
           }}</a-select-option>
         </a-select>
       </template>
-      <template #whetherTable #default="text, record">
+      <template #whetherTable="{ text, record }">
         <a-checkbox v-model="record.whetherTable" ></a>
       </template>
-      <template #whetherRetract #default="text, record">
+      <template #whetherRetract="{ text, record }">
         <a-checkbox v-model="record.whetherRetract" ></a>
       </template>
-      <template #whetherAddUpdate #default="text, record">
+      <template #whetherAddUpdate="{ text, record }">
         <a-checkbox v-model  value="record.whetherAddUpdate" : disabled="judgeColumns(record)" ></a>
       </template>
-      <template #whetherRequired #default="text, record">
+      <template #whetherRequired="{ text, record }">
         <a-checkbox v-model  value="record.whetherRequired" : disabled="judgeColumns(record)" ></a>
       </template>
-      <template #queryWhether #default="text, record">
+      <template #queryWhether="{ text, record }">
         <a-switch v-model="record.queryWhether">
           <a-icon #checkedChildren type="check" ></a>
           <a-icon #unCheckedChildren type="close" ></a>
         </a-switch>
       </template>
-      <template #queryType #default="text, record">
+      <template #queryType="{ text, record }">
         <a-select style="width: 100px" v-model  value="record.queryType" : disabled="!record.queryWhether">
           <a-select-option v-for="(item, index) in codeGenQueryTypeData" :key="index" :value="item.code">{{
             item.name

@@ -20,32 +20,32 @@
         <a-col  md="24" : sm="24">
           <a-table size="middle" :columns="columnShowColumns" :dataSource="columnInfo" :pagination="false"
             :loading="false">
-            <template #dbColumnName #default="text, record">
+            <template #dbColumnName="{ text, record }">
               <a-input style="width: 120px" v-model : value="record.dbColumnName" ></a>
             </template>
-            <template #columnDescription #default="text, record">
+            <template #columnDescription="{ text, record }">
               <a-input style="width: 120px" v-model : value="record.columnDescription" ></a>
             </template>
-            <template #isPrimarykey #default="text, record">
+            <template #isPrimarykey="{ text, record }">
               <a-select key="isPrimarykey" style="width: 120px" placeholder="请选择" has-feedback
                 @change="e => primarykeyHandleChange(e,record.key)" v-model="record.isPrimarykey">
                 <a-select-option v-for="(item,index) in selectData" :key="index" :value="item.value">{{ item.text }}
                 </a-select-option>
               </a-select>
             </template>
-            <template #isIdentity #default="text, record">
+            <template #isIdentity="{ text, record }">
               <a-select key="isIdentity" style="width: 120px" placeholder="请选择" has-feedback v-model  value="record.isIdentity" : disabled="record.isPrimarykey==0">
                 <a-select-option v-for="(item,index) in selectData" :key="index" :value="item.value">{{ item.text }}
                 </a-select-option>
               </a-select>
             </template>
-            <template #isNullable #default="text, record">
+            <template #isNullable="{ text, record }">
               <a-select key="isNullable" style="width: 120px" placeholder="请选择" has-feedback  disabled="record.isPrimarykey==1" v-model : value="record.isNullable">
                 <a-select-option v-for="(item,index) in selectData" :key="index" :value="item.value">{{ item.text }}
                 </a-select-option>
               </a-select>
             </template>
-            <template #dataType #default="text, record">
+            <template #dataType="{ text, record }">
               <a-select key="dataType" style="width: 120px" placeholder="请选择"
                 @change="e => dataTypeHandleChange(e,record.key)" has-feedback v-model="record.dataType">
                 <a-select-option v-for="(item,index) in dataTypeSelectData" :key="index" :value="item.value">
@@ -53,13 +53,13 @@
                 </a-select-option>
               </a-select>
             </template>
-            <template #length #default="text, record">
+            <template #length="{ text, record }">
               <a-input-number  disabled="!record.hasLength" v-model : value="record.length" ></a>
             </template>
-            <template #decimalDigits #default="text, record">
+            <template #decimalDigits="{ text, record }">
               <a-input-number  disabled="!record.hasDecimalDigits" v-model : value="record.decimalDigits" ></a>
             </template>
-            <template #operation #default="text, record">
+            <template #operation="{ text, record }">
               <a @click="remove(record.key)">删除</a>
             </template>
 

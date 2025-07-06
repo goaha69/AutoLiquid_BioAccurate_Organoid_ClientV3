@@ -69,7 +69,7 @@
               
             </div>
           </template>
-          <template #nameSlots #default="text,record">
+          <template #nameSlots="{ text,record }">
             <template v-if="record.fileType === '文件:">
               <a-icon type="folder-open" theme="twoTone" two-tone-color="#F7C709"></a>
               <a  style="margin-left: 5px;">{{ text }}</a>

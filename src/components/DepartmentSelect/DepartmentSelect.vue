@@ -7,7 +7,7 @@
     treeDefaultExpandAll
     @change="onchange"
   >
-    <span #title #default="{ id }">{{ id }}</span>
+    <template #title="{ { id } }"><span>{{ id }}</span></template>
   </a-tree-select>
 </template>
 <script>

@@ -17,8 +17,8 @@
             :treeData="docTree"
             placeholder="请选择父级文件'
             treeDefaultExpandAll" :replaceFields="replaceFields">
-            <span #title #default="{ id }">{{ id }}
-            </span>
+            <template #title="{ { id } }"><span>{{ id }}
+            </span></template>
           </a-tree-select>
         </a-form-item>
       </a-form>

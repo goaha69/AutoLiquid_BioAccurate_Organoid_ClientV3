@@ -41,31 +41,31 @@
       <s-table ref="table" size="middle" :loading="loading" :pagination="false"
         :columns="columns" :data="loadData" :alert="true"
         :rowKey="(record) => record.id">
-        <span #serial #default="text, record, index">
-          {{ index' + 1 }}
-        </span>
-        <span #type #default="text">
-          {{ typeFilter(text) }}
-        </span>
-        <span #status #default="text">
-          {{ statusFilter(text) }}
-        </span>
-        <span #flowId #default="text">
-          {{ flowFilter(text) }}
-        </span>
-        <span #cultivateOrGenerationTime #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <span #susceptibility1Time #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <span #susceptibility2Time #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <span #susceptibility3Time #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <template #action #default="record">
+        <template #serial="{ text, record, index }">
+          <span>{{ index + 1 }}</span>
+        </template>
+        <template #type="{ text }">
+          <span>{{ typeFilter(text) }}</span>
+        </template>
+        <template #status="{ text }">
+          <span>{{ statusFilter(text) }}</span>
+        </template>
+        <template #flowId="{ text }">
+          <span>{{ flowFilter(text) }}</span>
+        </template>
+        <template #cultivateOrGenerationTime="{ text }">
+          <span>{{ formatDate(text) }}</span>
+        </template>
+        <template #susceptibility1Time="{ text }">
+          <span>{{ formatDate(text) }}</span>
+        </template>
+        <template #susceptibility2Time="{ text }">
+          <span>{{ formatDate(text) }}</span>
+        </template>
+        <template #susceptibility3Time="{ text }">
+          <span>{{ formatDate(text) }}</span>
+        </template>
+        <template #action="{ record }">
           <a-button type="link" @click="showDetail(record)">查看明细</a-button>
           <a-button type="link" @click="showStatusModal(record)">修改状态</a-button>
         </template>
@@ -74,7 +74,7 @@
 
     <!--显微镜图像!-->
     <a-modal title="显微镜图像" :open="imageModal.visible" :footer="null" :width="1100" @cancel="clearImageData" @close="clearImageData">
-      <image-thumbnail ref="imageThumbnail" :images="imageModal.imageData" ></image>
+      <image-thumbnail ref="imageThumbnail" :images="imageModal.imageData" />
     </a-modal>
 
     <!--样品明细模态框 !-->
@@ -151,8 +151,12 @@
         <!-- 主体表格 -->
         <div v-for="(row, rowIndex) in Modal384.rows" :key="row" class="plate-row">
           <div class="row-header">{{ row }}</div>
-          <div v-for="col in 24" :key="col" class="plate-cell"
-          :style="Modal384.data[getIndex(rowIndex, col - 1)] == 0 : '' : 'background-color: #8ad8bc;'">
+          <div
+            v-for="col in 24"
+            :key="col"
+            class="plate-cell"
+            :style="{ backgroundColor: Modal384.data[getIndex(rowIndex, col - 1)] == 0 ? '' : '#8ad8bc' }"
+          >
             {{ Modal384.data[getIndex(rowIndex, col - 1)] }}
           </div>
         </div>
@@ -488,7 +492,7 @@ export default {
        * 计算索引位置
        */
       getIndex(row, column) {
-      return row * 24' + column
+      return row * 24 + column
     },
   },
 };
@@ -517,7 +521,6 @@ export default {
 
 
 /* 384孔板 */
-       */
 .plate-container {
   display: flex;
   flex-direction: column;
@@ -579,21 +582,20 @@ export default {
   left: 0;
   right: 0;
   height: 3px;
-  background-color: #42b983; /* 修改时间轴主线颜? */
-  /* 添加箭头伪元? */
-  &::after {
-    content: '';
-    position: absolute;
-    right: -10px; /* 定位到轴线末端右? */
-    top: 50%;
-    transform: translateY(-50%);
-    /* 创建三角形箭? */
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-left: 10px solid #42b983; /* 颜色与轴线一? */
-  }
+  background-color: #42b983;
+}
+
+.timeline-line::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid #42b983;
 }
 
 .timeline-node {
@@ -628,9 +630,8 @@ export default {
   background-color: white;
   padding: 15px; /* 增加内边? */
   border-radius: 8px; /* 增加圆角 */
-       */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width  300px; /* 增加最大宽 : */
+  max-width: 300px; /* 增加最大宽  */
   position: relative;
   left: 10px;
   min-height: 130px;
@@ -659,13 +660,11 @@ export default {
 /* 节点上下布局的样: */
 .timeline-node-top .timeline-node-content {
   top: -90px; /* 增加顶部偏移 */
-       */
   left: 5px;
 }
 
 .timeline-node-bottom .timeline-node-content {
   bottom: -90px; /* 增加底部偏移 */
-       */
   left: 5px;
 }
 </style>

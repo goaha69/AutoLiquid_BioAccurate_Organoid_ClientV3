@@ -145,11 +145,11 @@
               </a-tag>
             </span>
           </template>
-          <!--  <span #fileSizeSlots #default="text">
+          <!--  <template #fileSizeSlots="{ text }"><span>
             <a-tag v-for="tag in tags" :key="tag" :color="tag === '1' : 'volcano' :" tag=== '2' : 'geekblue' : 'green'">
               {{documentlabelData[tag - 1].name}}
             </a-tag>
-          </span> -->
+          </span></template> -->
           <template #action="{ text, record }">
             <span>
               <a v-if="hasPerm('Document:edit')" @click="$refs.editForm.edit(record)">重命</a>

@@ -11,19 +11,19 @@
             <a-form-item>
               <a-table size="middle" :columns="columns" :dataSource="scales" :pagination="false" :loading="scaleLoading" rowKey="key">                
                 <!-- 自定义序号列 -->
-                <span #serial #default="text, record, index">
+                <template #serial="{ text, record, index }"><span>
                   {{ index + 1 }}
-                </span>
-                <span #name #default="text, record">
+                </span></template>
+                <template #name="{ text, record }"><span>
                    <a-input v-model  value="record.name" style="width : 150px;" placeholder="请输入轴名称"  allow-clear></a>
-                </span>
-                <span #realName #default="text, record">
+                </span></template>
+                <template #realName="{ text, record }"><span>
                    <a-input v-model  value="record.realName" style="width : 150px;" placeholder="请输入真正轴名称"  allow-clear></a>
-                </span>
-                <span #value #default="text, record">
+                </span></template>
+                <template #value="{ text, record }"><span>
                    <a-input-number :step="myInputNumberStep" v-model  value="record.value" style="width : 150px;" placeholder="请输入Scale值" ></a>
-                </span>                
-                <template #operation #default="text, record">
+                </span></template>                
+                <template #operation="{ text, record }">
                   <a @click="removeScale(record.key)">删除</a>
                 </template>
               </a-table>
