@@ -226,46 +226,47 @@ router.beforeEach(async (to, from, next) => {
             } else {
               // 检查是否有根路由
               const rootRouter = addRouters.find(route => 
-                route.path === '/' || 
-                route.name === 'MenuIndex.vue' || 
-                route.name === 'BasicLayout');
+                route.path === '/' || route.path === '' || route.name === 'index'
+              );
               
-              if (!rootRouter) {
-                // 创建根路由
-                const newRootRouter = {
-                  path: '/',
-                  name: 'MenuIndex.vue',
-                  component: BasicLayout,
-                  meta: { title: '首页' },
-                  children: []
-                };
-                
-                // 把所有其他路由作为根路由的子路由
-                addRouters.forEach(route => {
-                  if (route.path.startsWith('/')) {
-                    route.path = route.path.substring(1);
-                  }
-                  newRootRouter.children.push(route);
-                });
-                
-                // 添加根路由
-                router.addRoute(newRootRouter);
-              } else {
-                // 有根路由，直接添加
-                // 先添加根路由
-                router.addRoute(rootRouter);
-                
-                // 再添加其他路由
-                addRouters.forEach((route, index) => {
-                  if (route !== rootRouter) {
-                    try {
-                      router.addRoute(route);
-                    } catch (err) {
-                      // 路由添加失败，继续处理其他路由
-                    }
-                  }
-                });
+              // 直接添加所有路由，不做复杂的嵌套处理
+              
+              // 首先移除通配符路由，避免它拦截动态路由
+              try {
+                router.removeRoute('NotFound');
+                console.log('🗑️ [permission.js] 临时移除通配符路由');
+              } catch (err) {
+                // 通配符路由可能不存在，继续执行
               }
+              
+              addRouters.forEach((route, index) => {
+                try {
+                  console.log('🔧 [permission.js] 添加路由:', route.path, route.name);
+                  router.addRoute(route);
+                } catch (err) {
+                  console.error('❌ [permission.js] 路由添加失败:', route.path, err);
+                }
+              });
+              
+              // 重新添加通配符路由，确保它在最后
+              try {
+                router.addRoute({
+                  path: '/:pathMatch(.*)*',
+                  name: 'NotFound',
+                  redirect: '/404'
+                });
+                console.log('🔄 [permission.js] 重新添加通配符路由');
+              } catch (err) {
+                console.error('❌ [permission.js] 通配符路由添加失败:', err);
+              }
+              
+              // 调试：打印所有已注册的路由
+              const allRoutes = router.getRoutes();
+              console.log('📋 [permission.js] 所有已注册路由:', allRoutes.map(r => ({
+                path: r.path,
+                name: r.name,
+                component: r.component ? r.component.name || 'Component' : 'None'
+              })));
             }
           } catch (err) {
             // 处理路由时发生错误，继续执行

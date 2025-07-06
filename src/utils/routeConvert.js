@@ -18,7 +18,13 @@ export function convertRoutes (nodes) {
       node.children.forEach(child => {
         // 转化相对路径
         if (child.path[0] !== '/' && !child.path.startsWith('http')) {
-          child.path = node.path.replace(/(\w*)[/]*$/, `$1/${child.path}`)
+          // 生成绝对路径，防止出现 "welcome/auth/app" 这类相对跳转
+          const parentPath = node.path.endsWith('/') ? node.path.slice(0, -1) : node.path
+          child.path = `${parentPath}/${child.path}`
+          // 确保以 / 开头
+          if (!child.path.startsWith('/')) {
+            child.path = '/' + child.path
+          }
         }
       })
 

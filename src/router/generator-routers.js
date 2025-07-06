@@ -77,6 +77,11 @@ const constantRouterComponents = {
   'UserIndex': markRaw(() => import('@/views/system/user/index.vue')),
   'RoleIndex': markRaw(() => import('@/views/system/role/index.vue')),
   'MenuIndex': markRaw(() => import('@/views/system/menu/index.vue')),
+  // 兼容后端返回短名称
+  'app': markRaw(() => import('@/views/system/app/index.vue')),
+  'app/index': markRaw(() => import('@/views/system/app/index.vue')),
+  'menu': markRaw(() => import('@/views/system/menu/index.vue')),
+  'menu/index': markRaw(() => import('@/views/system/menu/index.vue')),
   'OrgIndex': markRaw(() => import('@/views/system/org/index.vue')),
   'PosIndex': markRaw(() => import('@/views/system/pos/index.vue')),
   'DictIndex': markRaw(() => import('@/views/system/dict/index.vue')),
@@ -91,6 +96,10 @@ const constantRouterComponents = {
   'SmsIndex': markRaw(() => import('@/views/system/sms/index.vue')),
   'AppIndex': markRaw(() => import('@/views/system/app/index.vue')),
   'TenantIndex': markRaw(() => import('@/views/system/tenant/index.vue')),
+  'sys_app_mgr': markRaw(() => import('@/views/system/app/index.vue')),
+  'sys_menu_mgr': markRaw(() => import('@/views/system/menu/index.vue')),
+  'system/app/index': markRaw(() => import('@/views/system/app/index.vue')),
+  'system/menu/index': markRaw(() => import('@/views/system/menu/index.vue')),
 
   // 默认首页
   'Console': markRaw(() => import('@/views/system/index/welcome.vue')),
@@ -98,6 +107,12 @@ const constantRouterComponents = {
   // 测试页面
   'TestPage': markRaw(() => import('@/views/test-page.vue'))
 }
+
+// 使用 webpack 提供的 `require.context` 递归扫描 `src/views` 目录下的所有 .vue 文件
+// 这样可以在不依赖 Vite `import.meta.glob` 的情况下，同样获得批量组件映射能力
+// ⚠️ 注意：此文件位于  src/router  目录下，因此相对路径为  ../views
+// 返回值是一个函数，key 形如 "./experiment/liquid/index.vue"
+const dynamicViewsModules = require.context('../views', true, /\.vue$/);
 
 // 前端未找到页面路由（固定不用改）
 const notFoundRouter = {
@@ -216,7 +231,7 @@ const userAccount = [
 const rootRouter = {
   key: '',
   name: 'MenuIndex.vue',
-  path: '/', // 确保根路径为 '/'
+  path: '', // 与Vue2项目保持一致，使用空字符串
   component: 'BasicLayout',
   redirect: '/welcome',
   meta: {
@@ -337,62 +352,49 @@ export const generator = (routerMap, parent) => {
   return routerMap.map(item => {
     // eslint-disable-next-line no-unused-vars
     const { title, show, hideChildren, hiddenHeaderContent, target, icon, link, keepAlive } = item.meta || {}
-    // 修复路径拼接逻辑
-    let currentPath
-    if (item.path) {
-      currentPath = item.path
-    } else if (parent && parent.path) {
-      currentPath = parent.path === '/' ? item.key : `${parent.path}/${item.key}`
-    } else {
-      currentPath = item.key
-    }
+    // 使用与Vue2项目完全相同的路径生成逻辑
+    const currentPath = item.path || `${parent && parent.path || ''}/${item.key}`
     const currentRouter = {
       path: currentPath,
       name: item.name || item.key || '',
       component: (() => {
-        // 首先检查是否在预定义组件中
-        const predefComponent = constantRouterComponents[item.component || item.key]
-        if (predefComponent) {
-          console.log('✅ [generator-routers] 使用预定义组件:', item.component || item.key)
-          return predefComponent
+        const compKey = item.component || item.key
+
+        // 1. 首先检查是否在显式预定义映射中（布局组件 / 手动登记组件）
+        const predefined = constantRouterComponents[compKey]
+        if (predefined) {
+          return predefined
         }
+
+        // 2. 尝试基于文件系统的自动匹配（支持两种常见路径格式）
+        const possiblePaths = [
+          `./${compKey}.vue`, 
+          `./${compKey}/index.vue`,
+          `./system/${compKey}.vue`,
+          `./system/${compKey}/index.vue`
+        ]
         
-        // 检查特殊布局组件
-        if (item.component === 'RouteView') {
-          console.log('✅ [generator-routers] 使用RouteView组件')
-          return constantRouterComponents['RouteView']
-        }
-        if (item.component === 'PageView') {
-          console.log('✅ [generator-routers] 使用PageView组件')
-          return constantRouterComponents['PageView']
-        }
-        
-        // 动态尝试按路径加载组件（与 Vue2 项目一致）。
-        try {
-          const asyncComp = markRaw(defineAsyncComponent(() => import(`@/views/${item.component}.vue`)))
-          constantRouterComponents[item.component] = asyncComp
-          console.log('✨ [generator-routers] 动态 import:', item.component)
-          return asyncComp
-        } catch (err1) {
-          // 再尝试 system/<component>/index.vue
-          try {
-            const asyncCompSys = markRaw(defineAsyncComponent(() => import(`@/views/system/${item.component}/index.vue`)))
-            constantRouterComponents[item.component] = asyncCompSys
-            console.log('✨ [generator-routers] 动态 import(system):', item.component)
-            return asyncCompSys
-          } catch (err2) {
-            // 再尝试无前缀 <component>/index.vue （与业务目录结构兼容）
-            try {
-              const asyncCompIdx = markRaw(defineAsyncComponent(() => import(`@/views/${item.component}/index.vue`)))
-              constantRouterComponents[item.component] = asyncCompIdx
-              console.log('✨ [generator-routers] 动态 import(index):', item.component)
-              return asyncCompIdx
-            } catch (err3) {
-              console.error('❌ [generator-routers] 动态 import 多次失败:', item.component)
-              return constantRouterComponents['404']
-            }
+        // 如果 compKey 已经包含路径分隔符，直接尝试
+        if (compKey.includes('/')) {
+          possiblePaths.unshift(`./${compKey}.vue`)
+          // 如果不是以 index 结尾，也尝试添加 index
+          if (!compKey.endsWith('/index')) {
+            possiblePaths.unshift(`./${compKey}/index.vue`)
           }
         }
+        
+        for (const p of possiblePaths) {
+          if (dynamicViewsModules.keys().includes(p)) {
+            const asyncComp = markRaw(defineAsyncComponent(() => Promise.resolve(dynamicViewsModules(p)).then(m => m.default || m)))
+            // 缓存，避免下次重复遍历
+            constantRouterComponents[compKey] = asyncComp
+            return asyncComp
+          }
+        }
+
+        // 3. 未匹配到组件，回退到 404
+        console.warn('⚠️ [generator-routers] 未找到组件, 返回404:', compKey)
+        return constantRouterComponents['404']
       })(),
       meta: {
         title: title,
@@ -402,6 +404,21 @@ export const generator = (routerMap, parent) => {
         keepAlive: keepAlive
       },
       hidden: item.hidden
+    }
+    
+    // 调试：打印路由信息
+    if (item.name === 'sys_app_mgr' || item.name === 'sys_menu_mgr') {
+      console.log('🚀 [generator-routers] 生成路由:', {
+        name: currentRouter.name,
+        path: currentRouter.path,
+        component: item.component,
+        parent: parent ? parent.path : 'none'
+      })
+    }
+    
+    // 调试：打印所有生成的路由路径
+    if (currentRouter.path && !currentRouter.path.startsWith('http')) {
+      console.log('📍 [generator-routers] 路由路径:', currentRouter.path, 'name:', currentRouter.name)
     }
     if (show === false) {
       currentRouter.hidden = true
