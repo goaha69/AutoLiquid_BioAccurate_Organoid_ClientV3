@@ -13,40 +13,19 @@
       @update:openKeys="onOpenChange"
       @update:selectedKeys="onSelect"
     >
-      <template v-for="menu in menuTree" :key="menu.path">
-        <template v-if="menu.children && !menu.hideChildrenInMenu">
-          <a-sub-menu :key="menu.path">
-            <template #title>
-              <span>
-                <component :is="getIconComponent(menu.meta?.icon)" v-if="menu.meta?.icon" />
-                <span>{{ menu.meta?.title }}</span>
-              </span>
-            </template>
-            <a-menu-item v-for="item in menu.children.filter(i => !i.hidden && !i.hideInMenu)" :key="item.path">
-              <router-link :to="{ path: item.path }">
-                <component :is="getIconComponent(item.meta?.icon)" v-if="item.meta?.icon" />
-                <span>{{ item.meta?.title }}</span>
-              </router-link>
-            </a-menu-item>
-          </a-sub-menu>
-        </template>
-        <template v-else>
-          <a-menu-item :key="menu.path">
-            <router-link :to="{ path: menu.path }">
-              <component :is="getIconComponent(menu.meta?.icon)" v-if="menu.meta?.icon" />
-              <span>{{ menu.meta?.title }}</span>
-            </router-link>
-          </a-menu-item>
-        </template>
-      </template>
+      <MenuItem
+        v-for="menu in menuTree"
+        :key="menu.path"
+        :item="menu"
+      />
     </a-menu>
   </div>
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { ref, computed, watch, defineComponent, h } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { Menu } from 'ant-design-vue'
 import { 
   HomeOutlined, 
   DashboardOutlined, 
@@ -70,8 +49,70 @@ const iconMap = {
   'folder': FolderOutlined
 }
 
+// =======================  递归菜单组件  =======================
+
+const MenuItem = defineComponent({
+  name: 'MenuItem',
+  props: {
+    item: {
+      type: Object,
+      required: true
+    }
+  },
+  setup (props) {
+    const renderIcon = (icon) => {
+      if (!icon || icon === 'none') return null
+      if (typeof icon === 'string') {
+        const IconComp = iconMap[icon.toLowerCase()] || AppstoreOutlined
+        return h(IconComp)
+      }
+      return h(icon)
+    }
+
+    const renderItem = (item) => {
+      if (item.hidden || item.hideInMenu) return null
+
+      // 如果有子菜单并且不隐藏
+      if (item.children && !item.hideChildrenInMenu) {
+        return h(
+          Menu.SubMenu,
+          { key: item.path },
+          {
+            title: () => h('span', {}, [
+              renderIcon(item.meta?.icon),
+              h('span', {}, item.meta?.title)
+            ]),
+            default: () => item.children.map(child => renderItem(child))
+          }
+        )
+      }
+
+      // 普通菜单项
+      return h(
+        Menu.Item,
+        { key: item.path },
+        {
+          default: () => h(RouterLink, { to: { path: item.path } }, {
+            default: () => [
+              renderIcon(item.meta?.icon),
+              h('span', {}, item.meta?.title)
+            ]
+          })
+        }
+      )
+    }
+
+    // 返回渲染函数
+    return () => renderItem(props.item)
+  }
+})
+// =======================  递归菜单组件  =======================
+
 export default {
   name: 'SMenu',
+  components: {
+    MenuItem
+  },
   props: {
     menu: {
       type: Array,
@@ -197,4 +238,5 @@ export default {
     }
   }
 }
+
 </script>

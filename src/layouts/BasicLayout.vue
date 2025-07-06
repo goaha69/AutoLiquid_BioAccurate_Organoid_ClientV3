@@ -193,7 +193,9 @@ export default {
     permissionMenus: {
       handler(val) {
         if (val && val.length > 0) {
-          this.updateSideMenus()
+          // 使用最新的 addRouters 信息重新生成侧栏层级，
+          // 确保切换应用后路径和层级正确
+          this.setMenus()
         }
       },
       deep: true
@@ -240,7 +242,7 @@ export default {
     // 设置菜单
     // 检查是否有permission菜单数据
     if (this.permissionMenus && this.permissionMenus.length > 0) {
-      this.updateSideMenus()
+      this.setMenus()
     } else {
       this.setMenus()
     }
@@ -278,18 +280,22 @@ export default {
     
     // 设置菜单 - 从动态路由或permission路由生成菜单
     setMenus() {
-      if (this.mainMenu && this.mainMenu.length > 0) {
-        // 过滤出需要在菜单中显示的路由
-        const menuRoutes = this.mainMenu.filter(item => {
-          // 过滤掉hidden的路由和重定向路由
-          return !item.hidden && item.path !== '*'
-        })
-        
-        // 使用转换工具将路由转换为菜单项
-        this.menus = convertRoutes(menuRoutes)
-      } else {
-        // 如果没有动态路由，使用默认菜单
+      if (!this.mainMenu || this.mainMenu.length === 0) {
         this.menus = []
+        return
+      }
+
+      // 找到根路由（path 为 '' 或 '/'）
+      const rootRoute = this.mainMenu.find(item => item.path === '' || item.path === '/')
+
+      if (rootRoute) {
+        const converted = convertRoutes(rootRoute)
+        // 只使用根路由的 children 作为侧边菜单，保持与旧版逻辑一致
+        this.menus = (converted && converted.children) ? converted.children : []
+      } else {
+        // 退化为原先过滤方式
+        const menuRoutes = this.mainMenu.filter(item => !item.hidden && item.path !== '*')
+        this.menus = convertRoutes(menuRoutes)
       }
     },
     
@@ -305,10 +311,8 @@ export default {
     },
     
     onAppChanged(activeApp) {
-      // 应用切换完成的处理
-      if (activeApp && activeApp.menu) {
-        this.menus = activeApp.menu
-      }
+      // 应用切换后，让 Vuex permission 模块触发的 watcher 自动更新侧栏菜单。
+      // 这里不再手动覆盖 this.menus，以避免状态竞争导致菜单被清空。
     },
 
     toggle () {
