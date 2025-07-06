@@ -741,15 +741,13 @@ export default defineComponent({
       },
       layoutCustomRow(record) {
           return {
-              on: {
-                  click: () => {
-                      this.selectLayoutNode=record
-                      console.log('layout row on click')  
-                      this.loadFlowStepData(1)   
-                      this.getConsumableTagData()
-                      this.getShippingSpaceData()
-                      this.stepData=[]                    
-                  }
+              onClick: () => {
+                  this.selectLayoutNode=record
+                  console.log('layout row on click')  
+                  this.loadFlowStepData(1)   
+                  this.getConsumableTagData()
+                  this.getShippingSpaceData()
+                  this.stepData=[]                    
               },                
               style: {
                   backgroundColor: this.selectLayoutNode==record ? ('#'+this.$store.getters.color.slice(1)+'15') : '', 
@@ -758,43 +756,40 @@ export default defineComponent({
       },
       stepParentCustomRow(record) {
           return {
-              on: {
-                  click: () => {
-                      this.selectStepParentNode=record
-                      console.log('parent row on click')
-                      console.log(record)
-                      this.loadFlowStepData(2) 
-                  },
-                  mouseenter: (event) => {
-                      event.target.draggable = true
-                  },
-                  dragstart: (event) => {
-                      event.stopPropagation()
-                      this.sourceObj = record
-                      console.log("源数据 "+ this.sourceObj.id)
-                  },
-                  dragover: (event) => {
-                      event.preventDefault()                        
-                  },
-                  drop: (event) => {
-                      event.preventDefault()                         
-                      if(this.sourceObj!=null) {
-                          this.targetObj = record
-                          console.log("目标数据 "+ this.targetObj.id)
+              onClick: () => {
+                  this.selectStepParentNode=record
+                  console.log('parent row on click')
+                  console.log(record)
+                  this.loadFlowStepData(2) 
+              },
+              onMouseenter: (event) => {
+                  event.target.draggable = true
+              },
+              onDragstart: (event) => {
+                  event.stopPropagation()
+                  this.sourceObj = record
+                  console.log("源数据 "+ this.sourceObj.id)
+              },
+              onDragover: (event) => {
+                  event.preventDefault()                        
+              },
+              onDrop: (event) => {
+                  event.preventDefault()                         
+                  if(this.sourceObj!=null) {
+                      this.targetObj = record
+                      console.log("目标数据 "+ this.targetObj.id)
 
-                          var data={...this.sourceObj}
-                          data.sort=this.targetObj.sort
-                          exp_flow_step_edit(data).then((res) => {
-                              this.parentLoading = false
-                              if (res.success) {
-                                  this.loadFlowStepData(1)
-                              } else {
-                                  message.error('数据刷新失败')
-                              }
-                          })
-                      }
-                  },
-                  
+                      var data={...this.sourceObj}
+                      data.sort=this.targetObj.sort
+                      exp_flow_step_edit(data).then((res) => {
+                          this.parentLoading = false
+                          if (res.success) {
+                              this.loadFlowStepData(1)
+                          } else {
+                              message.error('数据刷新失败')
+                          }
+                      })
+                  }
               },
               style: {
                   backgroundColor: this.selectStepParentNode==record ? ('#'+this.$store.getters.color.slice(1)+'15') : '', 
@@ -847,43 +842,41 @@ export default defineComponent({
       },
       stepCustomRow(record) {
           return {
-              on: {
-                  click: () => {
-                      this.selectStepNode=record
-                      console.log('step row on click')     
-                      console.log(record)                    
-                  },
-                  mouseenter:(event) =>{
-                      event.target.draggable = true
-                  },
-                  dragstart: (event) => {
-                      event.stopPropagation()
-                      this.dragAdd=false
-                      this.sourceObj = record
-                      console.log("源数据 "+ this.sourceObj.id)
-                  },
-                  dragover: (event) => {
-                      event.preventDefault()                        
-                  },
-                  drop: (event) => {
-                      event.preventDefault()                         
-                      if(this.dragAdd==false && this.sourceObj!=null) {
-                          this.targetObj = record
-                          console.log("目标数据 "+ this.targetObj.id)
+              onClick: () => {
+                  this.selectStepNode=record
+                  console.log('step row on click')     
+                  console.log(record)                    
+              },
+              onMouseenter:(event) =>{
+                  event.target.draggable = true
+              },
+              onDragstart: (event) => {
+                  event.stopPropagation()
+                  this.dragAdd=false
+                  this.sourceObj = record
+                  console.log("源数据 "+ this.sourceObj.id)
+              },
+              onDragover: (event) => {
+                  event.preventDefault()                        
+              },
+              onDrop: (event) => {
+                  event.preventDefault()                         
+                  if(this.dragAdd==false && this.sourceObj!=null) {
+                      this.targetObj = record
+                      console.log("目标数据 "+ this.targetObj.id)
 
-                          var data={...this.sourceObj}
-                          data.sort=this.targetObj.sort
-                          exp_flow_step_edit(data).then((res) => {
-                              this.layoutLoading = false
-                              if (res.success) {
-                                  this.loadFlowStepData(2)
-                              } else {
-                                  message.error('数据刷新失败')
-                              }
-                          })
-                      }
-                  },
-              },                
+                      var data={...this.sourceObj}
+                      data.sort=this.targetObj.sort
+                      exp_flow_step_edit(data).then((res) => {
+                          this.layoutLoading = false
+                          if (res.success) {
+                              this.loadFlowStepData(2)
+                          } else {
+                              message.error('数据刷新失败')
+                          }
+                      })
+                  }
+              },               
               style: {
                   backgroundColor: this.getStepRowBackground(record),
               },
