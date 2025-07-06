@@ -1,671 +1,624 @@
 <template>
-  <div>
-    <x-card v-if="hasPerm('exp_flow:page')">
-      <template #content>
-
-        <div class="table-page-search-wrapper">
-        <a-form layout="inline">
-          <a-row :gutter="48">
-            <a-col :span="5">
-              <a-form-item label="样品编号:">
-                <a-input v-model  value="queryParam.sampleCode" allow-clear placeholder="请输入样品编 : " ></a>
-              </a-form-item>
-            </a-col>
-            <!-- <a-col :span="5">
-              <a-form-item label="实验流程">
-                <a-select style="color: black;" v-model : value="queryParam.flowId" allowClear>
-                  <a-select-option v-for="(item, index) in flowData" :key="index" :value="item.id">{{ item.name
-                  }}</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-col>
-            <a-col :span="5">
-              <a-form-item label="流程类型">
-                <a-select style="color: black;" v-model : value="queryParam.type" allowClear>
-                  <a-select-option v-for="(item, index) in flowTypes" :key="index" :value="item.code">{{ item.value
-                  }}</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-col> -->
-            <a-col :span="4">
-              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-              <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
-            </a-col>
-          </a-row>
-        </a-form>
-        </div>
-
-      </template>
-    </x-card>
-    <a-card :bordered="false">
-      <s-table ref="table" size="middle" :loading="loading" :pagination="false"
-        :columns="columns" :data="loadData" :alert="true"
-        :rowKey="(record) => record.id">
-        <span #serial #default="text, record, index">
-          {{ index' + 1 }}
-        </span>
-        <span #type #default="text">
-          {{ typeFilter(text) }}
-        </span>
-        <span #status #default="text">
-          {{ statusFilter(text) }}
-        </span>
-        <span #flowId #default="text">
-          {{ flowFilter(text) }}
-        </span>
-        <span #cultivateOrGenerationTime #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <span #susceptibility1Time #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <span #susceptibility2Time #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <span #susceptibility3Time #default="text">
-          {{ formatDate(text) }}
-        </span>
-        <template #action #default="record">
-          <a-button type="link" @click="showDetail(record)">查看明细</a-button>
-          <a-button type="link" @click="showStatusModal(record)">修改状态</a-button>
-        </template>
-      </s-table>
+  <div style="padding: 20px;">
+    <h2>样品信息表</h2>
+    
+    <!-- 搜索区域 -->
+    <a-card title="搜索条件" style="margin-bottom: 16px;">
+      <a-form layout="inline">
+        <a-form-item label="样品编号">
+          <a-input v-model:value="queryParam.sampleCode" placeholder="请输入样品编号" allow-clear />
+        </a-form-item>
+        <a-form-item label="样品状态">
+          <a-select v-model:value="queryParam.status" placeholder="请选择样品状态" allow-clear style="width: 150px;">
+            <a-select-option value="0">培养中</a-select-option>
+            <a-select-option value="1">已完成</a-select-option>
+            <a-select-option value="2">已暂停</a-select-option>
+            <a-select-option value="3">已终止</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="实验流程">
+          <a-select v-model:value="queryParam.flowId" placeholder="请选择实验流程" allow-clear style="width: 200px;">
+            <a-select-option v-for="flow in flowList" :key="flow.id" :value="flow.id">
+              {{ flow.name }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item>
+          <a-button type="primary" @click="handleQuery">查询</a-button>
+          <a-button style="margin-left: 8px;" @click="handleReset">重置</a-button>
+        </a-form-item>
+      </a-form>
     </a-card>
 
-    <!--显微镜图像!-->
-    <a-modal title="显微镜图像" :open="imageModal.visible" :footer="null" :width="1100" @cancel="clearImageData" @close="clearImageData">
-      <image-thumbnail ref="imageThumbnail" :images="imageModal.imageData" ></image>
-    </a-modal>
-
-    <!--样品明细模态框 !-->
-    <a-modal title="样品明细" :open="detailModal.visible" @ok="handleDetailOk" @cancel="handleDetailCancel" :width="1600">
-      <div>
-        <p>{{"样品编号::"+detailModal.detailData.sampleCode  }}</p>
-        <p>{{"样品状态::"+statusFilter(detailModal.detailData.status) }}</p>
-      </div>
-      <div class="timeline-container">
-        <!-- 时间轴线 -->
-        <div class="timeline-line"></div>
-        
-        <!-- 时间轴节:-->
-        <div
-          v-for="(item, index) in detailModal.detailData.tracks" :key="index" :class="[
-            'timeline-node',
-            { 'timeline-node-top': isEven(index), 'timeline-node-bottom': isOdd(index) }
-          ]"
-        > 
-          <div class="timeline-node-dot"></div>
-          <div class="timeline-node-content" >
-            <div class="timeline-node-time" v-if="item.flowCase!=null">{{ item.flowCase.startTime}}</div>
-            <div class="timeline-node-text" v-if="item.flowCase!=null">{{ item.flowCase.name }}</div>
-            <div class="timeline-node-subtext" 
-            v-if="item.consumables!=null && item.consumables.length>0"
-            v-for="(sitem, sindex) in item.consumables" :key="sindex">
-              {{ sitem.name +'('+sitem.barcode+')' }}
-            </div>
-            <div class="timeline-node-subtext" v-if="item.files!=null && item.files.length>0" @click="showImage(item.files)">
-              图像
-            </div>
-            <div class="timeline-node-subtext" v-if="item.readerData!=null && item.readerData.length>0" @click="show384(item.readerData[0].dataScheme)">
-              384孔板数据
-            </div>
-          </div>
-        </div>
-      </div>
-    </a-modal>
-
-    <!--修改状态模态框 !-->
-    <a-modal title="修改状态" :open="statusModal.visible" @ok="handleStatusConfirm" @cancel="handleStatusCancel">
+    <!-- 表格区域 -->
+    <a-card title="样品信息列表">
       <div style="margin-bottom: 16px;">
-        <span>样品号::</span>
-        <span style="color: #666; font-weight : 500;">
-          {{ statusModal.record.sampleCode }}
-        </span>
+        <a-button type="primary" @click="showAddModal" v-if="hasPerm('exp_sample:add')">新增样品</a-button>
       </div>
-      <div style="margin-bottom: 16px;">
-        <span>原状态::</span>
-        <span style="color: #666; font-weight : 500;">
-          {{ statusFilter(statusModal.originalStatus) }}
-        </span>
-      </div>
-      <div>
-        <span>新状态::</span>
-        <a-select v-model="statusModal.record.status" style="width: 200px;" placeholder="请选择新状态:">
-          <a-select-option v-for="(value, key) in sampleStatus" :key="key" :value="parseInt(key)">
-            {{ value }}
-          </a-select-option>
-        </a-select>
-      </div>
+      
+      <a-table 
+        :columns="columns" 
+        :data-source="dataSource" 
+        :loading="loading"
+        :pagination="{
+          total: total,
+          current: pageNum,
+          pageSize: pageSize,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条记录`
+        }"
+        @change="handleTableChange"
+        rowKey="id"
+      >
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'index'">
+            {{ (pageNum - 1) * pageSize + index + 1 }}
+          </template>
+          <template v-else-if="column.key === 'status'">
+            <a-tag :color="getStatusColor(record.status)">
+              {{ getStatusText(record.status) }}
+            </a-tag>
+          </template>
+          <template v-else-if="column.key === 'cultivateOrGenerationTime'">
+            {{ formatDateTime(record.cultivateOrGenerationTime) }}
+          </template>
+          <template v-else-if="column.key === 'susceptibility1Time'">
+            {{ formatDateTime(record.susceptibility1Time) }}
+          </template>
+          <template v-else-if="column.key === 'susceptibility2Time'">
+            {{ formatDateTime(record.susceptibility2Time) }}
+          </template>
+          <template v-else-if="column.key === 'susceptibility3Time'">
+            {{ formatDateTime(record.susceptibility3Time) }}
+          </template>
+          <template v-else-if="column.key === 'action'">
+            <a @click="showDetail(record)">查看详情</a>
+            <a-divider type="vertical" />
+            <a @click="showStatusModal(record)" v-if="hasPerm('exp_sample:edit')">修改状态</a>
+            <a-divider type="vertical" v-if="hasPerm('exp_sample:edit') && hasPerm('exp_sample:delete')" />
+            <a-popconfirm title="确认删除？" @confirm="deleteRecord(record)" v-if="hasPerm('exp_sample:delete')">
+              <a style="color: red;">删除</a>
+            </a-popconfirm>
+          </template>
+        </template>
+      </a-table>
+    </a-card>
+
+    <!-- 新增/编辑模态框 -->
+    <a-modal
+      v-model:open="modalVisible"
+      :title="modalTitle"
+      @ok="handleOk"
+      @cancel="handleCancel"
+      width="800px"
+    >
+      <a-form :model="formData" layout="vertical">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="样品编号" required>
+              <a-input v-model:value="formData.sampleCode" placeholder="请输入样品编号" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="实验流程" required>
+              <a-select v-model:value="formData.flowId" placeholder="请选择实验流程" style="width: 100%;">
+                <a-select-option v-for="flow in flowList" :key="flow.id" :value="flow.id">
+                  {{ flow.name }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="培养/产生时间">
+              <a-date-picker
+                v-model:value="formData.cultivateOrGenerationTime"
+                show-time
+                format="YYYY-MM-DD HH:mm:ss"
+                placeholder="请选择培养/产生时间"
+                style="width: 100%;"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="感受态制备1时间">
+              <a-date-picker
+                v-model:value="formData.susceptibility1Time"
+                show-time
+                format="YYYY-MM-DD HH:mm:ss"
+                placeholder="请选择感受态制备1时间"
+                style="width: 100%;"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="感受态制备2时间">
+              <a-date-picker
+                v-model:value="formData.susceptibility2Time"
+                show-time
+                format="YYYY-MM-DD HH:mm:ss"
+                placeholder="请选择感受态制备2时间"
+                style="width: 100%;"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="感受态制备3时间">
+              <a-date-picker
+                v-model:value="formData.susceptibility3Time"
+                show-time
+                format="YYYY-MM-DD HH:mm:ss"
+                placeholder="请选择感受态制备3时间"
+                style="width: 100%;"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="样品状态">
+              <a-select v-model:value="formData.status" style="width: 100%;">
+                <a-select-option :value="0">培养中</a-select-option>
+                <a-select-option :value="1">已完成</a-select-option>
+                <a-select-option :value="2">已暂停</a-select-option>
+                <a-select-option :value="3">已终止</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="流程类型">
+              <a-select v-model:value="formData.type" placeholder="请选择流程类型" style="width: 100%;">
+                <a-select-option value="normal">普通流程</a-select-option>
+                <a-select-option value="urgent">紧急流程</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16">
+          <a-col :span="24">
+            <a-form-item label="备注">
+              <a-textarea v-model:value="formData.remark" placeholder="请输入备注" :rows="3" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-form>
     </a-modal>
 
-    <!--384孔板模态框 !-->
-    <a-modal v-model:open="Modal384.visible" title="384孔位数据" width="1050px" :footer="null">
-      <div class="plate-container">
-        <!-- 列号展示 -->
-        <div class="column-headers">
-          <div class="row-header"></div>
-          <div v-for="col in 24" :key="col" class="column-header">
-            {{ col }}
+    <!-- 样品详情模态框 -->
+    <a-modal
+      v-model:open="detailVisible"
+      title="样品详情"
+      :footer="null"
+      width="1200px"
+    >
+      <a-descriptions :column="2" v-if="selectedSample">
+        <a-descriptions-item label="样品编号">{{ selectedSample.sampleCode }}</a-descriptions-item>
+        <a-descriptions-item label="实验流程">{{ selectedSample.flowName }}</a-descriptions-item>
+        <a-descriptions-item label="培养/产生时间">{{ formatDateTime(selectedSample.cultivateOrGenerationTime) }}</a-descriptions-item>
+        <a-descriptions-item label="感受态制备1时间">{{ formatDateTime(selectedSample.susceptibility1Time) }}</a-descriptions-item>
+        <a-descriptions-item label="感受态制备2时间">{{ formatDateTime(selectedSample.susceptibility2Time) }}</a-descriptions-item>
+        <a-descriptions-item label="感受态制备3时间">{{ formatDateTime(selectedSample.susceptibility3Time) }}</a-descriptions-item>
+        <a-descriptions-item label="样品状态">
+          <a-tag :color="getStatusColor(selectedSample.status)">
+            {{ getStatusText(selectedSample.status) }}
+          </a-tag>
+        </a-descriptions-item>
+        <a-descriptions-item label="流程类型">{{ selectedSample.type || '普通流程' }}</a-descriptions-item>
+        <a-descriptions-item label="备注" :span="2">{{ selectedSample.remark || '无' }}</a-descriptions-item>
+      </a-descriptions>
+      
+      <!-- 样品跟踪时间轴 -->
+      <a-divider>样品跟踪记录</a-divider>
+      <a-timeline v-if="selectedSample.tracks && selectedSample.tracks.length > 0">
+        <a-timeline-item v-for="(track, index) in selectedSample.tracks" :key="index">
+          <template #dot>
+            <clock-circle-outlined style="font-size: 16px;" />
+          </template>
+          <div>
+            <div style="font-weight: bold;">{{ track.flowCase?.name || '未知步骤' }}</div>
+            <div style="color: #666; font-size: 12px;">{{ formatDateTime(track.flowCase?.startTime) }}</div>
+            <div v-if="track.flowCase?.description" style="margin-top: 4px;">{{ track.flowCase.description }}</div>
           </div>
-        </div>
-        <!-- 主体表格 -->
-        <div v-for="(row, rowIndex) in Modal384.rows" :key="row" class="plate-row">
-          <div class="row-header">{{ row }}</div>
-          <div v-for="col in 24" :key="col" class="plate-cell"
-          :style="Modal384.data[getIndex(rowIndex, col - 1)] == 0 : '' : 'background-color: #8ad8bc;'">
-            {{ Modal384.data[getIndex(rowIndex, col - 1)] }}
-          </div>
-        </div>
-      </div>
+        </a-timeline-item>
+      </a-timeline>
+      <a-empty v-else description="暂无跟踪记录" />
+    </a-modal>
+
+    <!-- 修改状态模态框 -->
+    <a-modal
+      v-model:open="statusModalVisible"
+      title="修改样品状态"
+      @ok="handleStatusOk"
+      @cancel="handleStatusCancel"
+      width="400px"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="当前状态">
+          <a-tag :color="getStatusColor(statusForm.currentStatus)">
+            {{ getStatusText(statusForm.currentStatus) }}
+          </a-tag>
+        </a-form-item>
+        <a-form-item label="新状态" required>
+          <a-select v-model:value="statusForm.newStatus" style="width: 100%;">
+            <a-select-option :value="0">培养中</a-select-option>
+            <a-select-option :value="1">已完成</a-select-option>
+            <a-select-option :value="2">已暂停</a-select-option>
+            <a-select-option :value="3">已终止</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="备注">
+          <a-textarea v-model:value="statusForm.remark" placeholder="请输入状态变更原因" :rows="2" />
+        </a-form-item>
+      </a-form>
     </a-modal>
   </div>
 </template>
 
 <script>
-import { STable, Ellipsis, XCard } from '@/components';
-import { exp_flow_case_getSamples, exp_flow_case_getSampleDetail, exp_flow_case_UpdateSampleStatus } from '@/api/modular/experiment/expFlowCaseManage';
-import { exp_flow_list } from '@/api/modular/experiment/expFlowManage';
-import { sysDictTypeDropDown } from '@/api/modular/system/dictManage';
-import SpInputNumber from '@/components/spInputNumber.vue';
-import SpInput from '@/components/spInput.vue';
-import { data } from 'jquery';
-import moment from 'moment';
-import ImageThumbnail from "@/components/ImageThumbnail.vue";
+import { ClockCircleOutlined } from '@ant-design/icons-vue'
+import { exp_flow_case_page, exp_flow_case_add, exp_flow_case_edit, exp_flow_case_delete, exp_flow_case_updateStatus } from '@/api/modular/experiment/expFlowCaseManage'
+import { exp_flow_list } from '@/api/modular/experiment/expFlowManage'
+import { hasPerm } from '@/utils/permissions'
+import dayjs from 'dayjs'
 
 export default {
+  name: 'SampleInformation',
   components: {
-    XCard,
-    STable,
-    Ellipsis,
-    SpInputNumber,
-    SpInput,
-    ImageThumbnail
+    ClockCircleOutlined
   },
   data() {
     return {
-      queryParam: {},
-      pagination: {
-        current: 1,
-        pageSize: 10,
-        total: 0,
-      },
       loading: false,
+      queryParam: {
+        sampleCode: '',
+        status: undefined,
+        flowId: undefined
+      },
+      dataSource: [],
+      total: 0,
+      pageNum: 1,
+      pageSize: 10,
       columns: [
         {
           title: '序号',
-          key: 'serial',
-          align: 'center',
-          width: '60px',
-          slots: { customRender: 'serial' },
+          key: 'index',
+          width: 60,
+          align: 'center'
         },
         {
-          title: '样品编号:',
+          title: '样品编号',
           dataIndex: 'sampleCode',
+          key: 'sampleCode',
+          align: 'center'
         },
         {
-          title: '培养箱位',
-          dataIndex: 'storageLoc',
+          title: '实验流程',
+          dataIndex: 'flowName',
+          key: 'flowName',
+          align: 'center'
         },
         {
-          title: '案例编号',
-          dataIndex: 'code',
-          slots: { customRender: 'code' },
+          title: '培养/产生时间',
+          key: 'cultivateOrGenerationTime',
+          align: 'center'
         },
         {
-          title: '流程名称',
-          dataIndex: 'name',
-          slots: { customRender: 'name' },
+          title: '感受态制备1时间',
+          key: 'susceptibility1Time',
+          align: 'center'
         },
         {
-          title: '流程类型',
-          dataIndex: 'type',
-          slots: { customRender: 'type' },
+          title: '感受态制备2时间',
+          key: 'susceptibility2Time',
+          align: 'center'
         },
         {
-          title: '培养日期',
-          dataIndex: 'cultivateOrGenerationTime',
-          slots: { customRender: 'cultivateOrGenerationTime' },
+          title: '感受态制备3时间',
+          key: 'susceptibility3Time',
+          align: 'center'
         },
         {
-          title: '距上一次换液天',
-          dataIndex: 'lastChangeLiquidDay',
-        },
-        {
-          title: '距上一次传代天',
-          dataIndex: 'lastGenerationDay',
-        },
-        {
-          title: '铺板日期',
-          dataIndex: 'susceptibility1Time',
-          slots: { customRender: 'susceptibility1Time' },
-        },
-        {
-          title: '加药日期',
-          dataIndex: 'susceptibility2Time',
-          slots: { customRender: 'susceptibility2Time' },
-        },
-        {
-          title: '检测日',
-          dataIndex: 'susceptibility3Time',
-          slots: { customRender: 'susceptibility3Time' },
-        },
-        {
-          title: '状',
-          dataIndex: 'status',
-          slots: {
-            customRender: 'status',
-          },
-        },
-        {
-          title: '操作',
-          align: 'center',
-          slots: { customRender: 'action' },
+          title: '样品状态',
+          key: 'status',
+          align: 'center'
         }
       ],
-      imageModal:{
-        visible: false,
-        imageData:[]
+      modalVisible: false,
+      modalTitle: '新增样品',
+      isEdit: false,
+      formData: {
+        id: null,
+        sampleCode: '',
+        flowId: null,
+        cultivateOrGenerationTime: null,
+        susceptibility1Time: null,
+        susceptibility2Time: null,
+        susceptibility3Time: null,
+        status: 0,
+        type: 'normal',
+        remark: ''
       },
-      detailModal: {
-        visible: false,
-        currentRecord: null,
-        detailData:{
-          sampleCode:'123',
-          status:0,
-          tracks:[],
-        },
+      detailVisible: false,
+      selectedSample: null,
+      statusModalVisible: false,
+      statusForm: {
+        id: null,
+        currentStatus: null,
+        newStatus: null,
+        remark: ''
       },
-      loadData: parameter => {
-        return exp_flow_case_getSamples(Object.assign(parameter, this.queryParam)).then((res) => {
-          this.pagination.current = res.data.pageNo;
-          this.pagination.pageSize = res.data.pageSize;
-          return res.data
-        })
-      }, 
-      flowData: [],
-      flowStatus: [],
-      liquidRanges: [],
-      flowTypes: [],
-      executeTypes: [],
-      flowPrioritys: [],
-      // 状态的判断
-
-    sampleStatus: [],
-      // 状态模态框是否打开
-
-    statusModal: {
-        visible: false,
-        record: {},// 存储当前操作的记
-      originalStatus: null // 新增属性保存原状      },
-      // 384孔板模态框是否打开
-
-    Modal384: {
-        visible: false,
-        rows: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'],
-        data: [],
-        dataList:[]
-      }
-    };
+      flowList: []
+    }
   },
   mounted() {
-    this.refreshTime = setInterval(this.refreshFun, 10000);
-    document.addEventListener('mouseup', () => {
-      this.isDragging = false;
-    });
-  },
-  beforeUnmount() {
-    clearInterval(this.refreshTime);
-    this.$socket.off('ReceiveMessage');
-  },
-  created() {
-    this.sysDictTypeDropDown();
-    this.getFlowData();
+    // 根据权限动态添加操作列
+    if (this.hasPerm('exp_sample:edit') || this.hasPerm('exp_sample:delete')) {
+      const hasActionColumn = this.columns.some(col => col.key === 'action')
+      if (!hasActionColumn) {
+        this.columns.push({
+          title: '操作',
+          key: 'action',
+          align: 'center',
+          width: 200
+        })
+      }
+    }
+    this.loadData()
+    this.loadFlowList()
   },
   methods: {
-    clearImageData(){
-      this.imageModal.visible=false;
-      console.log('===this.imageModal.visible=false===');
-      this.$refs.imageThumbnail.clearFormData();
+    async loadData() {
+      try {
+        this.loading = true
+        const params = {
+          ...this.queryParam,
+          page: this.pageNum,
+          pageSize: this.pageSize
+        }
+        console.log('样品信息表 - 请求参数:', params)
+        
+        const response = await exp_flow_case_page(params)
+        console.log('样品信息表 - API响应:', response)
+        
+        if (response && response.data) {
+          this.dataSource = response.data.rows || response.data.records || response.data.data || []
+          this.total = response.data.totalRows || response.data.totalCount || response.data.total || 0
+          
+          console.log('样品信息表 - 解析数据:', {
+            dataSource: this.dataSource,
+            total: this.total
+          })
+          
+          if (this.dataSource.length === 0) {
+            console.log('样品信息表 - 没有找到数据')
+            this.$message.info('暂无样品信息数据')
+          } else {
+            console.log('样品信息表 - 成功加载数据，共', this.dataSource.length, '条记录')
+          }
+        } else {
+          console.warn('样品信息表 - API响应格式异常:', response)
+          this.dataSource = []
+          this.total = 0
+        }
+      } catch (error) {
+        console.error('样品信息表 - 数据加载失败:', error)
+        this.$message.error('数据加载失败: ' + (error.response?.data?.message || error.message || error))
+        this.dataSource = []
+        this.total = 0
+      } finally {
+        this.loading = false
+      }
     },
-    // 判断索引是否为奇
-  isOdd(index) {
-      return index % 2 !== 0;
+
+    async loadFlowList() {
+      try {
+        const response = await exp_flow_list()
+        if (response && response.data) {
+          this.flowList = response.data.rows || response.data.records || response.data || []
+          console.log('样品信息表 - 流程列表加载成功:', this.flowList)
+        }
+      } catch (error) {
+        console.error('样品信息表 - 流程列表加载失败:', error)
+        this.flowList = []
+      }
     },
-    // 判断索引是否为偶
-  isEven(index) {
-      return index % 2 === 0;
+    
+    handleQuery() {
+      this.pageNum = 1
+      this.loadData()
     },
+    
+    handleReset() {
+      this.queryParam = {
+        sampleCode: '',
+        status: undefined,
+        flowId: undefined
+      }
+      this.pageNum = 1
+      this.loadData()
+    },
+    
+    handleTableChange(pagination) {
+      this.pageNum = pagination.current
+      this.pageSize = pagination.pageSize
+      this.loadData()
+    },
+
     showDetail(record) {
-      this.detailModal.currentRecord = record;
-      this.detailModal.visible = true;
-      var dd = { id: record.id };
-      exp_flow_case_getSampleDetail(dd).then((res) => {
-        if(res.success)
-        {
-          console.log(this.detailModal.detailData.sampleCode)
-          this.detailModal.detailData=res.data
-          console.log(this.detailModal.detailData.tracks)
-        }else {
-          this.$message.error('明细数据加载失败!');
-        }
-      });
+      this.selectedSample = record
+      this.detailVisible = true
     },
-    handleDetailOk() {
-      this.detailModal.visible = false;
+
+    showStatusModal(record) {
+      this.statusForm = {
+        id: record.id,
+        currentStatus: record.status,
+        newStatus: record.status,
+        remark: ''
+      }
+      this.statusModalVisible = true
     },
-    handleDetailCancel() {
-      this.detailModal.visible = false;
-    },
-    getFlowData() {
-      const data = {};
-      exp_flow_list(data).then((res) => {
-        if (res.success) {
-          this.flowData = res.data;
+
+    async handleStatusOk() {
+      try {
+        const response = await exp_flow_case_updateStatus(this.statusForm)
+        console.log('样品信息表 - 状态更新响应:', response)
+        
+        if (response && (response.success !== false || response.code === 200 || response.status === 'success')) {
+          this.$message.success('状态更新成功')
+          this.statusModalVisible = false
+          this.loadData()
         } else {
-          this.$message.error('数据加载失败');
+          this.$message.error('状态更新失败: ' + (response.message || response.msg || '未知错误'))
         }
-      });
-    },
-    sysDictTypeDropDown() {
-      sysDictTypeDropDown({ code: 'expflow_status' }).then((res) => {
-        this.flowStatus = res.data;
-        this.flowStatus.forEach((item) => {
-          item.code = parseInt(item.code);
-        });
-      });
-
-      sysDictTypeDropDown({ code: 'liquid_range' }).then((res) => {
-        this.liquidRanges = res.data;
-        this.liquidRanges.forEach((item) => {
-          item.code = parseInt(item.code);
-        });
-      });
-
-      sysDictTypeDropDown({ code: 'flow_type' }).then((res) => {
-        this.flowTypes = res.data;
-        this.flowTypes.forEach((item) => {
-          item.code = parseInt(item.code);
-        });
-      });
-
-      sysDictTypeDropDown({ code: 'flow_execute_type' }).then((res) => {
-        this.executeTypes = res.data;
-        this.executeTypes.forEach((item) => {
-          item.code = parseInt(item.code);
-        });
-      });
-
-      sysDictTypeDropDown({ code: 'flow_priority' }).then((res) => {
-        this.flowPrioritys = res.data;
-        this.flowPrioritys.forEach((item) => {
-          item.code = parseInt(item.code);
-        });
-      });
-
-      sysDictTypeDropDown({ code: 'sample_status' }).then((res) => {
-        this.sampleStatus = res.data
-        this.sampleStatus.forEach((item) => {
-          item.code = parseInt(item.code)
-        })
-      })
-    },
-    formatDate(text)
-    {
-      if(text!=null)
-        return moment(text).format('YYYY-MM-DD')
-      else
-        return ''
-    },
-    flowFilter(flowId) {
-      const values = this.flowData.filter((item) => item.id === flowId);
-      if (values.length > 0) {
-        return values[0].name;
+      } catch (error) {
+        console.error('样品信息表 - 状态更新失败:', error)
+        this.$message.error('状态更新失败: ' + (error.response?.data?.message || error.message || error))
       }
     },
-    typeFilter(status) {
-      const values = this.flowTypes.filter((item) => item.code === status);
-      if (values.length > 0) {
-        return values[0].value;
-      }
-    },
-    // 状态判
-  statusFilter(status) {
-      const values = this.sampleStatus.filter((item) => item.code === status);
-      if (values.length > 0) {
-        return values[0].value;
-      }
-    },
-    /**
-       * 打开状态修改模态框
-       */
-      showStatusModal(record) {
-      this.statusModal.visible = true;
-      this.statusModal.record = { ...record }; // 复制记录,避免直接修改原数据
 
-    this.statusModal.originalStatus = record.status; /**
-       * 保存原状 },
-       */
-      handleStatusConfirm() {
-      const { id, status } = this.statusModal.record;
-      exp_flow_case_UpdateSampleStatus({ id, status }).then(res => {
-        if (res.success) {
-          this.$message.success('状态更新成:);
-          // 更新表格数据
-
-        this.$refs.table.refresh()
-          // const index = this.sampleModal.sampleData.findIndex(item => item.id === id);
-          // if (index !== -1) {
-          //   this.$set(this.sampleModal.sampleData, index, { ...this.statusModal.record });
-          // }
-
-        this.statusModal.visible = false;
-        } else {
-          this.$message.error(res.message || '状态更新失:);
-        }
-      }).catch(err => {
-        this.$message.error('请求失败');
-      });
-    },
     handleStatusCancel() {
-      this.statusModal.visible = false;
+      this.statusModalVisible = false
+      this.statusForm = {
+        id: null,
+        currentStatus: null,
+        newStatus: null,
+        remark: ''
+      }
     },
-    /**
-       * 打开384孔板
-       */
-      show384(value) {
-      this.Modal384.visible = true;
-      console.log(value)
-      this.Modal384.data =value.split(',').map(Number); // this.Modal384.dataList[value];
-
-  },
-    showImage(files)
-    {
-      console.log("显微镜图像==###>>>")
-      this.imageModal.visible=true;
-      this.imageModal.imageData=files;
+    
+    showAddModal() {
+      this.modalTitle = '新增样品'
+      this.isEdit = false
+      this.resetForm()
+      this.modalVisible = true
     },
-    /**
-       * 计算索引位置
-       */
-      getIndex(row, column) {
-      return row * 24' + column
+    
+    editRecord(record) {
+      this.modalTitle = '编辑样品'
+      this.isEdit = true
+      this.formData = {
+        ...record,
+        cultivateOrGenerationTime: record.cultivateOrGenerationTime ? dayjs(record.cultivateOrGenerationTime) : null,
+        susceptibility1Time: record.susceptibility1Time ? dayjs(record.susceptibility1Time) : null,
+        susceptibility2Time: record.susceptibility2Time ? dayjs(record.susceptibility2Time) : null,
+        susceptibility3Time: record.susceptibility3Time ? dayjs(record.susceptibility3Time) : null
+      }
+      this.modalVisible = true
     },
-  },
-};
-</script>
+    
+    async deleteRecord(record) {
+      try {
+        const response = await exp_flow_case_delete(record)
+        console.log('样品信息表 - 删除响应:', response)
+        
+        if (response && (response.success !== false || response.code === 200 || response.status === 'success')) {
+          this.$message.success('删除成功')
+          this.loadData()
+        } else {
+          this.$message.error('删除失败: ' + (response.message || response.msg || '未知错误'))
+        }
+      } catch (error) {
+        console.error('样品信息表 - 删除失败:', error)
+        this.$message.error('删除失败: ' + (error.response?.data?.message || error.message || error))
+      }
+    },
+    
+    async handleOk() {
+      try {
+        // 转换时间格式
+        const submitData = {
+          ...this.formData,
+          cultivateOrGenerationTime: this.formData.cultivateOrGenerationTime ? this.formData.cultivateOrGenerationTime.format('YYYY-MM-DD HH:mm:ss') : null,
+          susceptibility1Time: this.formData.susceptibility1Time ? this.formData.susceptibility1Time.format('YYYY-MM-DD HH:mm:ss') : null,
+          susceptibility2Time: this.formData.susceptibility2Time ? this.formData.susceptibility2Time.format('YYYY-MM-DD HH:mm:ss') : null,
+          susceptibility3Time: this.formData.susceptibility3Time ? this.formData.susceptibility3Time.format('YYYY-MM-DD HH:mm:ss') : null
+        }
+        
+        let response
+        if (this.isEdit) {
+          response = await exp_flow_case_edit(submitData)
+          console.log('样品信息表 - 编辑响应:', response)
+        } else {
+          response = await exp_flow_case_add(submitData)
+          console.log('样品信息表 - 新增响应:', response)
+        }
+        
+        if (response && (response.success !== false || response.code === 200 || response.status === 'success')) {
+          this.$message.success(this.isEdit ? '更新成功' : '新增成功')
+          this.modalVisible = false
+          this.loadData()
+        } else {
+          this.$message.error('保存失败: ' + (response.message || response.msg || '未知错误'))
+        }
+      } catch (error) {
+        console.error('样品信息表 - 保存失败:', error)
+        this.$message.error('保存失败: ' + (error.response?.data?.message || error.message || error))
+      }
+    },
+    
+    handleCancel() {
+      this.modalVisible = false
+      this.resetForm()
+    },
+    
+    resetForm() {
+      this.formData = {
+        id: null,
+        sampleCode: '',
+        flowId: null,
+        cultivateOrGenerationTime: null,
+        susceptibility1Time: null,
+        susceptibility2Time: null,
+        susceptibility3Time: null,
+        status: 0,
+        type: 'normal',
+        remark: ''
+      }
+    },
 
-<style>
-.status-modal {
-  padding: 24px;
-}
+    getStatusColor(status) {
+      const colorMap = {
+        0: 'blue',
+        1: 'green',
+        2: 'orange',
+        3: 'red'
+      }
+      return colorMap[status] || 'blue'
+    },
 
-.status-modal .status-item {
-  margin-bottom: 16px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 4px;
-}
+    getStatusText(status) {
+      const textMap = {
+        0: '培养中',
+        1: '已完成',
+        2: '已暂停',
+        3: '已终止'
+      }
+      return textMap[status] || '培养中'
+    },
 
-.status-modal .status-item span {
-  margin-right: 12px;
-  font-weight: 600;
-}
+    formatDateTime(dateTime) {
+      return dateTime ? dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss') : ''
+    },
 
-.status-modal .ant-select {
-  width: 200px;
-}
-
-
-/* 384孔板 */
-       */
-.plate-container {
-  display: flex;
-  flex-direction: column;
-  overflow: auto;
-  max-height: 70vh;
-
-}
-
-.column-headers,
-.plate-row {
-  display: flex;
-  min-width: 1000px;
-}
-
-.column-header,
-.row-header {
-  width: 40px;
-  min-width: 40px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  background: #fafafa;
-  border: 1px solid #e8e8e8;
-}
-
-.plate-cell {
-  width: 40px;
-  min-width: 40px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #e8e8e8;
-  font-size: 12px;
-  transition: background 0.3s;
-}
-
-.plate-cell:hover {
-  transform: scale(1.2);
-  z-index: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-
-
-.timeline-container {
-  position: relative;
-  padding: 100px 0; /* 增加上下内边? */
-  display: flex;
-  justify-content: left;
-  margin-top: 30px;
-}
-
-.timeline-line {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-color: #42b983; /* 修改时间轴主线颜? */
-  /* 添加箭头伪元? */
-  &::after {
-    content: '';
-    position: absolute;
-    right: -10px; /* 定位到轴线末端右? */
-    top: 50%;
-    transform: translateY(-50%);
-    /* 创建三角形箭? */
-    width: 0;
-    height: 0;
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-left: 10px solid #42b983; /* 颜色与轴线一? */
+    // 权限检查方法
+    hasPerm(permission) {
+      return hasPerm(permission)
+    }
   }
 }
+</script>
 
-.timeline-node {
-  display: flex;
-  align-items: center;
-  position: relative;   
+<style scoped>
+.ant-card {
+  margin-bottom: 16px;
 }
 
-.timeline-node-top {
-  justify-content: flex-start;
-  margin-left: 30px;
-}
-
-.timeline-node-bottom {
-  justify-content: flex-start;
-  margin-left: 30px;
-}
-
-.timeline-node-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: #42b983;
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
-}
-
-.timeline-node-content {
-  background-color: white;
-  padding: 15px; /* 增加内边? */
-  border-radius: 8px; /* 增加圆角 */
-       */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width  300px; /* 增加最大宽 : */
-  position: relative;
-  left: 10px;
-  min-height: 130px;
-}
-
-.timeline-node-time {
-  font-size: 14px;
-  color: #888;
-  margin-bottom: 8px;
-  min-width: 100px;
-}
-
-.timeline-node-subtext {
-  font-size: 16px;
-  color: rgb(97, 116, 97);
-  cursor: pointer;
-  min-width: 100px;
-}
-
-.timeline-node-text {
-  font-size: 16px;
-  min-width: 100px;
-  margin-bottom: 8px;
-}
-
-/* 节点上下布局的样: */
-.timeline-node-top .timeline-node-content {
-  top: -90px; /* 增加顶部偏移 */
-       */
-  left: 5px;
-}
-
-.timeline-node-bottom .timeline-node-content {
-  bottom: -90px; /* 增加底部偏移 */
-       */
-  left: 5px;
+.timeline-container {
+  margin: 20px 0;
 }
 </style>
