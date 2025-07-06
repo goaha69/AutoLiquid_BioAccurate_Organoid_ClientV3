@@ -1,1 +1,1 @@
-这是vue3项目，从vue2项目(路径：AutoLiquid_BioAccurate_Organoid_Client)升级而来
+这是vue3项目，从vue2项目(路径：AutoLiquid_BioAccurate_Organoid_Client)级而来

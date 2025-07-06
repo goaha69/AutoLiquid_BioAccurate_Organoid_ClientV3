@@ -1,9 +1,9 @@
 <template>
   <div class="user-wrapper">
     <div class="content-box">
-      <!-- Setting Drawer (show in development mode) -->
-      <setting-drawer ref="settingDrawer" v-if="!production"></setting-drawer>
-      <a href="javascript:;" @click="$refs.settingDrawer.toggle()" v-if="!production">
+      <!-- Setting Drawer (强制显示在所有环境) -->
+      <setting-drawer ref="settingDrawer"></setting-drawer>
+      <a href="javascript:;" @click="$refs.settingDrawer.toggle()">
         <span class="action">
           <setting-outlined></setting-outlined>
         </span>
@@ -22,7 +22,7 @@
         </span>
         <template #overlay>
           <a-menu class="user-dropdown-menu-wrapper">
-            <a-menu-item v-if="!production" key="2">
+            <a-menu-item key="2">
               <a href="javascript:;" @click="$refs.settingDrawer.toggle()">
                 <appstore-outlined></appstore-outlined>
                 <span>界面设置</span>

@@ -200,7 +200,7 @@
               </a-list-item>
               <a-list-item>
                 <template #actions>
-                  <a-switch size="small" :default-checked="multiTab" @change="onMultiTab" />
+                  <a-switch size="small" :checked="multiTab" @change="onMultiTab" />
                 </template>
                 <a-list-item-meta>
                   <template #title>多页签模式</template>
@@ -298,6 +298,7 @@ export default {
         updateColorWeak(checked)
       },
       onMultiTab(checked) {
+        console.log('🎛️ [SettingDrawer] 多页签开关:', checked)
         this.$store.dispatch('ToggleMultiTab', checked)
       },
       handleMenuTheme(theme) {

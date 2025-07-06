@@ -45,20 +45,20 @@ const ls = {
 
 const app = {
   state: {
-    sidebar: true,
+    sidebar: ls.get(SIDEBAR_TYPE, true),
     device: 'desktop',
-    theme: '',
-    layout: '',
-    contentWidth: '',
-    fixedHeader: false,
-    fixSiderbar: false,
-    autoHideHeader: false,
-    color: null,
-    weak: false,
-    multiTab: true,
-    headerColor:null,
-    menuColor:null,
-    versionCode:'2.0.0.2'
+    theme: ls.get(DEFAULT_THEME, 'dark'),
+    layout: ls.get(DEFAULT_LAYOUT_MODE, 'sidemenu'),
+    contentWidth: ls.get(DEFAULT_CONTENT_WIDTH_TYPE, 'Fluid'),
+    fixedHeader: ls.get(DEFAULT_FIXED_HEADER, false),
+    fixSiderbar: ls.get(DEFAULT_FIXED_SIDEMENU, false),
+    autoHideHeader: ls.get(DEFAULT_FIXED_HEADER_HIDDEN, false),
+    color: ls.get(DEFAULT_COLOR, '#1890ff'),
+    weak: ls.get(DEFAULT_COLOR_WEAK, false),
+    multiTab: ls.get(DEFAULT_MULTI_TAB, true),
+    headerColor: ls.get(DEFAULT_HEADER_COLOR, '#FFFFFF'),
+    menuColor: ls.get(DEFAULT_MENU_COLOR, '#FFFFFF'),
+    versionCode: ls.get(DEFAULT_VERSION_CODE, '2.0.0.2')
   },
   mutations: {
     SET_SIDEBAR_TYPE: (state, type) => {
@@ -105,6 +105,7 @@ const app = {
       state.weak = flag
     },
     TOGGLE_MULTI_TAB: (state, bool) => {
+      console.log('🔧 [Store] TOGGLE_MULTI_TAB:', bool)
       ls.set(DEFAULT_MULTI_TAB, bool)
       state.multiTab = bool
     },

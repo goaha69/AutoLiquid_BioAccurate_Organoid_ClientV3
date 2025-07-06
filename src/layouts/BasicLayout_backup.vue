@@ -44,17 +44,18 @@
       ></global-header>
 
       <!-- layout content -->
-      <a-layout-content :style="{ height: '100%', margin: '24px 24px 0', paddingTop: fixedHeader ? '64px' : '8px' }">
-        <multi-tab v-if="multiTab"></multi-tab>
-        <div class="router-view-wrapper" :class="{ 'no-multi-tab': !multiTab }">
-          <transition name="page-transition">
-            <router-view v-slot="{ Component }">
+      <a-layout-content :style="{ height: '100%', margin: '24px 24px 0', paddingTop: fixedHeader ? '55px' : '0' }">
+        <multi-tab v-if="$store.state.app.multiTab" style="margin-bottom: 16px;"></multi-tab>
+        <div class="content-container">
+          <!-- 使用router-view确保Vue 3正确渲染 -->
+          <router-view v-slot="{ Component }">
+            <transition name="page-transition" mode="out-in">
               <keep-alive v-if="keepAliveRoute">
                 <component :is="Component" />
               </keep-alive>
               <component v-else :is="Component" />
-            </router-view>
-          </transition>
+            </transition>
+          </router-view>
         </div>
       </a-layout-content>
 
@@ -78,7 +79,7 @@ import SideMenu from '@/components/Menu/SideMenu'
 // 从components/GlobalHeader导入，而不是直接从GlobalHeader.vue导入，避免重复组件
 import GlobalHeader from '@/components/GlobalHeader'
 import GlobalFooter from '@/components/GlobalFooter'
-import MultiTab from '@/components/MultiTab'
+import MultiTab from '@/components/MultiTab/MultiTab.vue'
 import { convertRoutes } from '@/utils/routeConvert'
 
 export default {
@@ -223,17 +224,12 @@ export default {
     // 监听多标签状态变化
     multiTab: {
       handler(newVal) {
-        // multiTab 状态变化处理
+        console.log('✅ [BasicLayout] multiTab 状态变化:', newVal)
       },
       immediate: true
     }
   },
   created () {
-    // 确保多标签功能启用
-    if (!this.multiTab) {
-      this.$store.commit('TOGGLE_MULTI_TAB', true)
-    }
-    
     this.loadSettings()
     this.collapsed = !this.sidebarOpened
     
@@ -450,25 +446,5 @@ export default {
 
 .content-container {
   min-height: calc(100vh - 134px);
-}
-
-/* 固定头部样式 */
-.ant-header-fixedHeader {
-  position: fixed !important;
-  top: 0;
-  right: 0;
-  z-index: 100;
-  width: 100%;
-  transition: width 0.2s;
-}
-
-/* 确保内容区与顶部有合适间距 */
-.router-view-wrapper {
-  padding-top: 16px;
-}
-
-/* 单标签模式下给更多间距 */
-.router-view-wrapper.no-multi-tab {
-  padding-top: 24px;
 }
 </style>

@@ -1,78 +1,26 @@
 import { deviceEnquire, DEVICE_TYPE } from '@/utils/device'
-
-// 应用配置的默认值
-const getAppSettings = () => {
-  try {
-    const appSettings = localStorage.getItem('appSettings')
-    if (appSettings) {
-      return JSON.parse(appSettings)
-    }
-  } catch (error) {
-    console.error('获取应用设置失败:', error)
-  }
-  
-  // 返回默认设置
-  return {
-    layout: 'sidemenu',
-    theme: 'dark',
-    color: '#1890FF',
-    weak: false,
-    fixedHeader: true,
-    fixSiderbar: true,
-    contentWidth: 'Fluid',
-    autoHideHeader: false,
-    sidebar: true,
-    multiTab: false,
-    headerColor: '#1890FF',
-    menuColor: '#1890FF',
-    versionCode: '2.1.0',
-    device: DEVICE_TYPE.DESKTOP
-  }
-}
+import { mapState } from 'vuex'
 
 const mixin = {
   computed: {
-    layoutMode() {
-      return getAppSettings().layout
-    },
-    navTheme() {
-      return getAppSettings().theme
-    },
-    primaryColor() {
-      return getAppSettings().color
-    },
-    colorWeak() {
-      return getAppSettings().weak
-    },
-    fixedHeader() {
-      return getAppSettings().fixedHeader
-    },
-    fixSiderbar() {
-      return getAppSettings().fixSiderbar
-    },
+    ...mapState({
+      layoutMode: state => state.app.layout,
+      navTheme: state => state.app.theme,
+      primaryColor: state => state.app.color,
+      colorWeak: state => state.app.weak,
+      fixedHeader: state => state.app.fixedHeader,
+      fixSiderbar: state => state.app.fixSiderbar,
+      contentWidth: state => state.app.contentWidth,
+      autoHideHeader: state => state.app.autoHideHeader,
+      sidebarOpened: state => state.app.sidebar,
+      multiTab: state => state.app.multiTab,
+      headerColor: state => state.app.headerColor,
+      menuColor: state => state.app.menuColor,
+      versionCode: state => state.app.versionCode
+    }),
+    // 兼容性别名
     fixSidebar() {
-      return getAppSettings().fixSiderbar
-    },
-    contentWidth() {
-      return getAppSettings().contentWidth
-    },
-    autoHideHeader() {
-      return getAppSettings().autoHideHeader
-    },
-    sidebarOpened() {
-      return getAppSettings().sidebar
-    },
-    multiTab() {
-      return getAppSettings().multiTab
-    },
-    headerColor() {
-      return getAppSettings().headerColor
-    },
-    menuColor() {
-      return getAppSettings().menuColor
-    },
-    versionCode() {
-      return getAppSettings().versionCode
+      return this.fixSiderbar
     }
   },
   methods: {
@@ -87,9 +35,9 @@ const mixin = {
 
 const mixinDevice = {
   computed: {
-    device() {
-      return getAppSettings().device
-    }
+    ...mapState({
+      device: state => state.app.device
+    })
   },
   methods: {
     isMobile () {
