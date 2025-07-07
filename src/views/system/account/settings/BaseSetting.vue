@@ -1,250 +1,225 @@
 <template>
   <div class="account-settings-info-view">
     <a-row :gutter="16">
-      <a-col  md="24" : lg="16">
-
-        <a-form layout="vertical" :form="form">
-          <a-form-item label="昵称">
-            <a-input placeholder="给自己起个昵称吧" v-decorator="['nickName']" ></a>
+      <a-col :md="24" :lg="16">
+        <a-form layout="vertical" :model="formState" @finish="submitUserInfo">
+          <a-form-item label="昵称" name="nickName">
+            <a-input placeholder="给自己起个昵称吧" v-model:value="formState.nickName" />
           </a-form-item>
-          <a-form-item label="生日">
+          <a-form-item label="生日" name="birthday" :rules="[{required: true, message: '请选择生日'}]">
             <a-date-picker
               placeholder="请选择生日"
               @change="onChange"
               style="width: 100%"
-              v-decorator="['birthday', {rules: [{required: true, message: '请选择生日'}]}]" ></a>
+              v-model:value="formState.birthday"
+            />
           </a-form-item>
-          <a-form-item label="性别">
-            <a-radio-group v-decorator="['sex',{rules: [{ required: true, message: '请选择性别'}]}]">
-              <a-radio v-for="(item,index) in sexData" :key="index" :value="parseInt(item.code)">{{ item.name }}</a-radio>
+          <a-form-item label="性别" name="sex" :rules="[{required: true, message: '请选择性别'}]">
+            <a-radio-group v-model:value="formState.sex">
+              <a-radio v-for="item in sexData" :key="item.code" :value="parseInt(item.code)">{{ item.name }}</a-radio>
             </a-radio-group>
           </a-form-item>
-          <a-form-item label="手机">
-            <a-input placeholder="请输入手机号" v-decorator="['phone', {rules: [{required: true, message: '请输入手机号'}]}]" ></a>
+          <a-form-item label="手机" name="phone" :rules="[{required: true, message: '请输入手机号'}]">
+            <a-input placeholder="请输入手机号" v-model:value="formState.phone" />
           </a-form-item>
-          <a-form-item label="电话">
-            <a-input placeholder="请输入电话" v-decorator="['tel']" ></a>
+          <a-form-item label="电话" name="tel">
+            <a-input placeholder="请输入电话" v-model:value="formState.tel" />
           </a-form-item>
-          <a-form-item label="电子邮件">
+          <a-form-item label="电子邮件" name="email" :rules="[{required: true, type: 'email', message: '请输入正确的邮箱号!'}]">
             <a-input
               placeholder="请输入电子邮件地址"
-              v-decorator="['email', {type: 'email',message: '请输入正确的邮箱',rules: [{required: true, message: '请输入正确的邮箱号!'}]}]" ></a>
+              v-model:value="formState.email"
+            />
           </a-form-item>
           <a-form-item>
-            <a-button type="primary" @click="submitUserInfo">更新基本信息</a-button>
+            <a-button type="primary" html-type="submit">更新基本信息</a-button>
           </a-form-item>
         </a-form>
-
       </a-col>
       <a-col :md="24" :lg="8" :style="{ minHeight: '180px' }">
-        <div class="ant-upload-preview" @click="$refs.modal.edit(userInfo.id)">
-          <a-icon type="cloud-upload-o" class="upload-icon" ></a>
+        <div class="ant-upload-preview" @click="modalRef.edit(userInfo.id)">
+          <cloud-upload-outlined class="upload-icon" />
           <div class="mask">
-            <plus-outlined ></plus-outlined>
+            <plus-outlined />
           </div>
-          <img :src="option.img" @error="loadError()"/>
+          <img :src="option.img" @error="loadError"/>
         </div>
       </a-col>
-
     </a-row>
 
-    <avatar-modal ref="modal" @ok="setavatar" ></avatar>
-
+    <avatar-modal ref="modalRef" @ok="setavatar" />
   </div>
 </template>
 
-<script>
-  import store from '@/store'
-  import AvatarModal from './AvatarModal'
-  import {
-    mapGetters
-  } from 'vuex'
-  import moment from 'moment'
-  import {
-    sysUserUpdateInfo
-  } from '@/api/modular/system/userManage'
-  import {
-    sysFileInfoPreview
-  } from '@/api/modular/system/fileManage'
-  // mapActions
+<script setup>
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useStore } from 'vuex'
+import AvatarModal from './AvatarModal.vue'
+import { PlusOutlined, CloudUploadOutlined } from '@ant-design/icons-vue'
+import moment from 'moment'
+import { sysUserUpdateInfo } from '@/api/modular/system/userManage'
+import { sysFileInfoPreview } from '@/api/modular/system/fileManage'
+import { message } from 'ant-design-vue'
 
-export default {
-    components: {
-      AvatarModal
-    ,
-    PlusOutlined},
-    data() {
-      return {
-        // cropper
+const store = useStore()
+const modalRef = ref()
 
-      preview: {},
-        form: this.$form.createForm(this),
-        sexData: [],
-        option: {
-          img: '/avatar2.jpg',
-          info: true,
-          size: 1,
-          outputType: 'jpeg',
-          canScale: false,
-          autoCrop: true,
-          // 只有自动截图开宽度高度才生
-        autoCropWidth: 180,
-          autoCropHeight: 180,
-          fixedBox: true,
-          // 开启宽度和高度比例
+const formState = reactive({
+  nickName: '',
+  birthday: null,
+  sex: null,
+  phone: '',
+  tel: '',
+  email: ''
+})
 
-        fixed: true,
-          fixedNumber: [1, 1],
-          // userInfo
+const sexData = ref([])
+const birthdayString = ref('')
 
-        birthdayString: ''
-        }
-      }
-    },
-    computed: {
-      ...mapGetters(['userInfo'])
-    },
-    mounted() {
-      this.initUserInfo()
-    },
-    methods: {
-       loadError() {
-      	 const img = event.srcElement;
-      	 img.src = '/avatar2.jpg';
-      	 img.onerror = null; // 防止闪图
+const option = reactive({
+  img: '/avatar2.jpg',
+  info: true,
+  size: 1,
+  outputType: 'jpeg',
+  canScale: false,
+  autoCrop: true,
+  autoCropWidth: 180,
+  autoCropHeight: 180,
+  fixedBox: true,
+  fixed: true,
+  fixedNumber: [1, 1]
+})
 
-     },
-      // ...mapActions(['GetInfo']),
-      /**
-       * 初始化用户信
-       */
-      initUserInfo() {
-        setTimeout(() => {
-          this.form.setFieldsValue({
-            birthday: moment(this.userInfo.birthday, 'YYYY-MM-DD'),
-            nickName: this.userInfo.nickName,
-            sex: this.userInfo.sex,
-            email: this.userInfo.email,
-            phone: this.userInfo.phone,
-            tel: this.userInfo.tel
-          })
-          this.birthdayString = moment(this.userInfo.birthday).format('YYYY-MM-DD')
+const userInfo = computed(() => store.getters.userInfo)
 
-          if (this.userInfo.avatar) {
-            sysFileInfoPreview({
-              id: this.userInfo.avatar
-            }).then((res) => {
-              console.log('预览结果', res)
+const loadError = (event) => {
+  const img = event.target
+  img.src = '/avatar2.jpg'
+  img.onerror = null
+}
 
-                this.option.img = window.URL.createObjectURL(new Blob([res]))
-            }).catch((err) => {
-              this.$message.error('预览错误:::' + err.message)
-            })
-          }
+const initUserInfo = () => {
+  setTimeout(() => {
+    if (userInfo.value) {
+      formState.nickName = userInfo.value.nickName
+      formState.birthday = userInfo.value.birthday ? moment(userInfo.value.birthday, 'YYYY-MM-DD') : null
+      formState.sex = userInfo.value.sex
+      formState.email = userInfo.value.email
+      formState.phone = userInfo.value.phone
+      formState.tel = userInfo.value.tel
+      
+      birthdayString.value = userInfo.value.birthday ? moment(userInfo.value.birthday).format('YYYY-MM-DD') : ''
 
-          // this.option.img = process.env.VUE_APP_API_BASE_URL + '/sysFileInfo/previewid=' + this.userInfo.avatar
-          this.getSexData()
-        }, 100)
-      },
-      /**
-       * 日期需单独转换
-       */
-      onChange(date, dateString) {
-        this.birthdayString = dateString
-      },
-      submitUserInfo() {
-        const {
-          form: {
-            validateFields
-          }
-        } = this
-        validateFields((err, values) => {
-          if (!err) {
-            values.birthday = this.birthdayString
-            values.id = this.userInfo.id
-            sysUserUpdateInfo(values).then((res) => {
-              if (res.success) {
-                this.$message.success('个人信息更新成功')
-                store.dispatch('GetInfo').then(() => {})
-              } else {
-                this.$message.error(res.message)
-              }
-            })
-          }
-        })
-      },
-      getSexData() {
-        this.sexData = this.$options.filters['dictData']('sex')
-      },
-      setavatar(url) {
+      if (userInfo.value.avatar) {
         sysFileInfoPreview({
-          id: url
+          id: userInfo.value.avatar
         }).then((res) => {
-          this.option.img = window.URL.createObjectURL(new Blob([res]))
+          console.log('预览结果', res)
+          option.img = window.URL.createObjectURL(new Blob([res]))
         }).catch((err) => {
-          this.$message.error('预览错误:::' + err.message)
+          message.error('预览错误: ' + err.message)
         })
-        // this.option.img = process.env.VUE_APP_API_BASE_URL + '/sysFileInfo/previewid=' + url
-        store.dispatch('GetInfo').then(() => {})
       }
     }
-  }
+    getSexData()
+  }, 100)
+}
+
+const onChange = (date, dateString) => {
+  birthdayString.value = dateString
+}
+
+const submitUserInfo = (values) => {
+  values.birthday = birthdayString.value
+  values.id = userInfo.value.id
+  sysUserUpdateInfo(values).then((res) => {
+    if (res.success) {
+      message.success('个人信息更新成功')
+      store.dispatch('GetInfo')
+    } else {
+      message.error(res.message)
+    }
+  })
+}
+
+const getSexData = () => {
+  // Mock sex data - replace with actual dict data call
+  sexData.value = [
+    { code: '1', name: '男' },
+    { code: '2', name: '女' }
+  ]
+}
+
+const setavatar = (url) => {
+  sysFileInfoPreview({
+    id: url
+  }).then((res) => {
+    option.img = window.URL.createObjectURL(new Blob([res]))
+  }).catch((err) => {
+    message.error('预览错误: ' + err.message)
+  })
+  store.dispatch('GetInfo')
+}
+
+onMounted(() => {
+  initUserInfo()
+})
 </script>
 
 <style lang="less" scoped>
-  .avatar-upload-wrapper {
-    height: 200px;
-    width: 100%;
+.avatar-upload-wrapper {
+  height: 200px;
+  width: 100%;
+}
+
+.ant-upload-preview {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 180px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #ccc;
+
+  .upload-icon {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    font-size: 1.4rem;
+    padding: 0.5rem;
+    background: rgba(222, 221, 221, 0.7);
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.2);
   }
 
-  .ant-upload-preview {
-    position: relative;
-    margin: 0 auto;
+  .mask {
+    opacity: 0;
+    position: absolute;
+    background: rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: opacity 0.4s;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    i {
+      font-size: 2rem;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-left: -1rem;
+      margin-top: -1rem;
+      color: #d6d6d6;
+    }
+  }
+
+  img,
+  .mask {
     width: 100%;
     max-width: 180px;
+    height: 100%;
     border-radius: 50%;
-    box-shadow: 0 0 4px #ccc;
-
-    .upload-icon {
-      position: absolute;
-      top: 0;
-      right: 10px;
-      font-size: 1.4rem;
-      padding: 0.5rem;
-      background: rgba(222, 221, 221, 0.7);
-      border-radius: 50%;
-      border: 1px solid rgba(0, 0, 0, 0.2);
-    }
-
-    .mask {
-      opacity: 0;
-      position: absolute;
-      background: rgba(0, 0, 0, 0.4);
-      cursor: pointer;
-      transition: opacity 0.4s;
-
-      &:hover {
-        opacity: 1;
-      }
-
-      i {
-        font-size: 2rem;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        margin-left: -1rem;
-        margin-top: -1rem;
-        color: #d6d6d6;
-      }
-    }
-
-    img,
-    .mask {
-      width: 100%;
-      max-width: 180px;
-      height: 100%;
-      border-radius: 50%;
-      overflow: hidden;
-    }
+    overflow: hidden;
   }
+}
 </style>

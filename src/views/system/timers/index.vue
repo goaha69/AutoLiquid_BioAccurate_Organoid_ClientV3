@@ -2,264 +2,228 @@
   <div>
     <x-card v-if="hasPerm('sysTimers:page')">
       <template #content>
-
-        <div class="table-page-search-wrapper">
-        <a-form layout="inline">
+        <a-form class="table-page-search-wrapper" layout="inline">
           <a-row :gutter="48">
-            <a-col  md="8" : sm="24">
+            <a-col :md="8" :sm="24">
               <a-form-item label="任务名称">
-                <a-input v-model="queryParam.timerName" allow-clear placeholder="请输入任务名称" ></a>
+                <a-input v-model:value="queryParam.timerName" allow-clear placeholder="请输入任务名称" />
               </a-form-item>
             </a-col>
-            <a-col  md="8" : sm="24">
-              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
+            <a-col :md="8" :sm="24">
+              <a-button type="primary" @click="handleQuery">查询</a-button>
               <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
             </a-col>
           </a-row>
         </a-form>
-        </div>
-
       </template>
     </x-card>
     <a-card :bordered="false">
-      <s-table
+      <template #title>
+        <a-button type="primary" @click="handleAdd" v-if="hasPerm('sysTimers:add')">
+          <template #icon><plus-outlined /></template>
+          新增任务
+        </a-button>
+      </template>
+
+      <a-table
         ref="table"
         :columns="columns"
-        :data="loadData"
-        :alert="true"
-        :rowKey="(record) => record.id"
-        :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
-        <template #operator v-if="hasPerm('sysTimers:add')">
-          <a-button @click="$refs.addForm.add()" ><template #icon><plus-outlined ></plus-outlined></template type="primary" v-if="hasPerm('sysTimers:add')">新增任务
-          </a-button>
+        :data-source="dataSource"
+        :loading="loading"
+        :row-key="record => record.id"
+        :pagination="pagination"
+        @change="handleTableChange"
+        :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
+      >
+        <template #bodyCell="{ column, text, record }">
+          <template v-if="column.dataIndex === 'requestType'">
+            {{ requestTypeFilter(text) }}
+          </template>
+          <template v-if="column.dataIndex === 'timerStatus'">
+            <a-popconfirm
+              v-if="hasPerm('sysTimers:start') || hasPerm('sysTimers:stop')"
+              placement="top"
+              :title="text === 0 ? '确定停止该任务' : '确定启动该任务'"
+              @confirm="() => editJobStatus(text, record)"
+            >
+              <a-badge :status="text === 0 ? 'processing' : 'default'" />
+              <a>{{ jobStatusFilter(text) }}</a>
+            </a-popconfirm>
+            <span v-else>
+              <a-badge :status="text === 0 ? 'processing' : 'default'" />
+              {{ jobStatusFilter(text) }}
+            </span>
+          </template>
+          <template v-if="column.dataIndex === 'action'">
+            <a v-if="hasPerm('sysTimers:edit')" @click="handleEdit(record)">编辑</a>
+            <a-divider type="vertical" v-if="hasPerm('sysTimers:edit') && hasPerm('sysTimers:delete')" />
+            <a-popconfirm
+              v-if="hasPerm('sysTimers:delete')"
+              placement="topRight"
+              title="确认删除？"
+              @confirm="() => handleDelete(record)"
+            >
+              <a>删除</a>
+            </a-popconfirm>
+          </template>
         </template>
-        <template #actionClass="{ text }">
-          <ellipsis :length="10" tooltip>{{ text }}</ellipsis>
-        </template>
-        <template #remark="{ text }">
-          <ellipsis :length="10" tooltip>{{ text }}</ellipsis>
-        </template>
-        <template #requestType="{ text: requestType }">
-          {{ requestTypeFilter(requestType) }}
-        </template>
-        <template #jobStatus="{ text, record }">
-          <a-popconfirm
-            v-if="hasPerm('sysTimers  start') || hasPerm('sysTimers : stop')"
-            placement="top"
-            :title="text===0  '确定停止该任务' : '确定启动该任务'"
-            @confirm="() => editjobStatusStatus(text,record)">
-            <a-badge :status="text===0  'processing' : 'default'" ></a>
-            <a>{{ jobStatusFilter(text) }}</a>
-          </a-popconfirm>
-          <span v-else>
-            <a-badge :status="text===0  'processing' : 'default'" ></a>
-            {{ jobStatusFilter(text) }}
-          </span>
-        </template>
-        <template #action="{ text, record }">
-          <a v-if="hasPerm('sysTimers:edit')" @click="$refs.editForm.edit(record)">编辑</a>
-          <a-divider type="vertical" v-if="hasPerm('sysTimers  edit') & hasPerm('sysTimers : delete')" ></a>
-          <a-popconfirm
-            v-if="hasPerm('sysTimers:delete')"
-            placement="topRight"
-            title="确认删除'" @confirm="() => sysTimersDelete(record)">
-            <a>删除</a>
-          </a-popconfirm>
-        </template>
-      </s-table>
-      <add-form ref="addForm" @ok="handleOk" ></add>
-      <edit-form ref="editForm" @ok="handleOk" ></edit>
+      </a-table>
+
+      <add-form ref="addFormRef" @ok="handleOk" />
+      <edit-form ref="editFormRef" @ok="handleOk" />
     </a-card>
   </div>
 </template>
-<script>
-  import {
-    STable,
-    Ellipsis,
-    XCard
-  } from '@/components'
-  import {
-    sysTimersPage,
-    sysTimersDelete,
-    sysTimersStart,
-    sysTimersStop
-  } from '@/api/modular/system/timersManage'
-  import addForm from './addForm'
-  import editForm from './editForm'
-  import { sysEnumDataList} from '@/api/modular/system/enumManage'
-  export default {
-    name: 'sys_timers_mgr',
-    components: {
-      XCard,
-      STable,
-      Ellipsis,
-      addForm,
-      editForm
-    },
-    data() {
-      return {
-        // 查询参数
 
-      queryParam: {},
-        // 表头
+<script setup>
+import { ref, reactive, onMounted, toRaw } from 'vue'
+import { message } from 'ant-design-vue'
+import { XCard } from '@/components'
+import { sysTimersPage, sysTimersDelete, sysTimersStart, sysTimersStop } from '@/api/modular/system/timersManage'
+import { sysEnumDataList } from '@/api/modular/system/enumManage'
+import addForm from './addForm.vue'
+import editForm from './editForm.vue'
+import { hasPerm } from '@/utils/permission/index.js'
+import { PlusOutlined } from '@ant-design/icons-vue'
 
-      columns: [{
-            title: '任务名称',
-            dataIndex: 'jobName'
-          },
-          {
-            title: '请求地址',
-            dataIndex: 'requestUrl'
-          },
-          {
-            title: '请求类型',
-            dataIndex: 'requestType',
-            slots: {
-              customRender: 'requestType'
-            }
-          },
-          {
-            title: '请求参数',
-            dataIndex: 'requestParameters'
-          },
-          {
-            title: '间隔',
-            dataIndex: 'interval'
-          },
-          {
-            title: 'Cron',
-            dataIndex: 'cron'
-          },
-          {
-            title: '状',
-            dataIndex: 'timerStatus',
-            slots: {
-              customRender: 'jobStatus'
-            }
-          },
-          {
-            title: '执行次数',
-            dataIndex: 'runNumber'
-          },
-          {
-            title: '备注',
-            dataIndex: 'remark',
-            width: 100
-          }
-        ],
-        // 加载数据方法 必须Promise 对象
+const queryParam = ref({})
+const dataSource = ref([])
+const loading = ref(false)
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  showTotal: (total) => `共 ${total} 条`
+})
+const selectedRowKeys = ref([])
 
-      loadData: parameter => {
-          return sysTimersPage(Object.assign(parameter, this.queryParam)).then((res) => {
-            return res.data
-          })
-        },
-        selectedRowKeys: [],
-        selectedRows: [],
-        requestTypeEnumDataDropDown: []
-      }
-    },
-    created() {
-      this.sysEnumDataList()
-      if (this.hasPerm('sysTimers  edit') || this.hasPerm('sysTimers : delete')) {
-        this.columns.push({
-          title: '操作',
-          width: '150px',
-          dataIndex: 'action',
-          slots: {
-            customRender: 'action'
-          }
-        })
-      }
-    },
-    methods: {
-      /**
-       * 获取枚举数据
-       */
-      sysEnumDataList() {
-        sysEnumDataList({
-          enumName: 'RequestTypeEnum'
-        }).then((res) => {
-          this.requestTypeEnumDataDropDown = res.data
-        })
-      },
-      requestTypeFilter(requestType) {
-        // eslint-disable-next-line eqeqeq
+const columns = ref([
+  { title: '任务名称', dataIndex: 'jobName' },
+  { title: '请求地址', dataIndex: 'requestUrl' },
+  { title: '请求类型', dataIndex: 'requestType' },
+  { title: '请求参数', dataIndex: 'requestParameters' },
+  { title: '间隔', dataIndex: 'interval' },
+  { title: 'Cron', dataIndex: 'cron' },
+  { title: '状态', dataIndex: 'timerStatus' },
+  { title: '执行次数', dataIndex: 'runNumber' },
+  { title: '备注', dataIndex: 'remark', width: 100 }
+])
 
-      const values = this.requestTypeEnumDataDropDown.filter(item => item.code == requestType)
-        if (values.length > 0) {
-          return values[0].value
-        }
-      },
-      jobStatusFilter(jobStatus) {
-        if (jobStatus === 0) {
-          return '运行'} else if (jobStatus === 1) {
-          return '已停'} else if (jobStatus === 2) {
-          return '执行失败'
-        } else if (jobStatus === 3) {
-          return '已取'}
-      },
-      /**
-       * 启动停止
-       */
-      editjobStatusStatus(code, record) {
-        /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (code === 0) {
-          sysTimersStop({
-            id: record.id,
-            jobName: record.jobName
-          }).then(res => {
-            if (res.success) {
-              this.$message.success('停止成功')
-              this.$refs.table.refresh()
-            } else {
-              this.$message.error('停止失败::' + res.message)
-            }
-          })
-          // eslint-disable-next-line eqeqeq
+const requestTypeEnumDataDropDown = ref([])
 
-      } else if (code != 0) {
-          sysTimersStart(record).then(res => {
-            if (res.success) {
-              this.$message.success('启动成功')
-              this.$refs.table.refresh()
-            } else {
-              this.$message.error('启动失败::' + res.message)
-            }
-          })
-        }
-      },
-      sysTimersDelete(record) {
-        sysTimersDelete(record).then((res) => {
-          if (res.success) {
-            this.$message.success('删除成功')
-            this.$refs.table.refresh()
-          } else {
-            this.$message.error('删除失败::' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('删除错误::' + err.message)
-        })
-      },
-      toggleAdvanced() {
-        this.advanced = !this.advanced
-      },
-      handleOk() {
-        this.$refs.table.refresh()
-      },
-      onSelectChange(selectedRowKeys, selectedRows) {
-        this.selectedRowKeys = selectedRowKeys
-        this.selectedRows = selectedRows
-      }
-    },
-    mounted() {
-      // this.timer = setInterval(this.loadData, 5000)
-
+onMounted(() => {
+  fetchEnumData()
+  fetchData()
+  if (hasPerm('sysTimers:edit') || hasPerm('sysTimers:delete')) {
+    columns.value.push({
+      title: '操作',
+      dataIndex: 'action',
+      width: '150px'
+    })
   }
+})
+
+const fetchEnumData = async () => {
+  const res = await sysEnumDataList({ enumName: 'RequestTypeEnum' })
+  requestTypeEnumDataDropDown.value = res.data
+}
+
+const fetchData = async () => {
+  loading.value = true
+  const params = {
+    ...toRaw(queryParam.value),
+    current: pagination.value.current,
+    size: pagination.value.pageSize
   }
+  const res = await sysTimersPage(params)
+  dataSource.value = res.data.records
+  pagination.value.total = res.data.total
+  loading.value = false
+}
+
+const handleTableChange = (pag) => {
+  pagination.value.current = pag.current
+  pagination.value.pageSize = pag.pageSize
+  fetchData()
+}
+
+const handleQuery = () => {
+  pagination.value.current = 1
+  fetchData()
+}
+
+const onSelectChange = (keys) => {
+  selectedRowKeys.value = keys
+}
+
+const requestTypeFilter = (requestType) => {
+  const item = requestTypeEnumDataDropDown.value.find(item => item.code == requestType)
+  return item ? item.value : ''
+}
+
+const jobStatusFilter = (jobStatus) => {
+  if (jobStatus === 0) return '运行'
+  if (jobStatus === 1) return '已停'
+  if (jobStatus === 2) return '执行失败'
+  if (jobStatus === 3) return '已取'
+  return ''
+}
+
+const editJobStatus = async (code, record) => {
+  try {
+    if (code === 0) {
+      const res = await sysTimersStop({ id: record.id, jobName: record.jobName })
+      if (res.success) {
+        message.success('停止成功')
+        fetchData()
+      } else {
+        message.error('停止失败: ' + res.message)
+      }
+    } else {
+      const res = await sysTimersStart(record)
+      if (res.success) {
+        message.success('启动成功')
+        fetchData()
+      } else {
+        message.error('启动失败: ' + res.message)
+      }
+    }
+  } catch (err) {
+    message.error('操作错误: ' + err.message)
+  }
+}
+
+const handleDelete = async (record) => {
+  try {
+    const res = await sysTimersDelete(record)
+    if (res.success) {
+      message.success('删除成功')
+      fetchData()
+    } else {
+      message.error('删除失败: ' + res.message)
+    }
+  } catch (err) {
+    message.error('删除错误: ' + err.message)
+  }
+}
+
+const addFormRef = ref()
+const editFormRef = ref()
+
+const handleAdd = () => {
+  addFormRef.value.add()
+}
+
+const handleEdit = (record) => {
+  editFormRef.value.edit(toRaw(record))
+}
+
+const handleOk = () => {
+  fetchData()
+}
 </script>
+
 <style lang="less">
   .table-operator {
     margin-bottom: 18px;

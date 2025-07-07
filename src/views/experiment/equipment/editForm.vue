@@ -6,8 +6,8 @@
 
         <a-row :gutter="8">
           <div>            
-            <sp-input label="设备编号" :required="true" :isError="errors.code" :labelWidth="120" v-model="attributeData.code" ></sp>
-            <sp-input label="设备名称" :required="true" :isError="errors.name" :labelWidth="120" :inputWidth="250" v-model="attributeData.name" ></sp>
+            <sp-input label="设备编号" :required="true" :isError="errors.code" :labelWidth="120" v-model="attributeData.code" />
+            <sp-input label="设备名称" :required="true" :isError="errors.name" :labelWidth="120" :inputWidth="250" v-model="attributeData.name" />
 
             <span class="span-label">是否第三方::</span>
             <a-radio-group v-model="attributeData.isThirdParty" class="my-radio-group">
@@ -22,27 +22,27 @@
               <a-select-option v-for="(item, index) in protocolTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
 
-            <sp-input label="主机" v-if="attributeData.communicatioProtocol<3" style="margin-left:40px;" :required="true" :isError="errors.host" :labelWidth="120" v-model="attributeData.host" ></sp>
-            <sp-input-number label="端口" :step="1" v-if="attributeData.communicatioProtocol<3" style="margin-left:40px;" :required="true" :isError="errors.port" :labelWidth="120" v-model="attributeData.port" ></sp>
+            <sp-input label="主机" v-if="attributeData.communicatioProtocol<3" style="margin-left:40px;" :required="true" :isError="errors.host" :labelWidth="120" v-model="attributeData.host" />
+            <sp-input-number label="端口" :step="1" v-if="attributeData.communicatioProtocol<3" style="margin-left:40px;" :required="true" :isError="errors.port" :labelWidth="120" v-model="attributeData.port" />
 
             <sp-input label="Com口" v-if="attributeData.communicatioProtocol>=3" style="margin-left:40px;" :required="true" :isError="errors.comPort" :labelWidth="120" v-model="attributeData.comPort" />
             <sp-input-number label="波特率" :step="1" v-if="attributeData.communicatioProtocol>=3" style="margin-left:40px;" :required="true" :isError="errors.baudRate" :labelWidth="120" v-model="attributeData.baudRate" />
           
-            <sp-input-number label="X偏移" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.xOffset" ></sp>            
+            <sp-input-number label="X偏移" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.xOffset" />            
           </div>          
 
           <div style="margin-top:10px;">   
-            <sp-input label="生产厂商" :labelWidth="120" v-model="attributeData.manufacturer" ></sp>
+            <sp-input label="生产厂商" :labelWidth="120" v-model="attributeData.manufacturer" />
 
             <span class="span-label">生产日期::</span>
-            <a-date-picker placeholder="请选择生产日期:" class="my-data-picker" v-model="attributeData.manufactureDate" @change="onDateChange"></a>            
+            <a-date-picker placeholder="请选择生产日期:" class="my-data-picker" v-model="attributeData.manufactureDate" @change="onDateChange" />            
 
             <span class="span-label" style="margin-left:80px;">设备类型::</span>
             <a-select class="my-select" placeholder="请选择设备类型:" v-model="attributeData.type" @change="equipmentTypeFunc">
               <a-select-option v-for="(item, index) in equipmentTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
 
-            <sp-input-number label="Y偏移" :labelWidth="80" unit="mm" :required="true" v-model="attributeData.yOffset" ></sp>
+            <sp-input-number label="Y偏移" :labelWidth="80" unit="mm" :required="true" v-model="attributeData.yOffset" />
           </div>
 
           <div style="margin-top:10px;">   
@@ -54,9 +54,9 @@
               <a-select-option v-for="(item, index) in coordinateTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
 
-            <sp-input label="配置url" :labelWidth="90" :inputWidth="300" v-model="attributeData.paramsPage" ></sp>
+            <sp-input label="配置url" :labelWidth="90" :inputWidth="300" v-model="attributeData.paramsPage" />
 
-            <sp-input label="控制类" :labelWidth="90" :inputWidth="250" v-model="attributeData.controlClass"></sp>
+            <sp-input label="控制类" :labelWidth="90" :inputWidth="250" v-model="attributeData.controlClass" />
           </div>
         </a-row>
 
@@ -64,11 +64,11 @@
           <a-card title="移液头属性" :bordered="false">
             <div>
               <span class="span-label">通道数:::</span>
-              <a-select style="width: 60px" v-model : value="pipetteAttribute.channelRow">
+              <a-select style="width: 60px" v-model:value="pipetteAttribute.channelRow">
                 <a-select-option v-for="(item, index) in channelRows" :key="index" :value="item">{{ item }}</a-select-option>
               </a-select>
               <span class="span-unit">列</span>
-              <a-select style="width: 60px;margin-left : 10px;" v-model  value="pipetteAttribute.channelCol" : disabled="true">
+              <a-select style="width: 60px;margin-left : 10px;" v-model:value="pipetteAttribute.channelCol" :disabled="true">
                 <a-select-option v-for="(item, index) in channelRows" :key="index" :value="item">{{ item }}</a-select-option>
               </a-select>
               <span class="span-unit">行</span>
@@ -84,11 +84,11 @@
               </a-radio-group>
             </div>            
 
-            <a-divider type="horizontal" ></a>            
+            <a-divider type="horizontal" />            
 
             <div>
               <span class="span-label">吸喷液装置::</span>
-              <a-select style="width: 150px" v-model : value="pipetteAttribute.jetEquipmentId" @change="getJEid()">
+              <a-select style="width: 150px" v-model:value="pipetteAttribute.jetEquipmentId" @change="getJEid()">
                 <a-select-option v-for="(item, index) in equipmentData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
 
@@ -108,9 +108,9 @@
                 <a-checkbox-group v-model="selectedChannels">
                   <div v-for="(item, index) in pipetteAttribute.pipetteChannels" :key="index" style="float:left;">
                     <a-checkbox  value="item.index" style="color: black;width : 80px;">{{ '通道' + (item.index + 1) }}</a-checkbox>
-                    <sp-input-number style="margin-top: 10px;" : disabled="!selectedChannels.includes(item.index)" :label="'x偏移'+(item.index+1)" :labelWidth="60" :inputWidth="65" :rightEmpty="true"  v-model="item.xOffset"></sp>
-                    <sp-input-number style="margin-top: 10px;" : disabled="!selectedChannels.includes(item.index)" :label="'y偏移'+(item.index+1)" :labelWidth="60" :inputWidth="65" :rightEmpty="true"  v-model="item.yOffset"></sp>
-                    <sp-input-number style="margin-top: 10px;" : disabled="!selectedChannels.includes(item.index)" :label="'z偏移'+(item.index+1)" :labelWidth="60" :inputWidth="65" :rightEmpty="true"  v-model="item.zOffset"></sp>
+                    <sp-input-number style="margin-top: 10px;" :disabled="!selectedChannels.includes(item.index)" :label="'x偏移'+(item.index+1)" :labelWidth="60" :inputWidth="65" :rightEmpty="true"  v-model="item.xOffset" />
+                    <sp-input-number style="margin-top: 10px;" :disabled="!selectedChannels.includes(item.index)" :label="'y偏移'+(item.index+1)" :labelWidth="60" :inputWidth="65" :rightEmpty="true"  v-model="item.yOffset" />
+                    <sp-input-number style="margin-top: 10px;" :disabled="!selectedChannels.includes(item.index)" :label="'z偏移'+(item.index+1)" :labelWidth="60" :inputWidth="65" :rightEmpty="true"  v-model="item.zOffset" />
                   </div>
                 </a-checkbox-group>
               </div>
@@ -133,42 +133,42 @@
               </a-radio-group>
 
               <span class="span-label">推脱板次数::</span>
-              <a-select style="width: 100px" v-model  value="pipetteAttribute.releaseTipUsePushCount" : disabled="!pipetteAttribute.releaseTipUsePush">
+              <a-select style="width: 100px" v-model:value="pipetteAttribute.releaseTipUsePushCount" :disabled="!pipetteAttribute.releaseTipUsePush">
                 <a-select-option v-for="(item, index) in releaseTipUsePushCounts" :key="index" :value="item">{{ item }}</a-select-option>
               </a-select>
 
-              <sp-input-number label="推脱板偏移" unit="mm" :disabled="!pipetteAttribute.releaseTipUsePush" v-model="pipetteAttribute.releaseTipOffset" ></sp>
-              <sp-input-number label="挡板行程" :step="1"  :disabled="!pipetteAttribute.releaseTipUsePush" v-model="pipetteAttribute.baffleItinerary" ></sp>
+              <sp-input-number label="推脱板偏移" unit="mm" :disabled="!pipetteAttribute.releaseTipUsePush" v-model="pipetteAttribute.releaseTipOffset" />
+              <sp-input-number label="挡板行程" :step="1"  :disabled="!pipetteAttribute.releaseTipUsePush" v-model="pipetteAttribute.baffleItinerary" />
             </div>
 
-            <a-divider type="horizontal" ></a>
+            <a-divider type="horizontal" />
 
             <table>
               <tr>
                 <td class="table-col-label"><div>预退枪头位置</div></td>
                 <td colspan="3" class="table-col-value-3">
-                  <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosX" ></sp>
+                  <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosX" />
                   <!-- <a-button type="primary" @click="btnGoPos('x0')" :loading="isLoading('x0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosY" ></sp>
+                  <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosY" />
                   <!-- <a-button type="primary" @click="btnGoPos('y0')" :loading="isLoading('y0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosZ" ></sp>
+                  <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosZ" />
                   <!-- <a-button type="primary" @click="btnGoPos('z0')" :loading="isLoading('z0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
                 </td>
               </tr>
               <tr>
                 <td class="table-col-label"><div>退枪头位置</div></td>
                 <td colspan="3" class="table-col-value-3">
-                  <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosX" ></sp>
+                  <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosX" />
                   <!-- <a-button type="primary" @click="btnGoPos('x1')" :loading="isLoading('x1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosY" ></sp>
+                  <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosY" />
                   <!-- <a-button type="primary" @click="btnGoPos('y1')" :loading="isLoading('y1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosZ" ></sp>
+                  <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosZ" />
                   <!-- <a-button type="primary" @click="btnGoPos('z1')" :loading="isLoading('z1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
                 </td>
               </tr>
             </table>
 
-            <a-divider type="horizontal" ></a>
+            <a-divider type="horizontal" />
 
             <div>
               <a-checkbox v-model="pipetteAttribute.prepareReleaseTipAxisXGoFirst" class="my-checkbox">预退枪头先走X</a-checkbox>
@@ -176,9 +176,9 @@
               <a-checkbox v-model="pipetteAttribute.releaseTipBack2TakePos" class="my-checkbox">返回取枪头位置退枪头</a-checkbox>
               <a-checkbox v-model="pipetteAttribute.releaseTipZa0Before" class="my-checkbox">退枪头前高度回零</a-checkbox>
               <span class="span-label" style="width: auto; margin-left : 20px;">退枪头速度指令::</span>
-              <a-input class="my-input-speed" v-model="pipetteAttribute.releaseTipSpeedCmd" ></a>
+              <a-input class="my-input-speed" v-model="pipetteAttribute.releaseTipSpeedCmd" />
               <span class="span-label" style="width: auto; margin-left : 20px;">退枪头后指令::</span>
-              <a-input class="my-input-speed" v-model="pipetteAttribute.releaseTipAfterCmd" ></a>
+              <a-input class="my-input-speed" v-model="pipetteAttribute.releaseTipAfterCmd" />
             </div>
             
           </a-card>
@@ -187,7 +187,7 @@
         <a-row :gutter="8" v-show="!attributeData.isThirdParty && attributeData.type===1">
           <a-card title="机械臂参数" :bordered="false">
             <span class="span-label" style="width:130px;">夹抓::</span>
-            <a-select style="width: 150px" v-model : value="attributeData.clipEquipmentId">
+            <a-select style="width: 150px" v-model:value="attributeData.clipEquipmentId">
               <a-select-option v-for="(item, index) in clipEquipmentData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
             </a-select>
           </a-card>
@@ -197,11 +197,11 @@
           <a-card title="移液枪参数" :bordered="false">
             <div>
               <span class="span-label">通道数:::</span>
-              <a-select style="width: 60px" v-model : value="pipetteAttribute.channelRow">
+              <a-select style="width: 60px" v-model:value="pipetteAttribute.channelRow">
                 <a-select-option v-for="(item, index) in channelRows" :key="index" :value="item">{{ item }}</a-select-option>
               </a-select>
               <span class="span-unit">列</span>
-              <a-select style="width: 60px;margin-left : 10px;" v-model  value="pipetteAttribute.channelCol" : disabled="true">
+              <a-select style="width: 60px;margin-left : 10px;" v-model:value="pipetteAttribute.channelCol" :disabled="true">
                 <a-select-option v-for="(item, index) in channelRows" :key="index" :value="item">{{ item }}</a-select-option>
               </a-select>
               <span class="span-unit">行</span>
@@ -394,13 +394,13 @@ export default {
       getFiledRules(flag)
       {
         if(flag===1)
-          return this.communicatioProtocol<3 : [{ required: true, message: '' }] : []; 
+          return this.communicatioProtocol<3 ? [{ required: true, message: '' }] : []; 
         else if(flag===2)
-          return this.communicatioProtocol<3 : [{ required: true, message: '' }] : []; 
+          return this.communicatioProtocol<3 ? [{ required: true, message: '' }] : []; 
         else if(flag===3)
-          return this.communicatioProtocol>=3 : [{ required: true, message: '' }] : []; 
+          return this.communicatioProtocol>=3 ? [{ required: true, message: '' }] : []; 
         else if(flag===4)
-          return this.communicatioProtocol>=3 : [{ required: true, message: '' }] : []; 
+          return this.communicatioProtocol>=3 ? [{ required: true, message: '' }] : []; 
       },
        onDateChange(date) {
         this.manufactureDateString = moment(date).format('YYYY-MM-DD')
@@ -508,7 +508,7 @@ export default {
         sysDictTypeDropDown({code: 'yes_true_false'}).then((res) => {
           this.variables = res.data
           this.variables.forEach((item) => {
-            item.code=item.code==='true':true:false
+            item.code=item.code==='true'?true:false
           })
         })
 
@@ -584,10 +584,10 @@ export default {
         var result=true;
         this.errors.code=!this.attributeData.code;
         this.errors.name=!this.attributeData.name;
-        this.errors.host=this.attributeData.communicatioProtocol< 3  !this.attributeData.host : false;
-        this.errors.port=this.attributeData.communicatioProtocol< 3  !this.attributeData.port : false;
-        this.errors.comPort=this.attributeData.communicatioProtocol>=3  !this.attributeData.comPort : false;
-        this.errors.baudRate=this.attributeData.communicatioProtocol>=3  !this.attributeData.baudRate : false;
+        this.errors.host=this.attributeData.communicatioProtocol< 3 ? !this.attributeData.host : false;
+        this.errors.port=this.attributeData.communicatioProtocol< 3 ? !this.attributeData.port : false;
+        this.errors.comPort=this.attributeData.communicatioProtocol>=3 ? !this.attributeData.comPort : false;
+        this.errors.baudRate=this.attributeData.communicatioProtocol>=3 ? !this.attributeData.baudRate : false;
         console.log(this.errors)
         for (const key in this.errors) {          
           if (this.errors[key]) {            
@@ -603,10 +603,10 @@ export default {
           return;
 
         this.formLoading = true
-        const host=this.attributeData.communicatioProtocol>=3  '' : this.attributeData.host
-        const port=this.attributeData.communicatioProtocol>=3  0 : this.attributeData.port
-        const comPort=this.attributeData.communicatioProtocol>=3  this.attributeData.comPort : ''
-        const baudRate=this.attributeData.communicatioProtocol>=3  this.attributeData.baudRate : 0
+        const host=this.attributeData.communicatioProtocol>=3 ? '' : this.attributeData.host
+        const port=this.attributeData.communicatioProtocol>=3 ? 0 : this.attributeData.port
+        const comPort=this.attributeData.communicatioProtocol>=3 ? this.attributeData.comPort : ''
+        const baudRate=this.attributeData.communicatioProtocol>=3 ? this.attributeData.baudRate : 0
 
         this.attributeData.baudRate=baudRate
         this.attributeData.comPort=comPort

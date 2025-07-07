@@ -8,55 +8,66 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="confirmLoading">
-      <div style="text-align: center;font-size : 30px">{{ this.contentRecord.title }}</div>
+      <div style="text-align: center; font-size: 30px">{{ contentRecord.title }}</div>
       <br>
-      <div style="text-align: right;font-size : 10px">
-        <span>(发布人:{{ this.contentRecord.createdUserName }}:</span>
-        <span>发布时间:{{ this.contentRecord.createdTime }} </span>
+      <div style="text-align: right; font-size: 10px">
+        <span>发布人: {{ contentRecord.createdUserName }}</span>
+        <span>发布时间: {{ contentRecord.createdTime }}</span>
       </div>
-      <a-divider style="margin-top: 5px"></a>
-      <div >
-        <label v-html="this.contentRecord.content"></label>
+      <a-divider style="margin-top: 5px" />
+      <div>
+        <div v-html="contentRecord.content"></div>
       </div>
     </a-spin>
   </a-modal>
 </template>
-<script>
-  import { sysArticleDetail } from '@/api/modular/system/articleManage'
 
-  export default {
-    name: 'DetailForm',
-    components: {
-    },
-    data () {
-      return {
-        visible: false,
-        confirmLoading: false,
-        contentRecord: {}
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      detail (record) {
-        this.confirmLoading = true
-        this.visible = true
-        this.sysArticleDetail(record.id)
-      },
-      /**
-       * 查看详情
-       */
-      sysArticleDetail (id) {
-        sysArticleDetail({ id: id }).then((res) => {
-          this.confirmLoading = false
-          this.contentRecord = res.data
-        })
-      },
-      handleCancel () {
-        this.visible = false
-        this.contentRecord = {}
-      }
-    }
-  }
+<script setup>
+import { ref, reactive } from 'vue'
+import { sysArticleDetail } from '@/api/modular/system/articleManage'
+
+defineOptions({
+  name: 'DetailForm'
+})
+
+const visible = ref(false)
+const confirmLoading = ref(false)
+const contentRecord = reactive({
+  title: '',
+  createdUserName: '',
+  createdTime: '',
+  content: ''
+})
+
+const detail = (record) => {
+  confirmLoading.value = true
+  visible.value = true
+  fetchArticleDetail(record.id)
+}
+
+const fetchArticleDetail = (id) => {
+  sysArticleDetail({ id: id }).then((res) => {
+    confirmLoading.value = false
+    Object.assign(contentRecord, res.data)
+  }).catch(() => {
+    confirmLoading.value = false
+  })
+}
+
+const handleCancel = () => {
+  visible.value = false
+  Object.assign(contentRecord, {
+    title: '',
+    createdUserName: '',
+    createdTime: '',
+    content: ''
+  })
+}
+
+defineExpose({
+  detail
+})
 </script>
+
+<style scoped>
+</style>

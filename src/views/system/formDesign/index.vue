@@ -1,21 +1,16 @@
 <template>
   <div>
-    <k-form-design :showHead="false" style="background-color: white;" ></k>
+    <k-form-design :showHead="false" style="background-color: white;"/>
   </div>
 </template>
-<script>
-  import 'k-form-design/styles/k-form-design.less'
 
-  export default {
-    name:"form_design",
-    components: {},
-    data() {
-      return {}
-    },
-    methods: {}
-  }
+<script setup>
+import 'k-form-design/styles/k-form-design.less'
+
+defineOptions({
+  name: 'form_design'
+})
 </script>
 
 <style lang="less" scoped>
-
 </style>

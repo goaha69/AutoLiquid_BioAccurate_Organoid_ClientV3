@@ -2,240 +2,229 @@
   <div>
     <x-card v-if="hasPerm('sysTenant:page')">
       <template #content>
-
         <div class="table-page-search-wrapper">
-        <a-form layout="inline">
-          <a-row :gutter="48">
-            <a-col  md="8" : sm="24">
-              <a-form-item label="公司名称">
-                <a-input v-model="queryParam.name" allow-clear placeholder="请输入租户名称" ></a>
-              </a-form-item>
-            </a-col>
-            <a-col  md="8" : sm="24">
-              <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-              <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
-            </a-col>
-          </a-row>
-        </a-form>
+          <a-form layout="inline" @finish="handleQuery">
+            <a-row :gutter="48">
+              <a-col :md="8" :sm="24">
+                <a-form-item label="公司名称">
+                  <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入租户名称" />
+                </a-form-item>
+              </a-col>
+              <a-col :md="8" :sm="24">
+                <a-button type="primary" html-type="submit">查询</a-button>
+                <a-button style="margin-left: 8px" @click="resetQuery">重置</a-button>
+              </a-col>
+            </a-row>
+          </a-form>
         </div>
-
       </template>
     </x-card>
+
     <a-card :bordered="false">
-      <s-table
-        ref="table"
+      <template #title>
+        <a-button type="primary" @click="handleAdd" v-if="hasPerm('sysTenant:add')">
+          <template #icon><plus-outlined /></template>
+          新增租户
+        </a-button>
+      </template>
+
+      <a-table
         :columns="columns"
-        :data="loadData"
-        :alert="true"
-        :rowKey="(record) => record.id"
-        :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
-        <template #operator v-if="hasPerm('sysTenant:add')">
-          <a-button @click="$refs.addForm.add()" ><template #icon><plus-outlined ></plus-outlined></template type="primary" v-if="hasPerm('sysTenant:add')">新增租户
-          </a-button>
-        </template>
-        <template #host="{ text: host }">
-          <a-tag :color="'geekblue'">
-            {{ host }}
-          </a-tag>
-        </template>
-        <template #action="{ text, record }">
-          <a v-if="hasPerm('sysTenant:edit')" @click="$refs.editForm.edit(record)">编辑</a>
-          <a-divider type="vertical" v-if="hasPerm('sysTenant:edit')" ></a>
-            <a v-if="hasPerm('simulationTenantLogin')" @click="simulationTenantLogin(record)">模拟登录</a>
-          <a-divider type="vertical" v-if="hasPerm('simulationTenantLogin')" ></a>
-          <a-dropdown
-            v-if="hasPerm('sysTenant  grantMenu') || hasPerm('sysTenant : delete')">
-            <template #default>
+        :data-source="tableData"
+        :loading="loading"
+        :row-key="(record) => record.id"
+        :pagination="pagination"
+        @change="handleTableChange"
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.dataIndex === 'action'">
+            <a @click="handleEdit(record)" v-if="hasPerm('sysTenant:edit')">编辑</a>
+            <a-divider type="vertical" v-if="hasPerm('sysTenant:edit') && hasPerm('simulationTenantLogin')" />
+            <a @click="simulationTenantLogin(record)" v-if="hasPerm('simulationTenantLogin')">模拟登录</a>
+            <a-divider type="vertical" v-if="hasPerm('simulationTenantLogin') && (hasPerm('sysTenant:grantMenu') || hasPerm('sysTenant:delete'))" />
+            <a-dropdown v-if="hasPerm('sysTenant:grantMenu') || hasPerm('sysTenant:delete')">
               <a class="ant-dropdown-link">
-                更多
-                <down-outlined ></down>
+                更多 <down-outlined />
               </a>
-            </template>
-            <template #overlay>
-              <a-menu>
-                <a-menu-item v-if="hasPerm('sysTenant:grantMenu')">
-                  <a @click="$refs.tenantMenuForm.tenantMenu(record)">授权菜单</a>
-                </a-menu-item>
-                <a-menu-item v-if="hasPerm('sysTenant:resetPwd')">
-                  <a-popconfirm placement="topRight" title="确认重置密码" @confirm="() => resetPwd(record)">
-                    <a>重置密码</a>
-                  </a-popconfirm>
-                </a-menu-item>
-                <a-menu-item v-if="hasPerm('sysTenant:delete')">
-                  <a-popconfirm placement="topRight" title="确认删除" @confirm="() => sysTenantDelete(record)">
-                    <a>删除</a>
-                  </a-popconfirm>
-                </a-menu-item>
-              </a-menu>
-            </template>
-          </a-dropdown>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item v-if="hasPerm('sysTenant:grantMenu')">
+                    <a @click="handleMenu(record)">授权菜单</a>
+                  </a-menu-item>
+                  <a-menu-item v-if="hasPerm('sysTenant:resetPwd')">
+                    <a-popconfirm placement="topRight" title="确认重置密码？" @confirm="() => resetPwd(record)">
+                      <a>重置密码</a>
+                    </a-popconfirm>
+                  </a-menu-item>
+                  <a-menu-item v-if="hasPerm('sysTenant:delete')">
+                    <a-popconfirm placement="topRight" title="确认删除？" @confirm="() => deleteRecord(record)">
+                      <a>删除</a>
+                    </a-popconfirm>
+                  </a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </template>
         </template>
-      </s-table>
-      <add-form ref="addForm" @ok="handleOk" ></add>
-      <edit-form ref="editForm" @ok="handleOk" ></edit>
-      <tenant-menu-form ref="tenantMenuForm" @ok="handleOk"></tenant>
+      </a-table>
+
+      <add-form ref="addFormRef" @ok="handleOk" />
+      <edit-form ref="editFormRef" @ok="handleOk" />
+      <tenant-menu-form ref="tenantMenuFormRef" @ok="handleOk" />
     </a-card>
   </div>
 </template>
-<script>
-  import {
-    STable,
-    Ellipsis,
-    XCard
-  } from '@/components'
-  import {
-    sysTenantPage,
-    sysTenantDelete,
-    sysTenantResetPwd
-  } from '@/api/modular/system/tenantManage'
-    import {
-    simulationTenantLogin
-  } from '@/api/modular/system/loginManage'
-  import addForm from './addForm'
-  import editForm from './editForm'
-  import tenantMenuForm from './tenantMenuForm'
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import { message, Modal } from 'ant-design-vue';
+import { XCard } from '@/components';
 import {
-  ACCESS_TOKEN,
-	ALL_APPS_MENU
-} from '@/store/mutation-types'
-  export default {
-    name:"sys_tenant_mgr",
-    components: {
-      XCard,
-      STable,
-      Ellipsis,
-      addForm,
-      editForm,
-      tenantMenuForm
-    },
-    data() {
-      return {
-        // 查询参数
+  sysTenantPage,
+  sysTenantDelete,
+  sysTenantResetPwd,
+} from '@/api/modular/system/tenantManage';
+import { simulationTenantLogin as apiSimulationTenantLogin } from '@/api/modular/system/loginManage';
+import { ACCESS_TOKEN, ALL_APPS_MENU } from '@/store/mutation-types';
+import { useStore } from 'vuex';
+import { ls } from '@/utils/storage';
+import AddForm from './addForm.vue';
+import EditForm from './editForm.vue';
+import TenantMenuForm from './tenantMenuForm.vue';
+import { DownOutlined, PlusOutlined } from '@ant-design/icons-vue';
+import { hasPerm } from '@/utils/permission/index';
 
-      queryParam: {},
-        // 表头
+const store = useStore();
 
-      columns: [{
-            title: '公司名称',
-            dataIndex: 'name'
-          },
-          {
-            title: '账号(邮箱)',
-            dataIndex: 'email'
-          },
-          {
-            title: '姓名',
-            dataIndex: 'adminName'
-          },
-          {
-            title: '电话',
-            dataIndex: 'phone'
-          },
-           {
-            title: '创建时间',
-            dataIndex: 'createdTime'
-          },
-          {
-            title: '备注',
-            dataIndex: 'remark'
-          }
-          // {
-          //   title: '架构',
-          //   dataIndex: 'schema',
-          //   width: 100
-          // },
+const columns = [
+  { title: '公司名称', dataIndex: 'name' },
+  { title: '账号(邮箱)', dataIndex: 'email' },
+  { title: '姓名', dataIndex: 'adminName' },
+  { title: '电话', dataIndex: 'phone' },
+  { title: '创建时间', dataIndex: 'createdTime' },
+  { title: '备注', dataIndex: 'remark' },
+  { title: '操作', dataIndex: 'action' },
+];
 
-      ],
-        // 加载数据方法 必须Promise 对象
+const queryParam = ref({ name: '' });
+const tableData = ref([]);
+const loading = ref(false);
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+});
 
-      loadData: parameter => {
-          return sysTenantPage(Object.assign(parameter, this.queryParam)).then((res) => {
-            return res.data
-          })
-        },
-        selectedRowKeys: [],
-        selectedRows: []
-      }
-    },
-    created() {
-      if (this.hasPerm('sysTenant:edit') || this.hasPerm('sysTenant:delete')|| this.hasPerm(
-				'simulationTenantLogin')) {
-        this.columns.push({
-          title: '操作',
-          width: '200px',
-          dataIndex: 'action',
-          slots: {
-            customRender: 'action'
-          }
-        })
-      }
-    },
-    methods: {
-      sysTenantDelete(record) {
-        sysTenantDelete(record).then((res) => {
-          if (res.success) {
-            this.$message.success('删除成功')
-            this.$refs.table.refresh()
-          } else {
-            this.$message.error('删除失败::' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('删除错误::' + err.message)
-        })
-      },
-      toggleAdvanced() {
-        this.advanced = !this.advanced
-      },
-      handleOk() {
-        this.$refs.table.refresh()
-      },
-      onSelectChange(selectedRowKeys, selectedRows) {
-        this.selectedRowKeys = selectedRowKeys
-        this.selectedRows = selectedRows
-      },
-      /**
-       * 重置密码
-       */
-      resetPwd(record) {
-        sysTenantResetPwd({
-          id: record.id
-        }).then(res => {
-          if (res.success) {
-            this.$message.success('重置成功')
-            // this.$refs.table.refresh()
+const addFormRef = ref();
+const editFormRef = ref();
+const tenantMenuFormRef = ref();
 
-        } else {
-            this.$message.error('重置失败::' + res.message)
-          }
-        })
-      },
-      simulationTenantLogin(record) {
-        const that = this;
-				simulationTenantLogin({
-					tenantId: record.id,
-					account: record.email,
-					password: '66666' /**
-       * 这个无所谓,主要是为了绕过非空验 }).then((res) => {
-       */
-      if (res.success) {
-						const token = res.data;
-            that.$ls.remove(ALL_APPS_MENU)
-            that.$ls.set(ACCESS_TOKEN, token)
-						window.open(`${window.location.origin}/`)
-					} else {
-						this.$message.error('登录失败::' + res.message)
-					}
-				})
-			}
+const loadData = async () => {
+  loading.value = true;
+  const params = {
+    current: pagination.current,
+    size: pagination.pageSize,
+    ...queryParam.value,
+  };
+  try {
+    const res = await sysTenantPage(params);
+    tableData.value = res.data.records;
+    pagination.total = res.data.total;
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadData();
+});
+
+const handleTableChange = (pag) => {
+  pagination.current = pag.current;
+  pagination.pageSize = pag.pageSize;
+  loadData();
+};
+
+const handleQuery = () => {
+  pagination.current = 1;
+  loadData();
+};
+
+const resetQuery = () => {
+  queryParam.value = { name: '' };
+  handleQuery();
+};
+
+const handleAdd = () => {
+  addFormRef.value.add();
+};
+
+const handleEdit = (record) => {
+  editFormRef.value.edit(record);
+};
+
+const handleMenu = (record) => {
+  tenantMenuFormRef.value.tenantMenu(record);
+};
+
+const handleOk = () => {
+  handleQuery();
+};
+
+const deleteRecord = async (record) => {
+  try {
+    const res = await sysTenantDelete(record);
+    if (res.success) {
+      message.success('删除成功');
+      handleQuery();
+    } else {
+      message.error(`删除失败：${res.message}`);
     }
+  } catch (err) {
+    message.error(`删除错误：${err.message}`);
   }
-</script>
-<style lang="less">
-  .table-operator {
-    margin-bottom: 18px;
-  }
+};
 
-  button {
-    margin-right: 8px;
+const resetPwd = async (record) => {
+  try {
+    const res = await sysTenantResetPwd({ id: record.id });
+    if (res.success) {
+      Modal.success({
+        title: '重置成功',
+        content: `新密码为：${res.data}`,
+      });
+    } else {
+      message.error(`重置失败：${res.message}`);
+    }
+  } catch (err) {
+    message.error(`重置错误：${err.message}`);
   }
+};
+
+const simulationTenantLogin = async (record) => {
+  try {
+    const res = await apiSimulationTenantLogin({
+      tenantId: record.id,
+    });
+    if (res.success) {
+      const token = res.data;
+      ls.remove(ALL_APPS_MENU);
+      ls.set(ACCESS_TOKEN, token, 7 * 24 * 60 * 60 * 1000);
+      window.open(`${window.location.origin}/`, '_blank');
+    } else {
+      message.error(`登录失败：${res.message}`);
+    }
+  } catch (err) {
+    message.error(`登录错误：${err.message}`);
+  }
+};
+</script>
+
+<style lang="less" scoped>
+.table-operator {
+  margin-bottom: 18px;
+}
+button {
+  margin-right: 8px;
+}
 </style>

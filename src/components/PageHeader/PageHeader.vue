@@ -1,7 +1,7 @@
 <template>
   <div class="page-header">
     <div class="page-header-index-wide">
-      <s-breadcrumb ></s>
+      <s-breadcrumb />
       <div class="detail">
         <div class="main" v-if="!$route.meta.hiddenHeaderContent">
           <div class="row">
@@ -13,12 +13,12 @@
           </div>
           <div class="row">
             <div v-if="avatar" class="avatar">
-              <a-avatar :src="avatar" ></a>
+              <a-avatar :src="avatar" />
             </div>
-            <div v-if="this.$slots.content" class="headerContent">
+            <div v-if="$slots.content" class="headerContent">
               <slot name="content"></slot>
             </div>
-            <div v-if="this.$slots.extra" class="extra">
+            <div v-if="$slots.extra" class="extra">
               <slot name="extra"></slot>
             </div>
           </div>
@@ -31,35 +31,38 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { useRoute } from 'vue-router'
+import { useSlots } from 'vue'
 import Breadcrumb from '@/components/tools/Breadcrumb'
 
-export default {
+defineOptions({
   name: 'PageHeader',
   components: {
     's-breadcrumb': Breadcrumb
-  },
-  props: {
-    title: {
-      type: [String, Boolean],
-      default: true,
-      required: false
-    },
-    logo: {
-      type: String,
-      default: '',
-      required: false
-    },
-    avatar: {
-      type: String,
-      default: '',
-      required: false
-    }
-  },
-  data () {
-    return {}
   }
-}
+})
+
+const props = defineProps({
+  title: {
+    type: [String, Boolean],
+    default: true,
+    required: false
+  },
+  logo: {
+    type: String,
+    default: '',
+    required: false
+  },
+  avatar: {
+    type: String,
+    default: '',
+    required: false
+  }
+})
+
+const $route = useRoute()
+const $slots = useSlots()
 </script>
 
 <style lang="less" scoped>

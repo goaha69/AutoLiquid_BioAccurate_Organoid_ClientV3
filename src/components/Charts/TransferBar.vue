@@ -7,14 +7,33 @@
       :scale="scale"
       :forceFit="true"
       :padding="['auto', 'auto', '40', '50']">
-      <v-tooltip ></v>
-      <v-axis ></v>
-      <v-bar position="x*y"></v>
+      <v-tooltip />
+      <v-axis />
+      <v-bar position="x*y" />
     </v-chart>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getCurrentInstance } from 'vue'
+
+defineOptions({
+  name: 'Bar'
+})
+
+const props = defineProps({
+  title: {
+    type: String,
+    default: ''
+  }
+})
+
+const instance = getCurrentInstance()
+const { proxy } = instance
+
+const data = ref([])
+
 const tooltip = [
   'x*y',
   (x, y) => ({
@@ -22,6 +41,7 @@ const tooltip = [
     value: y
   })
 ]
+
 const scale = [{
   dataKey: 'x',
   title: '日期(:',
@@ -34,31 +54,14 @@ const scale = [{
   min: 1
 }]
 
-export default {
-  name: 'Bar',
-  props: {
-    title: {
-      type: String,
-      default: ''
-    }
-  },
-  data () {
-    return {
-      data: [],
-      scale,
-      tooltip
-    }
-  },
-  created () {
-    this.getMonthBar()
-  },
-  methods: {
-    getMonthBar () {
-      this.$http.get('/analysis/month-bar')
-        .then(res => {
-          this.data = res.result
-        })
-    }
-  }
+const getMonthBar = () => {
+  proxy.$http.get('/analysis/month-bar')
+    .then(res => {
+      data.value = res.result
+    })
 }
+
+onMounted(() => {
+  getMonthBar()
+})
 </script>

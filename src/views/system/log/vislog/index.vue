@@ -1,311 +1,239 @@
 <template>
   <div>
-    <x-card v-if="hasPerm('sysVisLog:page')">
-      <template #content>
-
-        <div class="table-page-search-wrapper">
-        <a-form layout="inline">
-          <a-row :gutter="48">
-            <a-col  md="8" : sm="24">
-              <a-form-item label="日志名称">
-                <a-input v-model  value="queryParam.name" allow-clear placeholder="请输入日志名 : " ></a>
-              </a-form-item>
-            </a-col>
-            <a-col  md="8" : sm="24">
-              <a-form-item label="访问类型">
-                <a-select v-model="queryParam.visType" allow-clear placeholder="请选择访问类型">
-                  <a-select-option v-for="(item,index) in visTypeDict" :key="index" :value="item.code">{{ item.value }}
+    <a-card v-if="hasPerm('sysVisLog:page')" :bordered="false">
+      <a-form layout="inline" :model="queryParam">
+        <a-row :gutter="48">
+          <a-col :md="8" :sm="24">
+            <a-form-item label="日志名称">
+              <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入日志名称" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="8" :sm="24">
+            <a-form-item label="访问类型">
+              <a-select v-model:value="queryParam.visType" allow-clear placeholder="请选择访问类型">
+                <a-select-option v-for="(item, index) in visTypeDict" :key="index" :value="item.code">
+                  {{ item.value }}
+                </a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <template v-if="advanced">
+            <a-col :md="8" :sm="24">
+              <a-form-item label="是否成功">
+                <a-select v-model:value="queryParam.success" placeholder="请选择是否成功">
+                  <a-select-option v-for="(item, index) in successDict" :key="index" :value="item.code">
+                    {{ item.value }}
                   </a-select-option>
                 </a-select>
               </a-form-item>
             </a-col>
-            <template v-if="advanced">
-              <a-col  md="8" : sm="24">
-                <a-form-item label="是否成功">
-                  <a-select v-model="queryParam.success" placeholder="请选择是否成功">
-                    <a-select-option v-for="(item,index) in successDict" :key="index" :value="item.code">
-                      {{ item.value }}</a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-              <a-col :md="10" :sm="24">
-                <a-form-item label="访问时间">
-                  <a-range-picker
-                    v-model="queryParam.dates"
-                    :show-time="{
-                      hideDisabledOptions: true,
-                      defaultValue: [moment('00:00:00', 'HH  mm : ss'), moment('23:59:59', 'HH  mm : ss')],
-                    }"
-                    format="YYYY-MM-DD HH  mm : ss" ></a>
-                </a-form-item>
-              </a-col>
-            </template>
-            <a-col :md="!advanced && 8 || 24" :sm="24">
-              <span
-                class="table-page-search-submitButtons"
-                :style="advanced && { float: 'right', overflow: 'hidden' } || {} ">
-                <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-                <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
-                <a @click="toggleAdvanced" style="margin-left: 8px">
-                  {{ advanced : '收起' : '展开' }}
-                  <a-icon :type="advanced  'up' : 'down'" ></a>
-                </a>
-              </template>
+            <a-col :md="10" :sm="24">
+              <a-form-item label="访问时间">
+                <a-range-picker
+                  v-model:value="queryParam.dates"
+                  :show-time="{
+                    hideDisabledOptions: true,
+                    defaultValue: [moment('00:00:00', 'HH:mm:ss'), moment('23:59:59', 'HH:mm:ss')],
+                  }"
+                  format="YYYY-MM-DD HH:mm:ss"
+                  style="width: 100%"
+                />
+              </a-form-item>
             </a-col>
-          </a-row>
-        </a-form>
-        </div>
-
-      </template>
-    </x-card>
+          </template>
+          <a-col :md="!advanced && 8 || 24" :sm="24">
+            <span class="table-page-search-submitButtons">
+              <a-button type="primary" @click="handleQuery">查询</a-button>
+              <a-button style="margin-left: 8px" @click="resetQuery">重置</a-button>
+              <a @click="toggleAdvanced" style="margin-left: 8px">
+                {{ advanced ? '收起' : '展开' }}
+                <up-outlined v-if="advanced" />
+                <down-outlined v-else />
+              </a>
+            </span>
+          </a-col>
+        </a-row>
+      </a-form>
+    </a-card>
     <a-card :bordered="false">
-      <s-table
-        ref="table"
-        :columns="columns"
-        :data="loadData"
-        :alert="true"
-        :rowKey="(record) => record.id"
-        :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
-        <template #operator v-if="hasPerm('sysVisLog:sysVisLog')">
+      <template #title>
+        <a-space>
           <a-popconfirm
-            @confirm="() => sysVisLogDelete()"
+            v-if="hasPerm('sysVisLog:delete')"
             placement="top"
-            title="确认清空日志'" v-if="hasPerm('sysVisLog:delete')">
+            title="确认清空所有日志？"
+            @confirm="handleDelete"
+          >
             <a-button>清空日志</a-button>
           </a-popconfirm>
-        </template>
-        <template #operator v-if="hasPerm('sysVisLog:export')">
-            <a-button @click="sysVisLogExport">导出日志</a-button>
-        </template>
-        <span #name #default="text">
-          <ellipsis :length="10" tooltip>{{ text }}</ellipsis>
-        </template>
-        <span #visTime #default="text">
-          <ellipsis :length="10" tooltip>{{ text }}</ellipsis>
-        </template>
-        <span #visType #default="text">
-          {{ visTypeFilter(text) }}
-        </template>
-        <span #success #default="text">
-          {{ successFilter(text) }}
-        </template>
-        <template #action="text, record">
-          <span #action>
-            <a @click="$refs.detailsVislog.details(record)">查看详情</a>
+          <a-button @click="handleExport" v-if="hasPerm('sysVisLog:export')">导出日志</a-button>
+        </a-space>
+      </template>
+
+      <a-table
+        :columns="columns"
+        :data-source="dataSource"
+        :loading="loading"
+        :pagination="pagination"
+        :row-key="(record) => record.id"
+        @change="handleTableChange"
+      >
+        <template #bodyCell="{ column, text, record }">
+          <template v-if="['name', 'visTime'].includes(column.dataIndex)">
+            <ellipsis :length="10" tooltip>{{ text }}</ellipsis>
+          </template>
+          <template v-if="column.dataIndex === 'visType'">{{ visTypeFilter(text) }}</template>
+          <template v-if="column.dataIndex === 'success'">
+            <a-tag :color="text === 'SUCCESS' ? 'success' : 'error'">{{ successFilter(text) }}</a-tag>
+          </template>
+          <template v-if="column.dataIndex === 'action'">
+            <a @click="handleDetail(record)">查看详情</a>
           </template>
         </template>
-      </s-table>
-      <details-vislog ref="detailsVislog" ></details>
+      </a-table>
+      <details-vislog ref="detailsVislogRef" />
     </a-card>
   </div>
 </template>
-<script>
-  import {
-    STable,
-    Ellipsis,
-    XCard
-  } from '@/components'
-  import {
-    sysVisLogPage,
-    sysVisLogDelete,
-    sysVisLogExport
-  } from '@/api/modular/system/logManage'
-  import detailsVislog from './details'
-  import {
-    sysEnumDataList
-  } from '@/api/modular/system/enumManage'
-  import moment from 'moment'
-  export default {
-    name:"sys_log_mgr_vis_log",
-    components: {
-      XCard,
-      STable,
-      Ellipsis,
-      detailsVislog
-    },
-    data() {
-      return {
-        advanced: false,
-        // 查询参数
 
-      queryParam: {},
-        // 表头
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import { sysVisLogPage, sysVisLogDelete, sysVisLogExport } from '@/api/modular/system/logManage';
+import { sysEnumDataList } from '@/api/modular/system/enumManage';
+import { message } from 'ant-design-vue';
+import { Ellipsis } from '@/components';
+import { DownOutlined, UpOutlined } from '@ant-design/icons-vue';
+import detailsVislog from './details.vue';
+import moment from 'moment';
+import { hasPerm } from '@/core/permission/permission';
 
-      columns: [{
-            title: '日志名称',
-            dataIndex: 'name',
-            slots: {
-              customRender: 'name'
-            }
-          },
-          {
-            title: '访问类型',
-            dataIndex: 'visType',
-            slots: {
-              customRender: 'visType'
-            }
-          },
-          {
-            title: '是否成功',
-            dataIndex: 'success',
-            slots: {
-              customRender: 'success'
-            }
-          },
-          {
-            title: 'IP',
-            dataIndex: 'ip'
-          },
-          {
-            title: '浏览',
-            dataIndex: 'browser'
-          },
-          {
-            title: '时间',
-            dataIndex: 'visTime',
-            slots: {
-              customRender: 'visTime'
-            }
-          },
-          {
-            title: '访问',
-            dataIndex: 'account'
-          },
-          {
-            title: '详情',
-            dataIndex: 'action',
-            width: '150px',
-            slots: {
-              customRender: 'action'
-            }
-          }
-        ],
-        // 加载数据方法 必须Promise 对象
+const advanced = ref(false);
+const queryParam = reactive({});
+const dataSource = ref([]);
+const loading = ref(false);
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+});
+const visTypeDict = ref([]);
+const successDict = ref([]);
+const detailsVislogRef = ref();
 
-      loadData: parameter => {
-          return sysVisLogPage(Object.assign(parameter, this.switchingDate())).then((res) => {
-            return res.data
-          })
-        },
-        selectedRowKeys: [],
-        selectedRows: [],
-        defaultExpandedKeys: [],
-        visTypeDict: [],
-        successDict: []
-      }
-    },
-    /**
-     * 相当于html的onload方法,进来初始化
-       */
-    created() {
-      this.sysEnumDataList()
-    },
-    methods: {
-      moment,
-      visTypeFilter(visType) {
-        // eslint-disable-next-line eqeqeq
+const columns = [
+  { title: '日志名称', dataIndex: 'name' },
+  { title: '访问类型', dataIndex: 'visType' },
+  { title: '是否成功', dataIndex: 'success' },
+  { title: 'IP', dataIndex: 'ip' },
+  { title: '浏览器', dataIndex: 'browser' },
+  { title: '时间', dataIndex: 'visTime' },
+  { title: '访问人', dataIndex: 'account' },
+  { title: '详情', dataIndex: 'action', width: '150px' },
+];
 
-      const values = this.visTypeDict.filter(item => item.code == visType)
-        if (values.length > 0) {
-          return values[0].value
-        }
-      },
-      successFilter(success) {
-        // eslint-disable-next-line eqeqeq
+const visTypeFilter = (visType) => {
+  const value = visTypeDict.value.find((item) => item.code === visType);
+  return value ? value.value : visType;
+};
 
-      const values = this.successDict.filter(item => item.code == success)
-        if (values.length > 0) {
-          return values[0].value
-        }
-      },
-      /**
-       * 获取枚举数据
-       */
-      sysEnumDataList() {
-        sysEnumDataList({
-          enumName: 'LoginType'
-        }).then((res) => {
-          this.visTypeDict = res.data
-        })
-        sysEnumDataList({
-          enumName: 'YesOrNot'
-        }).then((res) => {
-          this.successDict = res.data
-        })
-      },
-      /**
-       * 查询参数组装
-       */
-      switchingDate() {
-        const dates = this.queryParam.dates
-        if (dates != null) {
-          this.queryParam.searchBeginTime = moment(dates[0]).format('YYYY-MM-DD HH  mm : ss')
-          this.queryParam.searchEndTime = moment(dates[1]).format('YYYY-MM-DD HH  mm : ss')
-          if (dates.length < 1) {
-            delete this.queryParam.searchBeginTime
-            delete this.queryParam.searchEndTime
-          }
-        }
-        const obj = JSON.parse(JSON.stringify(this.queryParam))
-        delete obj.dates
-        return obj
-      },
-      /**
-       * 清空日志
-       */
-      sysVisLogDelete() {
-        sysVisLogDelete().then((res) => {
-          if (res.success) {
-            this.$message.success('清空成功')
-            this.$refs.table.refresh(true)
-          } else {
-            this.$message.error('清空失败::' + res.message)
-          }
-        })
-      },
-      sysVisLogExport(){
-        sysVisLogExport(this.selectedRowKeys).then((res=>{
-        // 尝试解析 filename* 格式
+const successFilter = (success) => {
+  const value = successDict.value.find((item) => item.code === success);
+  return value ? value.value : success;
+};
 
-      let fileName = `VisLog.txt`; // 默认        const disposition = res.headers['content-disposition'];
-        const utf8FilenameMatch = disposition.match(/filename\*=UTF-8''(.' + ?)(?:;|$)/);
-        if (utf8FilenameMatch) {
-          fileName = decodeURIComponent(utf8FilenameMatch[1]);
-        } else {
-          // 回退解析 filename 格式
+const getEnumData = async () => {
+  const [visTypeRes, successRes] = await Promise.all([
+    sysEnumDataList({ enumName: 'LoginType' }),
+    sysEnumDataList({ enumName: 'YesOrNot' }),
+  ]);
+  if (visTypeRes.success) visTypeDict.value = visTypeRes.data;
+  if (successRes.success) successDict.value = successRes.data;
+};
 
-        const filenameMatch = disposition.match(/filename="?(.+?)":(::;|$)/);
-          if (filenameMatch) {
-            fileName = decodeURIComponent(filenameMatch[1]);
-          }
-        }
+const switchingDate = () => {
+  const params = { ...queryParam };
+  if (params.dates) {
+    params.searchBeginTime = moment(params.dates[0]).format('YYYY-MM-DD HH:mm:ss');
+    params.searchEndTime = moment(params.dates[1]).format('YYYY-MM-DD HH:mm:ss');
+    delete params.dates;
+  }
+  return params;
+};
 
-        const blob = new Blob([res.data], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = decodeURIComponent(fileName) ; // 已解
-      document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      }))
-      },
-      toggleAdvanced() {
-        this.advanced = !this.advanced
-      },
-      onSelectChange(selectedRowKeys, selectedRows) {
-        this.selectedRowKeys = selectedRowKeys
-        this.selectedRows = selectedRows
-      }
+const fetchData = async () => {
+  loading.value = true;
+  const params = {
+    ...switchingDate(),
+    current: pagination.value.current,
+    size: pagination.value.pageSize,
+  };
+  try {
+    const res = await sysVisLogPage(params);
+    dataSource.value = res.data.records;
+    pagination.value.total = res.data.total;
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  getEnumData();
+  fetchData();
+});
+
+const handleTableChange = (pag) => {
+  pagination.value = pag;
+  fetchData();
+};
+
+const handleQuery = () => {
+  pagination.value.current = 1;
+  fetchData();
+};
+
+const resetQuery = () => {
+  for (const key in queryParam) {
+    delete queryParam[key];
+  }
+  handleQuery();
+};
+
+const toggleAdvanced = () => {
+  advanced.value = !advanced.value;
+};
+
+const handleDelete = async () => {
+  try {
+    const res = await sysVisLogDelete();
+    if (res.success) {
+      message.success('清空成功');
+      fetchData();
+    } else {
+      message.error('清空失败：' + res.message);
     }
+  } catch (err) {
+    message.error('清空错误：' + err.message);
   }
-</script>
-<style lang="less">
-  .table-operator {
-    margin-bottom: 18px;
-  }
+};
 
-  button {
-    margin-right: 8px;
+const handleExport = async () => {
+  try {
+    await sysVisLogExport(switchingDate());
+  } catch (err) {
+    message.error('导出错误：' + err.message);
   }
+};
+
+const handleDetail = (record) => {
+  detailsVislogRef.value.details(record);
+};
+</script>
+
+<style lang="less" scoped>
+.table-operator {
+  margin-bottom: 18px;
+}
+button {
+  margin-right: 8px;
+}
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%">
-    <vfd style="background-color: white;" : needShow="true" ></vfd>
+    <vfd style="background-color: white;" :needShow="true" />
   </div>
 </template>
 <script>

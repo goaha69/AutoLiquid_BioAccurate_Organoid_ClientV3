@@ -3,40 +3,40 @@
     title="授权数据"
     :width="600"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-form-item
-          label="授权范围"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          has-feedback
-        >
-          <a-select style="width: 100%" placeholder="请选择授权范围" v-decorator="['dataScopeType', {rules: [{ required: true, message: '请选择授权范围'}]}]" >
-            <a-select-option v-for="(item,index) in dataScopeTypeData" :key="index" :value="item.code" @click="handleChange(item.code)">{{ item.value }}</a-select-option>
+      <a-form :model="form">
+        <a-form-item label="授权范围" :label-col="labelCol" :wrapper-col="wrapperCol">
+          <a-select
+            v-model:value="form.dataScopeType"
+            style="width: 100%"
+            placeholder="请选择授权范围"
+            @change="handleChange"
+          >
+            <a-select-option
+              v-for="item in dataScopeTypeData"
+              :key="item.code"
+              :value="item.code"
+            >
+              {{ item.value }}
+            </a-select-option>
           </a-select>
         </a-form-item>
         <div v-show="orgTreeShow">
-          <a-form-item
-            label="选择机构"
-            :labelCol="labelCol"
-            :wrapperCol="wrapperCol"
-          >
+          <a-form-item label="选择机构" :label-col="labelCol" :wrapper-col="wrapperCol">
             <a-tree
-              v-model="checkedKeys"
+              v-model:checkedKeys="checkedKeys"
               checkable
-              checkStrictly
+              check-strictly
               :auto-expand-parent="autoExpandParent"
               :expanded-keys="expandedKeys"
               :tree-data="orgTreeData"
-              :selected-keys="selectedKeys"
-              :replaceFields="replaceFields"
+              :replace-fields="replaceFields"
               @expand="onExpand"
-              @select="onSelect"
-            ></a>
+            />
           </a-form-item>
         </div>
       </a-form>
@@ -44,167 +44,127 @@
   </a-modal>
 </template>
 
-<script>
-  import { getOrgTree } from '@/api/modular/system/orgManage'
-  import { sysRoleOwnData, sysRoleGrantData } from '@/api/modular/system/roleManage'
-  import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+<script setup>
+import { ref, reactive } from 'vue';
+import { message } from 'ant-design-vue';
+import { getOrgTree } from '@/api/modular/system/orgManage';
+import { sysRoleOwnData, sysRoleGrantData } from '@/api/modular/system/roleManage';
+import { sysDictTypeDropDown } from '@/api/modular/system/dictManage';
 
-  export default {
-    data () {
-      return {
-        labelCol: {
-          style: { 'padding-right': '20px' },
-          xs: { span: 24 },
-          sm: { span: 5 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 15 }
-        },
-        orgTreeData: [],
-        expandedKeys: [],
-        checkedKeys: [],
-        visible: false,
-        confirmLoading: false,
-        formLoading: true,
-        autoExpandParent: true,
-        selectedKeys: [],
-        subValues: [],
-        roleEntity: [],
-        dataScopeTypeData: [],
-        orgTreeShow: false,
-        replaceFields: {
-          key: 'id'
-        },
-        form: this.$form.createForm(this)
-      }
-    },
+const props = defineProps({
+  visible: Boolean,
+});
 
-    methods: {
-      /**
-       * 初始化方法
-       */
-      roleOrg (record) {
-        this.roleEntity = record
-        this.visible = true
-        this.formLoading = true
-        this.sysDictTypeDropDown()
-        this.form.getFieldDecorator('dataScopeType', { initialValue: record.dataScopeType.toString() })
-        this.handleChange(record.dataScopeType)
-      },
+const emit = defineEmits(['update:visible', 'ok']);
 
-      /**
-       * 获取字典数据
-       */
-      sysDictTypeDropDown () {
-        // 数据范围
+const labelCol = {
+  style: { 'padding-right': '20px' },
+  xs: { span: 24 },
+  sm: { span: 5 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 15 },
+};
 
-      sysDictTypeDropDown({ code: 'data_scope_type' }).then((res) => {
-          this.dataScopeTypeData = res.data
-          this.formLoading = false
-        })
-      },
+const orgTreeData = ref([]);
+const expandedKeys = ref([]);
+const checkedKeys = ref({ checked: [], halfChecked: [] });
+const confirmLoading = ref(false);
+const formLoading = ref(false);
+const autoExpandParent = ref(true);
+const roleEntity = ref(null);
+const dataScopeTypeData = ref([]);
+const orgTreeShow = ref(false);
+const replaceFields = { key: 'id', title: 'name' };
+const form = reactive({
+  dataScopeType: undefined,
+});
 
-      /**
-       * 范围下拉框事件
-       */
-      handleChange (value) {
-        /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (value == '5') {
-          this.formLoading = true
-          this.orgTreeShow = true
-          // 获取机构树
+const roleOrg = async (record) => {
+  roleEntity.value = record;
+  await loadDataScopeTypes();
+  form.dataScopeType = record.dataScopeType.toString();
+  handleChange(form.dataScopeType);
+  emit('update:visible', true);
+};
 
-        this.getOrgTree()
-          // 已关联数据
-
-        this.sysRoleOwnData(this.roleEntity)
-        } else {
-          this.orgTreeShow = false
-          // 清理已选中机构
-
-        this.checkedKeys = []
-        }
-      },
-
-      /**
-       * 获取机构树
-       */
-      getOrgTree () {
-        getOrgTree().then((res) => {
-           if (res.success) {
-             this.orgTreeData = res.data
-             // 默认展开
-
-           this.orgTreeData.forEach(item => {
-               this.expandedKeys.push(item.id)
-             })
-           }
-        })
-      },
-
-      /**
-       * 此角色已有数据列表
-       */
-      sysRoleOwnData (record) {
-        sysRoleOwnData({ id: record.id }).then((res) => {
-          if (res.success) {
-            this.checkedKeys = res.data
-          }
-          this.formLoading = false
-        })
-      },
-
-      onExpand (expandedKeys) {
-        this.expandedKeys = expandedKeys
-        this.autoExpandParent = false
-      },
-      onCheck (checkedKeys) {
-        console.log(JSON.stringify(checkedKeys))
-        this.checkedKeys = checkedKeys
-      },
-      onSelect (selectedKeys, info) {
-        this.selectedKeys = selectedKeys
-      },
-
-      handleSubmit () {
-        const { form: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            const checkedKeys = this.checkedKeys.checked === undefined  this.checkedKeys : this.checkedKeys.checked
-            sysRoleGrantData({ id: this.roleEntity.id, grantOrgIdList: checkedKeys, dataScopeType: parseInt(values.dataScopeType) }).then((res) => {
-              this.confirmLoading = false
-              if (res.success) {
-                this.$message.success('授权成功')
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('授权失败:' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel () {
-        this.form.resetFields()
-        // 清空已选择的
-
-      this.checkedKeys = []
-        // 清空已展开的
-
-      this.expandedKeys = []
-        this.visible = false
-        // 隐藏机构树
-
-      this.orgTreeShow = false
-      }
-    }
+const loadDataScopeTypes = async () => {
+  formLoading.value = true;
+  try {
+    const res = await sysDictTypeDropDown({ code: 'data_scope_type' });
+    dataScopeTypeData.value = res.data;
+  } finally {
+    formLoading.value = false;
   }
+};
+
+const handleChange = async (value) => {
+  if (value === '5') {
+    orgTreeShow.value = true;
+    formLoading.value = true;
+    try {
+      await loadOrgTree();
+      await loadRoleOwnData(roleEntity.value);
+    } finally {
+      formLoading.value = false;
+    }
+  } else {
+    orgTreeShow.value = false;
+    checkedKeys.value = { checked: [], halfChecked: [] };
+  }
+};
+
+const loadOrgTree = async () => {
+  const res = await getOrgTree();
+  if (res.success) {
+    orgTreeData.value = res.data;
+    expandedKeys.value = res.data.map((item) => item.id);
+  }
+};
+
+const loadRoleOwnData = async (record) => {
+  const res = await sysRoleOwnData({ id: record.id });
+  if (res.success) {
+    checkedKeys.value = { checked: res.data, halfChecked: [] };
+  }
+};
+
+const onExpand = (keys) => {
+  expandedKeys.value = keys;
+  autoExpandParent.value = false;
+};
+
+const handleSubmit = async () => {
+  confirmLoading.value = true;
+  try {
+    const grantOrgIdList = checkedKeys.value.checked;
+    const res = await sysRoleGrantData({
+      id: roleEntity.value.id,
+      grantOrgIdList,
+      dataScopeType: parseInt(form.dataScopeType),
+    });
+    if (res.success) {
+      message.success('授权成功');
+      emit('ok');
+      handleCancel();
+    } else {
+      message.error(`授权失败: ${res.message}`);
+    }
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+const handleCancel = () => {
+  form.dataScopeType = undefined;
+  checkedKeys.value = { checked: [], halfChecked: [] };
+  expandedKeys.value = [];
+  orgTreeShow.value = false;
+  emit('update:visible', false);
+};
+
+defineExpose({
+  roleOrg,
+});
 </script>

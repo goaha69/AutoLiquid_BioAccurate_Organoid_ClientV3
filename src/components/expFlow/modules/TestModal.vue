@@ -8,18 +8,22 @@
 			@close="onClose">
 			
 			<div>当前的flowData:</div>
-			<json-view 
-				:value="flowData"
-				:expand-depth=3
-				boxed
-				copyable></json>
-			
-			<div style="margin-top: 12px;">暂存 : </div>
-			<a-textarea :autosize="{ minRows: 10, maxRows: 100 }" :value="flowDataJson" @change="editFlowDataJson" ></a>
-			
-			<a-divider ></a>
-			<a-button @click="onLoad">加载</a-button>
-			<a-button @click="tempSave" :style="{ marginRight: '8px' }" type="primary">暂存</a-button>
+                <vue-json-pretty
+                        :data="flowData"
+                        :deep="2"
+                        :show-double-quotes="true"
+                        :highlight-mouseover-node="true"
+                        :highlight-selected-node="true"
+                        :expand-depth="3"
+                        boxed
+                        copyable />
+
+                <div style="margin-top: 12px;">暂存数据:</div>
+                <a-textarea :autosize="{ minRows: 10, maxRows: 100 }" :value="flowDataJson" @change="editFlowDataJson" />
+
+                <a-divider />
+                <a-button @click="onLoad">加载</a-button>
+                <a-button @click="tempSave" :style="{ marginRight: '8px' }" type="primary"> 暂存</a-button>
 		</a-drawer>
 	</div>
 </template>

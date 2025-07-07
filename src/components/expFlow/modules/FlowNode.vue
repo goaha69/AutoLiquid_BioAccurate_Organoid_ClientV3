@@ -4,13 +4,13 @@
     class="common-circle-node"
     :class="{ active: isActive() }"
     :style="{ top: node.y + 'px', left: node.x + 'px',
-    cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out' : 'zoom-out' : 'default'))),
-    background:verificationStyle[!!activityId:'1':'4'] }"
+    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+    																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+    																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+    background: verificationStyle[!!activityId ? '1' : '4'] }"
     @click.stop="selectNode"
     @contextmenu.stop="showNodeContextMenu">
-    <a-icon type="play-circle"></a>
+    <a-icon type="play-circle" />
     {{ node.name }}
   </div>
 
@@ -19,13 +19,13 @@
     class="common-circle-node"
     :class="{ active: isActive() }"
     :style="{ top: node.y + 'px', left: node.x + 'px',
-    cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-    background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
+    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+    																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+    																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+    background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
     @click.stop="selectNode"
     @contextmenu.stop="showNodeContextMenu">
-    <a-icon type="close-circle"></a>
+    <a-icon type="close-circle" />
     {{ node.name }}
   </div>
 
@@ -34,13 +34,13 @@
 	class="common-rectangle-node"
 	:class="{ active: isActive() }"
 	:style="{ top: node.y + 'px', left: node.x + 'px',
-	cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-																								(currentTool.type == 'zoom-in'  'zoom-in' :
-																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-	background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
+	cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+	background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
 	@click.stop="selectNode"
 	@contextmenu.stop="showNodeContextMenu">
-	<a-icon type="setting"></a>
+	<a-icon type="setting" />
 	{{ node.name }}
   </div>
 
@@ -49,13 +49,13 @@
 	class="common-rectangle-node"
 	:class="{ active: isActive() }"
 	:style="{ top: node.y + 'px', left: node.x + 'px',
-	cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-																								(currentTool.type == 'zoom-in'  'zoom-in' :
-																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-	background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
+	cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+	background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
 	@click.stop="selectNode"
 	@contextmenu.stop="showNodeContextMenu">
-	<a-icon type="fullscreen"></a>
+	<a-icon type="fullscreen" />
 	{{ node.name }}
   </div>
 
@@ -64,13 +64,13 @@
 	class="common-rectangle-node"
 	:class="{ active: isActive() }"
 	:style="{ top: node.y + 'px', left: node.x + 'px',
-    cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-	background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
+    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+    																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+    																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+	background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
 	@click.stop="selectNode"
 	@contextmenu.stop="showNodeContextMenu">
-	<a-icon type="fullscreen-exit"></a>
+	<a-icon type="fullscreen-exit" />
     {{ node.name }}
   </div>
 
@@ -79,9 +79,9 @@
 	class="common-x-lane-node"
 	:class="{ active: isActive() }"
 	:style="{ top: node.y + 'px', left: node.x + 'px', height: node.height + 'px', width: node.width + 'px',
-    cursor: currentTool.type == 'zoom-in' : 'zoom-in' : (currentTool.type == 'zoom-out' : 'zoom-out' : 'default') }">
+    cursor: currentTool.type == 'zoom-in' ? 'zoom-in' : (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default') }">
 	<div class="lane-text-div"
-		:style="{ cursor: currentTool.type == 'drag' : 'move' : 'default' }"
+		:style="{ cursor: currentTool.type == 'drag' ? 'move' : 'default' }"
 		@click.stop="selectNode"
 		@contextmenu.stop="showNodeContextMenu">
 		<span class="lane-text">{{ node.name }}</span>
@@ -93,9 +93,9 @@
     class="common-y-lane-node"
     :class="{ active: isActive() }"
     :style="{ top: node.y + 'px', left: node.x + 'px', height: node.height + 'px', width: node.width + 'px',
-    cursor: currentTool.type == 'zoom-in' : 'zoom-in' : (currentTool.type == 'zoom-out' : 'zoom-out' : 'default') }">
+    cursor: currentTool.type == 'zoom-in' ? 'zoom-in' : (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default') }">
 	<div class="lane-text-div"
-		:style="{ cursor: currentTool.type == 'drag' : 'move' : 'default' }"
+		:style="{ cursor: currentTool.type == 'drag' ? 'move' : 'default' }"
 		@click.stop="selectNode"
 		@contextmenu.stop="showNodeContextMenu">
 		<span class="lane-text">{{ node.name }}</span>

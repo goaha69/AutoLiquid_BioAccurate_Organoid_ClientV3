@@ -7,181 +7,185 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-form-item v-show="false">
-          <a-input v-decorator="['id']" ></a>
+      <a-form ref="formRef" :model="form" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item name="id" style="display: none;">
+          <a-input v-model:value="form.id" />
         </a-form-item>
-        <a-form-item
-          label="标题"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-        >
-          <a-input placeholder="请输入标:" v-decorator="['title', {rules: [{required: true, message: '请输入标题!'}]}]" ></a>
+        <a-form-item label="标题" name="title">
+          <a-input v-model:value="form.title" placeholder="请输入标题" />
         </a-form-item>
-        <a-form-item
-          label="类型"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-        >
-          <a-radio-group v-decorator="['type',{rules: [{ required: true, message: '请选择类型'}]}]" >
-            <a-radio-button v-for="(item,index) in typeDictTypeDropDown" :key="index" :value="item.code">{{ item.value }}</a-radio-button>
+        <a-form-item label="类型" name="type">
+          <a-radio-group v-model:value="form.type">
+            <a-radio-button v-for="item in typeDictTypeDropDown" :key="item.code" :value="item.code">
+              {{ item.value }}
+            </a-radio-button>
           </a-radio-group>
         </a-form-item>
-        <a-form-item
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          label="内容"
-        >
-          <antd-editor  uploadConfig="editorUploadConfig" v-model : value="editorContent" @onchange="changeEditor" @oninit="getEditor" ></antd>
+        <a-form-item label="内容" name="content">
+          <div style="border: 1px solid #ccc">
+            <Toolbar
+              style="border-bottom: 1px solid #ccc"
+              :editor="editorRef"
+              :defaultConfig="toolbarConfig"
+              mode="default"
+            />
+            <Editor
+              style="height: 500px; overflow-y: hidden"
+              v-model="form.content"
+              :defaultConfig="editorConfig"
+              mode="default"
+              @onCreated="handleCreated"
+            />
+          </div>
         </a-form-item>
-
-        <a-divider ></a>
-        <a-form-item class="subForm-item">
-          <a-button type="primary" class="subButton" @click="handleSubmit">确认</a-button>
-          <a-button class="subButton" @click="handleCancel">取消</a-button>
+        <a-divider />
+        <a-form-item>
+          <div style="text-align: right;">
+            <a-button type="primary" @click="handleSubmit">确认</a-button>
+            <a-button style="margin-left: 8px" @click="handleCancel">取消</a-button>
+          </div>
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
-<script>
-  import { sysArticleEdit, sysArticleDetail } from '@/api/modular/system/articleManage'
-  import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
-  import { sysFileInfoUploadEditor } from '@/api/modular/system/fileManage'
-  import { AntdEditor } from '@/components'
-  export default {
-    name: 'AddForm',
-    components: {
-      AntdEditor
-    },
-    data () {
-      return {
-        labelCol: {
-          xs: { span: 24 },
-          sm: { span: 3 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 18 }
-        },
-        visible: false,
-        form: this.$form.createForm(this),
-        typeDictTypeDropDown: [], // 0通知 1公告
 
-      editorContent: '',
-        editorContentText: '',
-        editorUploadConfig: {
-          method: 'http',
-          callback: this.editorUploadImage
-        },
-        articleDetail: [],
-        formLoading: true
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      edit (record) {
-        this.visible = true
-        this.sysArticleDetail(record.id)
-        this.sysDictTypeDropDown()
-      },
-      /**
-       * 获取字典数据
-       */
-      sysDictTypeDropDown () {
-        sysDictTypeDropDown({ code: 'article_type' }).then((res) => {
-          this.typeDictTypeDropDown = res.data
-		  this.formLoading = false
-        })
-      },
-      /**
-       * 编辑器回调上传及回传图片url
-       */
-      editorUploadImage (files, insert) {
-        const formData = new FormData()
-        files.forEach(file => {
-          formData.append('file', file)
-        })
+<script setup>
+import { ref, reactive, onBeforeUnmount, shallowRef, defineExpose, defineEmits, nextTick } from 'vue';
+import { sysArticleEdit, sysArticleDetail } from '@/api/modular/system/articleManage';
+import { sysDictTypeDropDown } from '@/api/modular/system/dictManage';
+import { sysFileInfoUploadEditor } from '@/api/modular/system/fileManage';
+import { message } from 'ant-design-vue';
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
+import '@wangeditor/editor/dist/css/style.css';
+
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 3 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 18 },
+};
+
+const visible = ref(false);
+const formLoading = ref(true);
+const typeDictTypeDropDown = ref([]);
+const formRef = ref();
+const form = reactive({
+  id: '',
+  title: '',
+  type: undefined,
+  content: '',
+});
+
+const rules = {
+  title: [{ required: true, message: '请输入标题!' }],
+  type: [{ required: true, message: '请选择类型' }],
+  content: [{ required: true, message: '请输入内容' }],
+};
+
+const editorRef = shallowRef();
+const toolbarConfig = {};
+const editorConfig = {
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file, insertFn) {
+        const formData = new FormData();
+        formData.append('file', file);
         sysFileInfoUploadEditor(formData).then((res) => {
           if (res.success) {
-            insert(process.env.VUE_APP_API_BASE_URL + '/' + res.data)
+            insertFn(process.env.VUE_APP_API_BASE_URL + '/' + res.data, '', '');
           } else {
-            this.$message.error('编辑器上传图片失败::' + res.message)
+            message.error('编辑器上传图片失败：' + res.message);
           }
-        })
+        });
       },
-      getEditor (editor) {
-        this.editor = editor
-      },
-      changeEditor (html, ele) {
-        this.editorContent = html
-        this.editorContentText = ele.text()
-      },
-      /**
-       * 编辑时获取全部信
-       */
-      sysArticleDetail (id) {
-        sysArticleDetail({ id: id }).then((res) => {
-          const record = res.data
-          setTimeout(() => {
-            this.form.setFieldsValue(
-              {
-                id: id,
-                title: record.title,
-                type: record.type + ''
-              }
-            )
-            this.editor.txt.html(record.content)
-            this.editorContent = record.content
-          }, 100)
-        })
-      },
-      handleSubmit () {
-        const { form: { validateFields } } = this
-        /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.editorContent == '') {
-          this.$message.error('请填写内:')
-          return
-        }
-        validateFields((errors, values) => {
-          if (!errors) {
-            this.formLoading = true
-            values.content = this.editorContent
-			values.type = parseInt(values.type)
-            sysArticleEdit(values).then((res) => {
-              if (res.success) {
-                this.$message.success('编辑成功')
-                this.visible = false
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('编辑失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.formLoading = false
-            })
-          }
-        })
-      },
-      handleCancel () {
-        this.editor.txt.clear()
-        this.editorContent = ''
-        this.form.resetFields()
-        this.visible = false
-        this.formLoading = true
+    },
+  },
+};
+
+const handleCreated = (editor) => {
+  editorRef.value = editor;
+};
+
+const emit = defineEmits(['ok']);
+
+const edit = (record) => {
+  visible.value = true;
+  formLoading.value = true;
+  loadDictData();
+  loadArticleDetail(record.id);
+};
+
+const loadDictData = () => {
+  sysDictTypeDropDown({ code: 'article_type' }).then((res) => {
+    typeDictTypeDropDown.value = res.data;
+  });
+};
+
+const loadArticleDetail = (id) => {
+  sysArticleDetail({ id }).then((res) => {
+    Object.assign(form, res.data);
+    form.type = String(form.type); // Ensure type is a string for radio group
+    nextTick(() => {
+      if (editorRef.value) {
+        editorRef.value.setHtml(res.data.content);
       }
+    });
+    formLoading.value = false;
+  });
+};
+
+const handleSubmit = () => {
+  formRef.value.validate().then(() => {
+    if (!form.content || form.content === '<p><br></p>') {
+      message.error('请填写内容');
+      return;
     }
+    formLoading.value = true;
+    const params = { ...form, type: parseInt(form.type) };
+    sysArticleEdit(params)
+      .then((res) => {
+        if (res.success) {
+          message.success('编辑成功');
+          emit('ok');
+          handleCancel();
+        } else {
+          message.error('编辑失败：' + res.message);
+        }
+      })
+      .finally(() => {
+        formLoading.value = false;
+      });
+  });
+};
+
+const handleCancel = () => {
+  if (editorRef.value) {
+    editorRef.value.clear();
   }
+  formRef.value.resetFields();
+  visible.value = false;
+};
+
+onBeforeUnmount(() => {
+  const editor = editorRef.value;
+  if (editor == null) return;
+  editor.destroy();
+});
+
+defineExpose({
+  edit,
+});
 </script>
-<style>
-  .subButton{
-    float: right;
-  }
-  .subForm-item{
-    margin-bottom: 0px;
-  }
+
+<style scoped>
+.subButton {
+  float: right;
+}
+.subForm-item {
+  margin-bottom: 0px;
+}
 </style>

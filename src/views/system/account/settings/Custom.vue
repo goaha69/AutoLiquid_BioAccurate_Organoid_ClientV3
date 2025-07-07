@@ -16,7 +16,7 @@
             un-checked-children="白色" 
             :default-checked="navTheme === 'dark'" 
             @change="onChange" 
-          ></a>
+          />
         </div>
       </template>
     </a-list-item>
@@ -27,7 +27,7 @@
         </template>
         <template #description>
           <span>
-            页面风格配色::<a v-html="colorFilter(primaryColor)"></a>
+            页面风格配色: <span v-html="colorFilter(primaryColor)"></span>
           </span>
         </template>
       </a-list-item-meta>
@@ -35,38 +35,26 @@
   </a-list>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue'
+import { useStore } from 'vuex'
 import { colorList } from '@/components/SettingDrawer/settingConfig'
-import { mixin } from '@/utils/mixin'
 
-export default {
-  mixins: [mixin],
-  data () {
-    return {
-    }
-  },
-  filters: {
-    themeFilter (theme) {
-      const themeMap = {
-        'dark': '暗色',
-        'light': '白色'
-      }
-      return themeMap[theme]
-    }
-  },
-  methods: {
-    colorFilter (color) {
-      const c = colorList.find(o => o.color === color)
-      return c && c.key
-    },
+const store = useStore()
 
-    onChange (checked) {
-      if (checked) {
-        this.$store.dispatch('ToggleTheme', 'dark')
-      } else {
-        this.$store.dispatch('ToggleTheme', 'light')
-      }
-    }
+const navTheme = computed(() => store.state.app.theme)
+const primaryColor = computed(() => store.state.app.primaryColor)
+
+const colorFilter = (color) => {
+  const c = colorList.find(o => o.color === color)
+  return c && c.key
+}
+
+const onChange = (checked) => {
+  if (checked) {
+    store.dispatch('ToggleTheme', 'dark')
+  } else {
+    store.dispatch('ToggleTheme', 'light')
   }
 }
 </script>

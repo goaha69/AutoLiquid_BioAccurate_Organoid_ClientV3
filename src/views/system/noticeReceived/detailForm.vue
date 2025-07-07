@@ -2,78 +2,66 @@
   <a-modal
     title="通知公告详情"
     :width="1000"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     :open="visible"
     :footer="null"
-    @cancel="handleCancel">
+    @cancel="handleCancel"
+  >
     <a-spin :spinning="confirmLoading">
-
-      <div style="text-align: center;font-size : 30px">{{ this.contentRecord.title }}</div>
-      <br>
-      <div style="text-align: right;font-size : 10px">
-        <span>(发布人:{{ this.contentRecord.publicUserName }}:</span>
-        <span>发布时间:{{ this.contentRecord.publicTime }} </span>
+      <div style="text-align: center; font-size: 30px">{{ contentRecord.title }}</div>
+      <br />
+      <div style="text-align: right; font-size: 10px">
+        <span>(发布人:{{ contentRecord.publicUserName }})</span>
+        <span>发布时间:{{ contentRecord.publicTime }}</span>
       </div>
-      <a-divider style="margin-top: 5px" ></a>
+      <a-divider style="margin-top: 5px" />
       <div>
-        <label v-html="this.contentRecord.content"></label>
+        <label v-html="contentRecord.content"></label>
       </div>
-
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import {
-    sysNoticeDetail
-  } from '@/api/modular/system/noticeManage'
+<script setup>
+import { ref, reactive } from 'vue'
+import { sysNoticeDetail } from '@/api/modular/system/noticeManage'
 
-  export default {
-    name: 'DetailForm',
-    components: {},
+defineOptions({
+  name: 'DetailForm'
+})
 
-    data() {
-      return {
-        visible: false,
-        confirmLoading: false,
-        contentRecord: ''
-      }
-    },
+const visible = ref(false)
+const confirmLoading = ref(false)
+const contentRecord = reactive({})
 
-    methods: {
-      /**
-       * 初始化方法
-       */
-      detail(record) {
-        this.confirmLoading = true
-        this.visible = true
-        this.sysNoticeDetail(record.id)
-      },
+const detail = (record) => {
+  confirmLoading.value = true
+  visible.value = true
+  fetchNoticeDetail(record.id)
+}
 
-      /**
-       * 查看详情
-       */
-      sysNoticeDetail(id) {
-        sysNoticeDetail({
-          id: id
-        }).then((res) => {
-          this.confirmLoading = false
-          this.contentRecord = res.data
-        })
-      },
+const fetchNoticeDetail = (id) => {
+  sysNoticeDetail({ id: id }).then((res) => {
+    confirmLoading.value = false
+    Object.assign(contentRecord, res.data)
+  })
+}
 
-      handleCancel() {
-        this.visible = false
-      }
-    }
-  }
+const handleCancel = () => {
+  visible.value = false
+}
+
+defineExpose({
+  detail
+})
 </script>
-<style>
-  .subButton {
-    float: right;
-  }
 
-  .subForm-item {
-    margin-bottom: 0px;
-  }
+<style>
+.subButton {
+  float: right;
+}
+
+.subForm-item {
+  margin-bottom: 0px;
+}
 </style>

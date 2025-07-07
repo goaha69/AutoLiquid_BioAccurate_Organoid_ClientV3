@@ -25,7 +25,7 @@
             treeDefaultExpandAll
             @change="e => initrOrgName(e)"
           >
-            <template #title="{ { id } }"><span>{{ id }}</span></template>
+            <template #title="{ id }"><span>{{ id }}</span></template>
           </a-tree-select>
         </a-form-item>
         <a-form-item
@@ -50,7 +50,7 @@
           :wrapperCol="wrapperCol"
           has-feedback
         >
-          <a-input placeholder="请输入流程编:" v-decorator="['schemeCode', {rules: [{required: true, message: '请输入流程名称!'}]}]" ></a>
+          <a-input placeholder="请输入流程编:" v-decorator="['schemeCode', {rules: [{required: true, message: '请输入流程名称!'}]}]" />
         </a-form-item>
         <a-form-item
           label="流程名称"
@@ -58,7 +58,7 @@
           :wrapperCol="wrapperCol"
           has-feedback
         >
-          <a-input placeholder="请输入流程名:" v-decorator="['schemeName', {rules: [{required: true, message: '请输入流程名称!'}]}]" ></a>
+          <a-input placeholder="请输入流程名:" v-decorator="['schemeName', {rules: [{required: true, message: '请输入流程名称!'}]}]" />
         </a-form-item>
         
         <a-form-item
@@ -66,7 +66,7 @@
           :wrapperCol="wrapperCol"
           label="排序"
         >
-          <a-input-number placeholder="请输入排序 style="width: 100%" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" ></a>
+          <a-input-number placeholder="请输入排序" style="width: 100%" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" />
         </a-form-item>
 
         <a-form-item
@@ -101,7 +101,7 @@
         selfForms: [],
         frmType:0,
         formData:[],
-        formTypeList:[{id:0,name:"动态流'},{id:1,name:"自定义流:}],
+        formTypeList:[{id:0,name:"动态流程"},{id:1,name:"自定义流程"}],
         visible: false,
         confirmLoading: false,
         formLoading: true,

@@ -3,7 +3,7 @@
 		<div v-if="container.auxiliaryLine.isOpen && container.auxiliaryLine.isShowXLine" class="auxiliary-line-x" :style="{ top: auxiliaryLinePos.y + 'px' }"></div>
 		<div v-if="container.auxiliaryLine.isOpen && container.auxiliaryLine.isShowYLine" class="auxiliary-line-y" :style="{ left: auxiliaryLinePos.x + 'px' }"></div>
 		<div id="flowContainer" class="flow-container" 
-			:class="{ grid: flowData.config.showGrid, zoomIn: currentTool.type == 'zoom-in', zoomOut: currentTool.type == 'zoom-out', canScale: container.scaleFlag, canDrag  container.dragFlag, canMultiple : rectangleMultiple.flag }"
+			:class="{ grid: flowData.config.showGrid, zoomIn: currentTool.type == 'zoom-in', zoomOut: currentTool.type == 'zoom-out', canScale: container.scaleFlag, canDrag: container.dragFlag, canMultiple: rectangleMultiple.flag }"
 			:style="{ top: container.pos.top + 'px', left: container.pos.left + 'px', transform: 'scale(' + container.scale + ')', transformOrigin: container.scaleOrigin.x + 'px ' + container.scaleOrigin.y + 'px' }"
 			@click.stop="containerHandler" 
 			@mousedown="mousedownHandler"
@@ -12,15 +12,12 @@
 			@mousewheel="scaleContainer"
 			@DOMMouseScroll="scaleContainer"
 			@contextmenu="showContainerContextMenu">
-			<flow-node
-				v-for="(node, index) in flowData.nodeList"
-				:key="index"
-				:node="node"
-				:plumb="plumb"
+			<flow-node v-for="node in flowData.nodeList" :key="node.id" :node="node" :plumb="plumb" :flowData="flowData"
 				:select="currentSelect"
 				:selectGroup="currentSelectGroup"
 				@update:select="currentSelect = $event"
-				@update  selectGroup="currentSelectGroup = $event" : currentTool="currentTool"
+				@update:selectGroup="currentSelectGroup = $event"
+				:currentTool="currentTool"
         :activityId="activityId"
 				@showNodeContextMenu="showNodeContextMenu"
 				@isMultiple="isMultiple"

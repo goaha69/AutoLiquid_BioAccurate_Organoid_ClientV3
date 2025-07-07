@@ -3,18 +3,16 @@
     <a-spin :spinning="formLoading">
       <a-form :form="form" >
          <a-form-item style="display: none;" has-feedback>
-          <a-input v-decorator="['id']" ></a>
+          <a-input v-decorator="['id']" />
         </a-form-item>
 
-        <a-row :gutter="8">
-          <a-col :span="24">
+        <div>
             <a-form-item>
               <a-button type="primary" @click.stop="btnConnect">连接设备</a-button>
-                <a-divider type="vertical"></a>
+                <a-divider type="vertical" />
                 <a-button type="primary" @click="btnInitMachine">全部复位</a-button>
-            </a-form-item>            
-          </a-col>          
-        </a-row>
+            </a-form-item>
+        </div>
 
       </a-form>
     </a-spin>
@@ -104,6 +102,5 @@
 <style scoped>
 .form-footer {
   text-align: right; /* 使按钮居中 */
-       */
 }
 </style>

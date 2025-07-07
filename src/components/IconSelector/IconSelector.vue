@@ -6,8 +6,8 @@
       :value="icon"
       readonly>
       <template #addonAfter>
-        <component :is="getIconComponent(icon)" v-if="icon" :style="{ fontSize: '16px' }" ></component>
-        <question-circle-outlined v-else :style="{ fontSize: '16px' }" ></question>
+        <component :is="getIconComponent(icon)" v-if="icon" :style="{ fontSize: '16px' }" />
+        <question-circle-outlined v-else :style="{ fontSize: '16px' }" />
       </template>
     </a-input>
     
@@ -20,7 +20,7 @@
             class="icon-item"
             :class="{ active: iconName === selectedIcon }"
             @click="selectIcon(iconName)">
-            <component :is="getIconComponent(iconName)" :style="{ fontSize: '24px' }" ></component>
+            <component :is="getIconComponent(iconName)" :style="{ fontSize: '24px' }" />
             <div class="icon-name">{{ iconName }}</div>
           </div>
         </div>
@@ -29,71 +29,68 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, watch, onMounted } from 'vue'
 import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 import { getIconComponent } from '@/utils/iconUtil'
 
-export default {
-  name: 'IconSelector',
-  components: {
-    QuestionCircleOutlined
+defineOptions({
+  name: 'IconSelector'
+})
+
+const props = defineProps({
+  prefixCls: {
+    type: String,
+    default: 'ant-pro-icon-selector'
   },
-  props: {
-    prefixCls: {
-      type: String,
-      default: 'ant-pro-icon-selector'
-    },
-    // eslint-disable-next-line
-    modelValue: {
-      type: String
-    }
-  },
-  data () {
-    return {
-      selectedIcon: this.modelValue || '',
-      currentTab: 'directional',
-      icons: [],
-      visible: false,
-      placeholder: '请选择图标',
-      icon: this.modelValue || '',
-      iconList: []
-    }
-  },
-  watch: {
-    modelValue(val) {
-      this.selectedIcon = val
-      this.autoSwitchTab()
-    }
-  },
-  created () {
-    if (this.modelValue) {
-      this.autoSwitchTab()
-    }
-  },
-  methods: {
-    showModal() {
-      this.visible = true
-    },
-    handleOk() {
-      this.selectedIcon = this.selectedIcon
-      this.$emit('change', this.selectedIcon)
-      this.visible = false
-    },
-    handleCancel() {
-      this.visible = false
-    },
-    selectIcon(iconName) {
-      this.selectedIcon = iconName
-      this.visible = false
-    },
-    autoSwitchTab() {
-      this.icons.some(item => item.icons.some(icon => icon === this.modelValue) && (this.currentTab = item.key))
-    },
-    getIconComponent(iconName) {
-      return getIconComponent(iconName)
-    }
+  modelValue: {
+    type: String
   }
+})
+
+const emit = defineEmits(['change'])
+
+const selectedIcon = ref(props.modelValue || '')
+const currentTab = ref('directional')
+const icons = ref([])
+const visible = ref(false)
+const placeholder = ref('请选择图标')
+const icon = ref(props.modelValue || '')
+const iconList = ref([])
+
+watch(() => props.modelValue, (val) => {
+  selectedIcon.value = val
+  autoSwitchTab()
+})
+
+const showModal = () => {
+  visible.value = true
 }
+
+const handleOk = () => {
+  selectedIcon.value = selectedIcon.value
+  emit('change', selectedIcon.value)
+  visible.value = false
+}
+
+const handleCancel = () => {
+  visible.value = false
+}
+
+const selectIcon = (iconName) => {
+  selectedIcon.value = iconName
+  visible.value = false
+}
+
+const autoSwitchTab = () => {
+  icons.value.some(item => item.icons.some(icon => icon === props.modelValue) && (currentTab.value = item.key))
+}
+
+onMounted(() => {
+  if (props.modelValue) {
+    autoSwitchTab()
+  }
+})
 </script>
 
 <style lang="less" scoped>
@@ -114,7 +111,7 @@ export default {
       &:hover, &.active{
         // box-shadow: 0px 0px 5px 2px @primary-color;
         cursor: pointer;
-        color: @white;
+        color: white;
         background-color: @primary-color;
       }
     }

@@ -1,18 +1,18 @@
 <template>
   <a-row :gutter="24" >
     <a-col :md="5" :sm="24" style="padding: 0 0 0 0;">
-      <a-card  bordered="false" : loading="treeLoading" class="leftTree">
+      <a-card  bordered="false" :loading="treeLoading" class="leftTree">
         <div v-if="this.orgTree!='' ">
           <a-tree
-            style="scroll: true" : treeData="orgTree"
+            style="scroll: true" :treeData="orgTree"
             v-if="orgTree.length"
             @select="handleClick"
             :defaultExpandAll="true"
             :defaultExpandedKeys="defaultExpandedKeys"
-            :replaceFields="replaceFields" ></a>
+            :replaceFields="replaceFields" />
         </div>
         <div v-else>
-          <a-empty :image="simpleImage" ></a>
+          <a-empty :image="simpleImage" />
         </div>
       </a-card>
     </a-col>
@@ -23,16 +23,16 @@
           <div class="table-page-search-wrapper">
           <a-form layout="inline">
             <a-row :gutter="48">
-              <a-col  md="8" : sm="24">
+              <a-col  :md="8" :sm="24">
                 <a-form-item label="流程名称" >
-                  <a-input v-model  value="queryParam.name" allow-clear placeholder="请输入流程名 : ></a>
+                  <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入流程名称" />
                 </a-form-item>
               </a-col>
-              <a-col" :md="8" :sm="24">
+              <a-col :md="8" :sm="24">
                 <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
                 <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
               </a-col>
-              <a-col  md="8" : sm="24">
+              <a-col  :md="8" :sm="24">
               </a-col>
             </a-row>
           </a-form>
@@ -50,47 +50,52 @@
           :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
         >
           <template #operator v-if="hasPerm('flcFlowscheme:add')">
-            <a-button @click="$refs.addForm.add()" ><template #icon><plus-outlined ></plus-outlined></template type="primary" v-if="hasPerm('flcFlowscheme:add')">新增流程</a-button>
+            <a-button @click="$refs.addForm.add()" type="primary" v-if="hasPerm('flcFlowscheme:add')">
+              <template #icon><plus-outlined /></template>
+              新增流程
+            </a-button>
           </template>
-          <span #status #default="text,record" v-if="hasPerm('flcFlowscheme:changeStatus')">
+          <template #status="{ text, record }" v-if="hasPerm('flcFlowscheme:changeStatus')">
             <a-popconfirm
               placement="top"
-              :title="text===0  '确定停用该流程' : '确定启用该流程'"
+              :title="text===0 ? '确定停用该流程' : '确定启用该流程'"
               @confirm="() => changeStatus(text,record)">
               <a>{{ statusFilter(text) }}</a>
             </a-popconfirm>
           </template>
-          <span #status v-else>
+          <template #status="{ text }" v-else>
             {{ statusFilter(text) }}
           </template>
-          <template #action="text, record">
+          <template #action="{ text, record }">
             <a v-if="hasPerm('flcFlowscheme:design')" @click="$refs.designForm.edit(record)">设计</a>
-            <a-divider type="vertical" v-if="hasPerm('flcFlowscheme:design')" ></a>
+            <a-divider type="vertical" v-if="hasPerm('flcFlowscheme:design')" />
             <template v-if="hasPerm('flcFlowscheme:preview')">
               <a @click="$refs.previewForm.edit(record)">预览</a>
             </template>
-            <a-divider type="vertical" v-if="hasPerm('flcFlowscheme  preview') && (hasPerm('flcFlowscheme  edit') || hasPerm('flcFlowscheme : delete'))" ></a>
-            <a-dropdown v-if="hasPerm('flcFlowscheme  edit') || hasPerm('flcFlowscheme : delete')">
+            <a-divider type="vertical" v-if="hasPerm('flcFlowscheme:preview') && (hasPerm('flcFlowscheme:edit') || hasPerm('flcFlowscheme:delete'))" />
+            <a-dropdown v-if="hasPerm('flcFlowscheme:edit') || hasPerm('flcFlowscheme:delete')">
               <a class="ant-dropdown-link">
-                更多 <down-outlined ></down>
+                更多 <down-outlined />
               </a>
-              <a-menu #overlay>
-                <a-menu-item v-if="hasPerm('flcFlowscheme:edit')">
-                  <a @click="$refs.editForm.edit(record)">编辑</a>
-                </a-menu-item>
-                <a-menu-item v-if="hasPerm('flcFlowscheme:delete')">
-                  <a-popconfirm placement="topRight" title="确认删除" @confirm="() => flcFlowschemeDelete(record)">
-                    <a>删除</a>
-                  </a-popconfirm>
-                </a-menu-item>
-              </a-menu>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item v-if="hasPerm('flcFlowscheme:edit')">
+                    <a @click="$refs.editForm.edit(record)">编辑</a>
+                  </a-menu-item>
+                  <a-menu-item v-if="hasPerm('flcFlowscheme:delete')">
+                    <a-popconfirm placement="topRight" title="确认删除" @confirm="() => flcFlowschemeDelete(record)">
+                      <a>删除</a>
+                    </a-popconfirm>
+                  </a-menu-item>
+                </a-menu>
+              </template>
             </a-dropdown>
           </template>
         </s-table>
-        <add-form ref="addForm" @ok="handleOk" ></add>
-        <edit-form ref="editForm" @ok="handleOk" ></edit>
-        <design-form ref="designForm" @ok="handleOk" ></design>
-        <preview-form ref="previewForm" @ok="handleOk" ></preview>
+        <add-form ref="addForm" @ok="handleOk" />
+        <edit-form ref="editForm" @ok="handleOk" />
+        <design-form ref="designForm" @ok="handleOk" />
+        <preview-form ref="previewForm" @ok="handleOk" />
       </a-card>
     </a-col>
   </a-row>
@@ -180,7 +185,7 @@
     created () {
       this.getOrgTree()
       this.sysDictTypeDropDown()
-      if (this.hasPerm('flcFlowscheme  design') || this.hasPerm('flcFlowscheme : preview') || this.hasPerm('flcFlowscheme  edit') || this.hasPerm('flcFlowscheme : delete')) {
+      if (this.hasPerm('flcFlowscheme:design') || this.hasPerm('flcFlowscheme:preview') || this.hasPerm('flcFlowscheme:edit') || this.hasPerm('flcFlowscheme:delete')) {
         this.columns.push({
           title: '操作',
           width: '190px',

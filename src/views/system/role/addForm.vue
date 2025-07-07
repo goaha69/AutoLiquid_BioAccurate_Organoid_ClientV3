@@ -3,105 +3,115 @@
     title="新增角色"
     :width="900"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
     <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
-        <a-form-item
-          label="角色名" :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          has-feedback
-        >
-          <a-input placeholder="请输入角色名" v-decorator="['name', {rules: [{required: true, message: '请输入角色名'}]}]" ></a>
+      <a-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        :label-col="labelCol"
+        :wrapper-col="wrapperCol"
+      >
+        <a-form-item label="角色名" name="name">
+          <a-input v-model:value="form.name" placeholder="请输入角色名" />
         </a-form-item>
 
-        <a-form-item
-          label="唯一编码"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          has-feedback
-        >
-          <a-input placeholder="请输入唯一编码" v-decorator="['code', {rules: [{required: true, message: '请输入唯一编码'}]}]" ></a>
+        <a-form-item label="唯一编码" name="code">
+          <a-input v-model:value="form.code" placeholder="请输入唯一编码" />
         </a-form-item>
 
-        <a-form-item
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          label="排序"
-        >
-          <a-input-number placeholder="请输入排序 style="width: 100%" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" ></a>
+        <a-form-item label="排序" name="sort">
+          <a-input-number v-model:value="form.sort" placeholder="请输入排序" style="width: 100%" :min="1" :max="1000" />
         </a-form-item>
 
-        <a-form-item
-          label="备注"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          has-feedback
-        >
-          <a-textarea :rows="4" placeholder="请输入备注" v-decorator="['remark']"></a-textarea>
+        <a-form-item label="备注" name="remark">
+          <a-textarea v-model:value="form.remark" :rows="4" placeholder="请输入备注" />
         </a-form-item>
-
       </a-form>
-
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import { sysRoleAdd } from '@/api/modular/system/roleManage'
-  export default {
-    data () {
-      return {
-        labelCol: {
-          xs: { span: 24 },
-          sm: { span: 5 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 15 }
-        },
-        visible: false,
-        confirmLoading: false,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      add (record) {
-        this.visible = true
-      },
+<script setup>
+import { ref, reactive } from 'vue'
+import { message } from 'ant-design-vue'
+import { sysRoleAdd } from '@/api/modular/system/roleManage'
 
-      handleSubmit () {
-        const { form: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            sysRoleAdd(values).then((res) => {
-              if (res.success) {
-                this.$message.success('新增成功')
-                this.visible = false
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.form.resetFields()
-              } else {
-                this.$message.error('新增失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
+const props = defineProps({
+  visible: {
+    type: Boolean,
+    required: true,
+  },
+})
+
+const emit = defineEmits(['update:visible', 'ok'])
+
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 5 },
+}
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 15 },
+}
+
+const formRef = ref()
+const confirmLoading = ref(false)
+
+const form = reactive({
+  name: '',
+  code: '',
+  sort: 100,
+  remark: '',
+})
+
+const rules = {
+  name: [{ required: true, message: '请输入角色名' }],
+  code: [{ required: true, message: '请输入唯一编码' }],
+}
+
+const add = () => {
+  // Reset form fields when the modal is opened
+  form.name = ''
+  form.code = ''
+  form.sort = 100
+  form.remark = ''
+}
+
+const handleSubmit = () => {
+  confirmLoading.value = true
+  formRef.value
+    .validate()
+    .then(() => {
+      sysRoleAdd(form)
+        .then((res) => {
+          if (res.success) {
+            message.success('新增成功')
+            emit('update:visible', false)
+            emit('ok')
+            formRef.value.resetFields()
           } else {
-            this.confirmLoading = false
+            message.error('新增失败：' + res.message)
           }
         })
-      },
-      handleCancel () {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
-  }
+        .finally(() => {
+          confirmLoading.value = false
+        })
+    })
+    .catch(() => {
+      confirmLoading.value = false
+    })
+}
+
+const handleCancel = () => {
+  formRef.value.resetFields()
+  emit('update:visible', false)
+}
+
+defineExpose({
+  add,
+})
 </script>

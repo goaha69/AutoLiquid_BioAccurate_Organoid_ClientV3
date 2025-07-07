@@ -12,64 +12,74 @@
 				layout="horizontal">
 				
 				<a-divider orientation="left">画布</a-divider>
-				<a-form-item label="缩小比例" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-slider  min="0.05" : max="0.5"
-						:step="0.05" 
-						:tipFormatter="formatterContainerOnceNarrow" 
-						v-decorator="['containerOnceNarrow', {}]"
-						@afterChange="setContainerOnceNarrow" ></a>
+				<a-form-item label="缩小的倍数" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-slider
+						v-model:value="formData.containerOnceNarrow"
+						:min="0.05"
+						:max="0.5"
+						:step="0.01"
+					/>
 				</a-form-item>
-				<a-form-item label="放大比例" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-slider  min="0.05" : max="0.5"
-						:step="0.05" 
-						:tipFormatter="formatterContainerOnceEnlarge" 
-						v-decorator="['containerOnceEnlarge', {}]"
-						@afterChange="setContainerOnceEnlarge" ></a>
+				<a-form-item label="放大的倍数" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-slider
+						v-model:value="formData.containerOnceEnlarge"
+						:min="0.05"
+						:max="0.5"
+						:step="0.01"
+					/>
 				</a-form-item>
 				
 				<a-divider orientation="left">连线</a-divider>
-				<a-form-item label="类型" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-select v-decorator="['linkType', {}]" @change="setFlowType">
-						<a-select-option value="Bezier">贝塞尔曲</a-select-option>
-						<a-select-option value="Straight">直线</a-select-option>
-						<a-select-option value="Flowchart">流程图线</a-select-option>
-						<a-select-option value="StateMachine">状态线</a-select-option>
+				<a-form-item label="连接线类型" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-select v-model:value="formData.linkType" @change="setFlowType">
+						<a-select-option v-for="item in linkTypeOptions" :key="item.value" :value="item.value">{{ item.label }}</a-select-option>
 					</a-select>
 				</a-form-item>
-				<a-form-item label="颜色" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<colorPicker v-model="linkColor" @change="setLinkColor" ></colorPicker>
+				<a-form-item label="连接线颜色" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-select v-model:value="formData.linkColor" @change="setLinkColor">
+						<a-select-option v-for="item in linkColorOptions" :key="item.value" :value="item.value">{{ item.label }}</a-select-option>
+					</a-select>
 				</a-form-item>
-				<a-form-item label="粗细" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-slider  min="1" : max="10"
-						v-decorator="['linkThickness', {}]"
-						@afterChange="setStrokeWidth" ></a>
+				<a-form-item label="连接线粗细" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-slider
+						v-model:value="formData.linkThickness"
+						:min="1"
+						:max="10"
+						:step="1"
+					/>
 				</a-form-item>
 				
 				<a-divider orientation="left">默认样式</a-divider>
-				<a-form-item label="辅助:" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-switch 
-						:checked="isOpenAuxiliaryLine"
-						v-decorator="['isOpenAuxiliaryLine', {}]" 
-						checkedChildren="开" 
-						unCheckedChildren=":" @change='toggleOpenAuxiliaryLine'></a>
+				<a-form-item label="是否开启辅助线" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-switch
+						v-model:checked="formData.isOpenAuxiliaryLine"
+						checked-children="开"
+						un-checked-children="关"
+					/>
 				</a-form-item>
-				<a-form-item label="自动对齐水平间距" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-slider  min="10" : max="800" 
-						:step="5" 
-						v-decorator="['alignLevelDistance', {}]" 
-						@afterChange="setAlignLevelDistance" ></a>
+				<a-form-item label="水平对齐距离" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-slider
+						v-model:value="formData.alignLevelDistance"
+						:min="1"
+						:max="50"
+						:step="1"
+					/>
 				</a-form-item>
-				<a-form-item label="自动对齐垂直间距" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-slider  min="10" : max="800" 
-						:step="5" 
-						v-decorator="['alignVerticalDistance', {}]" 
-						@afterChange="setAlignVerticalDistance" ></a>
+				<a-form-item label="垂直对齐距离" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-slider
+						v-model:value="formData.alignVerticalDistance"
+						:min="1"
+						:max="50"
+						:step="1"
+					/>
 				</a-form-item>
-				<a-form-item label="微移距离" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-					<a-slider 
-						:min="1" 
-						v-decorator="['movePx', {}]" 
-						@afterChange="setMovePx" ></a>
+				<a-form-item label="移动像素" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+					<a-slider
+						v-model:value="formData.movePx"
+						:min="1"
+						:max="50"
+						:step="1"
+					/>
 				</a-form-item>
 			</a-form>
 		</a-drawer>

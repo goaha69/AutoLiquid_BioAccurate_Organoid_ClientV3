@@ -3,119 +3,70 @@
     title="新增代码生成配置"
     :width="900"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
     @cancel="handleCancel">
-    <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
+    <a-spin :spinning="formLoading">
+      <a-form ref="formRef" :model="formState" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="生成: has-feedback>
-              <a-select
-                style="width: 100%"
-                placeholder="请选择数据库表"
-                v-decorator="['tableName', {rules: [{ required: true, message: '请选择数据库表'}]}]">
-                <a-select-option
-                  v-for="(item,index) in tableNameData"
-                  :key="index"
-                  :value="item.entityName"
-                  @click="tableNameSele(item)">{{ item.tableName }}</a-select-option>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="数据库表" name="tableName">
+              <a-select v-model:value="formState.tableName" placeholder="请选择数据库表" @change="handleTableChange">
+                <a-select-option v-for="item in tableNameData" :key="item.entityName" :value="item.tableName" :item="item">
+                  {{ item.tableName }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item label="业务:" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input
-                placeholder="请输入业务名"
-                v-decorator="['busName', {rules: [{required: true, message: '请输入业务名'}]}]" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="业务名" name="busName">
+              <a-input v-model:value="formState.busName" placeholder="请输入业务名" />
             </a-form-item>
           </a-col>
-          <!--<a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol"
-              label="移除前缀"
-            >
-              <a-radio-group v-decorator="['tablePrefix',{rules: [{ required: true, message: '请选择是否移除前缀'}]}]" >
-                <a-radio v-for="(item,index) in tablePrefixData" :key="index" :value="item.code" @click="tablePrefixRadio(item.code)">{{ item.name }}</a-radio>
-              </a-radio-group>
-            </a-form-item>
-          </a-col> -->
         </a-row>
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol" label="菜单分类" has-feedback>
-              <a-select
-                style="width: 100%"
-                placeholder="请选择应用分类"
-                v-decorator="['menuApplication', {rules: [{ required: true, message: '请选择应用分类'}]}]">
-                <a-select-option
-                  v-for="(item,index) in appData"
-                  :key="index"
-                  :value="item.code"
-                  @click="changeApplication(item.code)">{{ item.name }}</a-select-option>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="菜单分类" name="menuApplication">
+              <a-select v-model:value="formState.menuApplication" placeholder="请选择应用分类">
+                <a-select-option v-for="item in appData" :key="item.code" :value="item.code">
+                  {{ item.name }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <div>
-              <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol" label="父级菜单" has-feedback>
-                <a-tree-select
-                  v-decorator="['menuPid', {rules: [{ required: true, message: '请选择父级菜单'}]}]"
-                  style="width: 100%"
-                  :dropdownStyle="{ maxHeight: '300px', overflow: 'auto' }"
-                  :treeData="menuTreeData"
-                  placeholder="请选择父级菜单"
-                  treeDefaultExpandAll>
-                  <template #title="{ { id } }"><span>{{ id }}
-                  </span></template>
-                </a-tree-select>
-              </a-form-item>
-            </div>
-          </a-col>
-        </a-row>
-        <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item label="命名空间" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input
-                placeholder="请输入代码包'" v-decorator="['nameSpace', {rules: [{required: true, message: '请输入命名空间!'}]}]" ></a>
-            </a-form-item>
-          </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item label="作者姓:" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input
-                placeholder="请输入作者姓'" v-decorator="['authorName', {rules: [{required: true, message: '请输入作者姓名!'}]}]" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="父级菜单" name="menuPid">
+              <a-tree-select
+                v-model:value="formState.menuPid"
+                style="width: 100%"
+                :dropdown-style="{ maxHeight: '300px', overflow: 'auto' }"
+                :tree-data="menuTreeData"
+                placeholder="请选择父级菜单"
+                tree-default-expand-all
+                :field-names="{ children: 'children', label: 'title', value: 'id' }"
+              />
             </a-form-item>
           </a-col>
         </a-row>
-        <!--<a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item
-              label="功能'" :labelCol="labelCol"
-              :wrapperCol="wrapperCol"
-              has-feedback
-            >
-              <a-input placeholder="请输入功能名" v-decorator="['tableComment', {rules: [{required: true, message: '请输入功能名'}]}]" ></a>
-            </a-form-item>
-          </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item
-              label="类名"
-              :labelCol="labelCol"
-              :wrapperCol="wrapperCol"
-              has-feedback
-            >
-              <a-input placeholder="请输入类型" v-decorator="['className', {rules: [{required: true, message: '请输入类名!'}]}]" ></a>
-            </a-form-item>
-          </a-col>
-        </a-row> -->
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol" label="生成方式">
-              <a-radio-group v-decorator="['generateType',{rules: [{ required: true, message: '请选择生成方式'}]}]">
-                <a-radio
-                  v-for="(item,index) in generateTypeData"
-                  :key="index"
-                  :value="item.code"
-                  @click="generateTypeRadio(item.code)">{{ item.name }}</a-radio>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="命名空间" name="nameSpace">
+              <a-input v-model:value="formState.nameSpace" placeholder="请输入代码包名" />
+            </a-form-item>
+          </a-col>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="作者姓名" name="authorName">
+              <a-input v-model:value="formState.authorName" placeholder="请输入作者姓名" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="24">
+          <a-col :md="12" :sm="24">
+            <a-form-item label="生成方式" name="generateType">
+              <a-radio-group v-model:value="formState.generateType">
+                <a-radio v-for="item in generateTypeData" :key="item.code" :value="item.code">
+                  {{ item.name }}
+                </a-radio>
               </a-radio-group>
             </a-form-item>
           </a-col>
@@ -125,222 +76,112 @@
   </a-modal>
 </template>
 
-<script>
-  import {
-    getAppList
-  } from '@/api/modular/system/appManage'
-  import {
-    getMenuTree
-  } from '@/api/modular/system/menuManage'
-  import {
-    codeGenerateInformationList,
-    codeGenerateAdd
-  } from '@/api/modular/gen/codeGenerateManage'
-  export default {
-    data() {
-      return {
-        labelCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 5
-          }
-        },
-        wrapperCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 15
-          }
-        },
-        visible: false,
-        appData: [],
-        menuTreeData: [],
-        tableNameData: [],
-        // tablePrefixData: [],
+<script setup>
+import { ref, reactive, watch } from 'vue';
+import { message } from 'ant-design-vue';
+import { getAppList } from '@/api/modular/system/appManage';
+import { getMenuTree } from '@/api/modular/system/menuManage';
+import { codeGenerateInformationList, codeGenerateAdd } from '@/api/modular/gen/codeGenerateManage';
+import { dictType } from '@/utils/dict'
 
-      generateTypeData: [],
-        confirmLoading: false,
-        // tablePrefixValue: 'N',
+const emit = defineEmits(['ok']);
 
-      tableNameValue: '',
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      add() {
-        this.visible = true
-        this.codeGenerateInformationList()
-        this.dataTypeItem()
-        this.selectedByDefault()
+const labelCol = { xs: { span: 24 }, sm: { span: 5 } };
+const wrapperCol = { xs: { span: 24 }, sm: { span: 15 } };
 
-        // 获取系统应用列表
+const visible = ref(false);
+const confirmLoading = ref(false);
+const formLoading = ref(false);
+const formRef = ref();
 
-      this.getSysApplist()
-      },
-      /**
-       * 默认选中
-       */
-      selectedByDefault() {
-        this.form.getFieldDecorator('nameSpace', {
-          initialValue: 'SuperH2.Core'
-        })
-        // this.form.getFieldDecorator('tablePrefix', { valuePropName: 'checked', initialValue: 'N' })
+const appData = ref([]);
+const menuTreeData = ref([]);
+const tableNameData = ref([]);
+const generateTypeData = ref([]);
 
-      this.form.getFieldDecorator('generateType', {
-          valuePropName: 'checked',
-          initialValue: '2'
-        })
-        this.form.getFieldDecorator('authorName', {
-          initialValue: 'matthew.mak'
-        })
+const formState = reactive({
+  tableName: undefined,
+  busName: '',
+  menuApplication: 'expapp',
+  menuPid: undefined,
+  nameSpace: 'SuperH2.Core',
+  authorName: 'matthew.mak',
+  generateType: '2',
+});
 
-        // 初始化菜单默认选择
+const rules = {
+  tableName: [{ required: true, message: '请选择数据库表' }],
+  busName: [{ required: true, message: '请输入业务名' }],
+  menuApplication: [{ required: true, message: '请选择应用分类' }],
+  menuPid: [{ required: true, message: '请选择父级菜单' }],
+  nameSpace: [{ required: true, message: '请输入命名空间' }],
+  authorName: [{ required: true, message: '请输入作者姓名' }],
+  generateType: [{ required: true, message: '请选择生成方式' }],
+};
 
-      this.form.getFieldDecorator('menuApplication', {
-          initialValue: 'expapp'
-        })
-        this.changeApplication('expapp')
-      },
-      /**
-       * 获得所有数据库的表
-       */
-      codeGenerateInformationList() {
-        codeGenerateInformationList().then((res) => {
-          this.tableNameData = res.data
-        })
-      },
-      /**
-       * 获得菜单所属应
-       */
-      getSysApplist() {
-        return getAppList().then((res) => {
-          if (res.success) {
-            this.appData = res.data
-          } else {
-            this.$message.warning(res.message)
-          }
-        })
-      },
-      /**
-       * 获取字典数据
-       */
-      dataTypeItem() {
-        this.tablePrefixData = this.$options.filters['dictData']('yes_or_no')
-        this.generateTypeData = this.$options.filters['dictData']('code_gen_create_type')
-        this.generateTypeData.splice(0, 1) // 默认去掉从压缩包下载
-
-    },
-      /**
-       * 提交表单
-       */
-      handleSubmit() {
-        const {
-          form: {
-            validateFields
-          }
-        } = this
-        validateFields((errors, values) => {
-          if (!errors) {
-            this.confirmLoading = true
-            codeGenerateAdd(values).then((res) => {
-              if (res.success) {
-                this.$message.success('新增成功')
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('新增失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          }
-        })
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-        // 清空他们三个
-
-      this.form.getFieldDecorator('className', {
-          initialValue: ''
-        })
-        this.form.getFieldDecorator('busName', {
-          initialValue: ''
-        })
-        // this.form.getFieldDecorator('tableComment', { initialValue: '' })
-
-    },
-      /**
-       * 选择数据库列
-       */
-      tableNameSele(item) {
-        this.tableNameValue = item.tableName
-        // this.form.getFieldDecorator('tableComment', { initialValue: item.tableComment })
-
-      this.form.getFieldDecorator('busName', {
-          initialValue: item.tableComment
-        })
-        // this.settingDefaultValue()
-
-    },
-      /**
-       * 菜单所属应用change事件
-       */
-      changeApplication(value) {
-        getMenuTree({
-          'application': value
-        }).then((res) => {
-          if (res.success) {
-            this.menuTreeData = [{
-              'id': '-1',
-              'parentId': '0',
-              'title': '顶级',
-              'value': '0',
-              'pid': '0',
-              'children': res.data
-            }]
-            this.form.getFieldDecorator('menuPid', {
-              initialValue: '0'
-            })
-          } else {
-            this.$message.warning(res.message)
-          }
-        })
-      },
-      // /**
-      //  * 选择是否移除前缀触发
-      //  */
-      // tablePrefixRadio (tablePrefixType) {
-      //   this.tablePrefixValue = tablePrefixType
-      //   this.settingDefaultValue()
-      // },
-      /**
-       * 设置默认
-       */
-      settingDefaultValue() {
-        // const tableName = this.classNameToHump()
-        // this.form.getFieldDecorator('className', { initialValue: tableName })
-        // this.form.getFieldDecorator('busName', { initialValue: tableName' + "业务"})
-
-    },
-      /**
-       * 选择生成方式
-       */
-      generateTypeRadio(generateType) {
-        // if (generateType === '1') {
-        //   this.packageNameShow = true
-        // } else {
-        //   this.packageNameShow = false
-        //   this.form.setFieldsValue({ nameSpace: 'Dilon.Application' })
-        // }
-
-    }
-    }
+watch(() => formState.menuApplication, (appCode) => {
+  if (appCode) {
+    getMenuTree({ application: appCode }).then((res) => {
+      menuTreeData.value = res.data;
+    });
+  } else {
+    menuTreeData.value = [];
   }
+});
+
+const handleTableChange = (value, option) => {
+  if (option && option.item) {
+    formState.busName = option.item.busName;
+    formState.nameSpace = `SuperH2.Service.Dto.${option.item.busName}`;
+  }
+};
+
+const add = async () => {
+  visible.value = true;
+  formLoading.value = true;
+  formRef.value?.resetFields();
+  try {
+    const [tables, apps] = await Promise.all([
+      codeGenerateInformationList(),
+      getAppList(),
+    ]);
+    tableNameData.value = tables.data;
+    appData.value = apps.data;
+    generateTypeData.value = dictType('code_gen_create_type').filter(d => d.code !== '1');
+    
+    // Trigger initial menu load
+    if (formState.menuApplication) {
+        const menuRes = await getMenuTree({ application: formState.menuApplication });
+        menuTreeData.value = menuRes.data;
+    }
+
+  } catch (error) {
+    message.error('加载基础数据失败');
+  } finally {
+    formLoading.value = false;
+  }
+};
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate();
+    confirmLoading.value = true;
+    await codeGenerateAdd(formState);
+    message.success('新增成功');
+    visible.value = false;
+    emit('ok');
+  } catch (error) {
+    // validation error
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+const handleCancel = () => {
+  visible.value = false;
+};
+
+defineExpose({
+  add,
+});
 </script>

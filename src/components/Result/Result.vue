@@ -1,7 +1,7 @@
 <template>
   <div class="result">
-    <check-circle-outlined v-if="localIsSuccess" :class="{ 'icon': true, [`${type}`]: true }" ></check>
-    <close-circle-outlined v-else :class="{ 'icon': true, [`${type}`]: true }" ></close>
+    <check-circle-outlined v-if="localIsSuccess" :class="{ 'icon': true, [`${type}`]: true }" />
+    <close-circle-outlined v-else :class="{ 'icon': true, [`${type}`]: true }" />
     <div class="title">
       <slot name="title">{{ title }}</slot>
     </div>
@@ -17,45 +17,40 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed } from 'vue'
 import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons-vue'
 
-const resultEnum = ['success', 'error']
+defineOptions({
+  name: 'Result'
+})
 
-export default {
-  name: 'Result',
-  components: {
-    CheckCircleOutlined,
-    CloseCircleOutlined
+const props = defineProps({
+  /** @Deprecated */
+  isSuccess: {
+    type: Boolean,
+    default: false
   },
-  props: {
-    /** @Deprecated */
-    isSuccess: {
-      type: Boolean,
-      default: false
-    },
-    type: {
-      type: String,
-      default: resultEnum[0],
-      validator (val) {
-        return (val) => resultEnum.includes(val)
-      }
-    },
-    title: {
-      type: String,
-      default: ''
-    },
-    description: {
-      type: String,
-      default: ''
+  type: {
+    type: String,
+    default: 'success',
+    validator (val) {
+      return ['success', 'error'].includes(val)
     }
   },
-  computed: {
-    localIsSuccess: function () {
-      return this.type === resultEnum[0]
-    }
+  title: {
+    type: String,
+    default: ''
+  },
+  description: {
+    type: String,
+    default: ''
   }
-}
+})
+
+const localIsSuccess = computed(() => {
+  return props.type === 'success'
+})
 </script>
 
 <style lang="less" scoped>

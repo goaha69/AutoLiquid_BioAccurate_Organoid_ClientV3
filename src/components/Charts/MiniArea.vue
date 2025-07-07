@@ -2,15 +2,21 @@
   <div class="antv-chart-mini">
     <div class="chart-wrapper" :style="{ height: 46 }">
       <v-chart :force-fit="true" :height="height" :data="data" :padding="[36, 0, 18, 0]">
-        <v-tooltip ></v>
-        <v-smooth-area position="x*y" ></v>
+        <v-tooltip />
+        <v-smooth-area position="x*y" />
       </v-chart>
     </div>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue'
 import moment from 'moment'
+
+defineOptions({
+  name: 'MiniArea'
+})
+
 const data = []
 const beginDay = new Date().getTime()
 
@@ -28,6 +34,7 @@ const tooltip = [
     value: y
   })
 ]
+
 const scale = [{
   dataKey: 'x',
   min: 2
@@ -38,17 +45,7 @@ const scale = [{
   max: 22
 }]
 
-export default {
-  name: 'MiniArea',
-  data () {
-    return {
-      data,
-      tooltip,
-      scale,
-      height: 100
-    }
-  }
-}
+const height = ref(100)
 </script>
 
 <style lang="less" scoped>

@@ -3,161 +3,131 @@
     title="编辑定时任务"
     :width="900"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
-    @cancel="handleCancel">
+    @cancel="handleCancel"
+  >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-row  gutter="24" style="display : none;">
-          <a-col  md="12" : sm="24">
-            <a-form-item>
-              <a-input v-decorator="['id']" ></a>
-            </a-form-item>
-          </a-col>
-        </a-row>
+      <a-form ref="formRef" :model="formState" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item v-show="false">
+          <a-input v-model:value="formState.id" />
+        </a-form-item>
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item :label="jobNameLabel" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-select  placeholder="jobNamePlaceholder" : showArrow="true"
+          <a-col :md="12" :sm="24">
+            <a-form-item :label="jobNameLabel" name="jobName">
+              <a-select
+                v-model:value="formState.jobName"
+                :placeholder="jobNamePlaceholder"
+                show-arrow
                 :mode="jobNameMode"
-                v-decorator="['jobName', { rules: [{ required: true, message: '请输入任务名称!' }] }]">
-                <a-select-option
-                  v-for="(item, index) in JobNameData"
-                  :key="index"
-                  :value="item.jobName"
-                  @click="onChangeJobName(item)">{{ item.jobName }}</a-select-option>
+                @change="onChangeJobName"
+              >
+                <a-select-option v-for="item in jobNameData" :key="item.jobName" :value="item.jobName">
+                  {{ item.jobName }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol">
+          <a-col :md="12" :sm="24">
+            <a-form-item name="requestUrl">
               <template #label>
                 <a-tooltip title="Run类型:类型方法名,http类型:URL地址">
-                  <a-icon type="question-circle-o" ></a>
-                </a-tooltip> ' 请求地址
-              </span>
-              <a-input
-                placeholder="请输入请地址"
-                v-decorator="['requestUrl', { rules: [{ required: true, message: '请输入请求地址'}] }]" ></a>
+                  <question-circle-outlined />
+                </a-tooltip>
+                &nbsp;请求地址
+              </template>
+              <a-input v-model:value="formState.requestUrl" placeholder="请输入请求地址" />
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="24">
-          <a-col  md="24" : sm="24">
-            <a-form-item  labelCol="labelCol_JG" : wrapperCol="wrapperCol_JG" label="请求类型">
-              <a-radio-group v-decorator="['requestType', { rules: [{ required: true, message: '请选择请求类别'}] }]">
-                <a-radio
-                  v-for="(item, index) in requestTypeEnumDataDropDown"
-                  :key="index"
-                  :value="parseInt(item.code)"
-                  @click="onChangeRequestType(item.code)">{{ item.value }}</a-radio>
+          <a-col :md="24" :sm="24">
+            <a-form-item label="请求类型" :label-col="labelCol_JG" :wrapper-col="wrapperCol_JG" name="requestType">
+              <a-radio-group v-model:value="formState.requestType">
+                <a-radio v-for="item in requestTypeEnumDataDropDown" :key="item.code" :value="item.code">
+                  {{ item.value }}
+                </a-radio>
               </a-radio-group>
             </a-form-item>
           </a-col>
         </a-row>
 
-        <a-row :gutter="24">
-          <div v-show="showHeaders">
-            <a-col  md="24" : sm="24">
-              <a-form-item  labelCol="labelCol_JG" : wrapperCol="wrapperCol_JG" label="请求类型 has-feedback>
-                <a-input placeholder="请输入请求头" style="width: 100%" v-decorator="['headers']" ></a>
-              </a-form-item>
-            </a-col>
-          </div>
-        </a-row>
-
-        <a-row :gutter="24">
-          <a-col  md="24" : sm="24">
-            <a-form-item  labelCol="labelCol_JG" : wrapperCol="wrapperCol_JG"
-              :label="requestParametersLabel"
-              has-feedback>
-              <a-textarea :rows="1" :placeholder="requestParametersPlaceholder" v-decorator="['requestParameters']">
-              </a-textarea>
+        <a-row :gutter="24" v-show="showHeaders">
+          <a-col :md="24" :sm="24">
+            <a-form-item label="请求头" :label-col="labelCol_JG" :wrapper-col="wrapperCol_JG" name="headers">
+              <a-input v-model:value="formState.headers" placeholder="请输入请求头" />
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol" label="定时器类型>
-              <a-select
-                style="width: 100%"
-                placeholder="请选择定时器类'" @change="onChangeTimerType"
-                v-decorator="['timerType', { rules: [{ required: true, message: '请选择定时器类型!' }] }]">
-                <a-select-option v-for="(item, index) in spareTimeTypeDropDown" :key="index" :value="item.code">{{
-                  item.value
-                }}</a-select-option>
+          <a-col :md="24" :sm="24">
+            <a-form-item :label="requestParametersLabel" :label-col="labelCol_JG" :wrapper-col="wrapperCol_JG" name="requestParameters">
+              <a-textarea v-model:value="formState.requestParameters" :rows="1" :placeholder="requestParametersPlaceholder" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+
+        <a-row :gutter="24">
+          <a-col :md="12" :sm="24">
+            <a-form-item label="定时器类型" name="timerType">
+              <a-select v-model:value="formState.timerType">
+                <a-select-option v-for="item in spareTimeTypeDropDown" :key="item.code" :value="item.code">
+                  {{ item.value }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol"
-              label="执行间隔(秒)"
-              has-feedback
-              v-if="VisibleTimerType">
-              <a-input-number
-                placeholder="请输入执行间'
-                style="width: 100%"
-                v-decorator="['interval', { rules: [{ required: true, message: '请输入执行间隔!' }] }]"
-                :min="1" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item v-if="visibleTimerType" label="执行间隔(秒)" name="interval">
+              <a-input-number v-model:value="formState.interval" placeholder="请输入执行间隔" style="width: 100%" :min="1" />
             </a-form-item>
-            <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="任务表达式 has-feedback" v-else>
-              <nobr>
-                <a-input
-                  placeholder="请输入任务表达式"
-                  v-decorator="['cron', { rules: [{ required: true, message: '请输入任务表达式'}] }]" ></a>
-                <a href="https:// www.bejson.com/othertools/cron/" target="_Blank">参/a>
-              </nobr>
+            <a-form-item v-else label="任务表达式" name="cron">
+              <a-input v-model:value="formState.cron" placeholder="请输入任务表达式" />
+              <a href="https://www.bejson.com/othertools/cron/" target="_blank">参考</a>
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol">
+          <a-col :md="12" :sm="24">
+            <a-form-item>
               <template #label>
-                <a-tooltip title="新增任务后立即执行,项目启动后立即执行>
-                  <a-icon" type="question-circle-o" ></a>
-                </a-tooltip> ' 立即执行
-              </span>
-              <a-switch
-                id="startNow"
-                checkedChildren="'
-                unCheckedChildren="'" v-decorator="['startNow', { valuePropName: 'checked' }]" ></a>
+                <a-tooltip title="新增任务后立即执行,项目启动后立即执行">
+                  <question-circle-outlined />
+                </a-tooltip>
+                &nbsp;立即执行
+              </template>
+              <a-switch v-model:checked="formState.startNow" />
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol" label="只执行一次>
-              <a-switch
-                id="doOnce"
-                checkedChildren="'
-                unCheckedChildren=":" v-decorator="['doOnce', { valuePropName: 'checked' }]" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="只执行一次">
+              <a-switch v-model:checked="formState.doOnce" />
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol">
-              <template #label>
-                <a-tooltip title="并行执行不会等待当前任务完成,发起执行后立即开始下次任务的倒计时.串行执行会等待当前任务完成才开始下次任务的倒计时>
-                  <a-icon" type="question-circle-o" ></a>
-                </a-tooltip> ' 执行类型
-              </span>
-              <a-select
-                style="width: 100%"
-                placeholder="请选择执行类型"
-                v-decorator="['executeType', { rules: [{ required: true, message: '请选择执行类型'}] }]">
-                <a-select-option v-for="(item, index) in executeTypeDropDown" :key="index" :value="item.code">{{
-                  item.value
-                }}</a-select-option>
+          <a-col :md="12" :sm="24">
+            <a-form-item name="executeType">
+               <template #label>
+                <a-tooltip title="并行执行不会等待当前任务完成,发起执行后立即开始下次任务的倒计时.串行执行会等待当前任务完成才开始下次任务的倒计时">
+                  <question-circle-outlined />
+                </a-tooltip>
+                &nbsp;执行类型
+              </template>
+              <a-select v-model:value="formState.executeType" placeholder="请选择执行类型">
+                <a-select-option v-for="item in executeTypeDropDown" :key="item.code" :value="item.code">
+                  {{ item.value }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item label="备注" :labelCol="labelCol_JG" :wrapperCol="wrapperCol_JG" has-feedback>
-              <a-input placeholder="请输入备注" v-decorator="['remark']"></a-input>
+           <a-col :md="12" :sm="24">
+            <a-form-item label="备注" name="remark">
+              <a-input v-model:value="formState.remark" placeholder="请输入备注" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -166,174 +136,158 @@
   </a-modal>
 </template>
 
-<script>
-  import {sysTimersEdit,sysTimersLocalJobList} from '@/api/modular/system/timersManage'
-  import {sysEnumDataList, sysEnumDataListByField} from '@/api/modular/system/enumManage'
+<script setup>
+import { ref, reactive, watch } from 'vue'
+import { message } from 'ant-design-vue'
+import { sysTimersEdit, sysTimersLocalJobList } from '@/api/modular/system/timersManage'
+import { sysEnumDataList, sysEnumDataListByField } from '@/api/modular/system/enumManage'
+import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 
-  export default {
-    data() {
-      return {
-        labelCol: { xs: { span: 24},sm: { span: 6}},
-        wrapperCol: {xs: {span: 24},sm: {span: 16}},
-        labelCol_JG: { xs: {span: 24},sm: {span: 3}},
-        wrapperCol_JG: {xs: {span: 24}, sm: { span: 20}},
-        visible: false,
-        confirmLoading: false,
-        VisibleTimerType: true,
-        requestTypeEnumDataDropDown: [],
-        spareTimeTypeDropDown: [],
-        executeTypeDropDown: [],
-        LocalJobsDropDown: [],
-        JobNameData: [],
-        formLoading: false,
-        jobNameLabel: '任务名称',
-        jobNameMode: 'combobox',
-        jobNamePlaceholder: '请输入任务名',
-        requestParametersLabel: '请求参数',
-        requestParametersPlaceholder: '请输入请求参',
-        showHeaders: true,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      edit(record) {
-        this.visible = true
-        this.formLoading = true
-        this.sysEnumDataList()
+const emit = defineEmits(['ok'])
 
-        // eslint-disable-next-line eqeqeq
+const labelCol = { xs: { span: 24 }, sm: { span: 6 } }
+const wrapperCol = { xs: { span: 24 }, sm: { span: 16 } }
+const labelCol_JG = { xs: { span: 24 }, sm: { span: 3 } }
+const wrapperCol_JG = { xs: { span: 24 }, sm: { span: 20 } }
 
-      this.VisibleTimerType = record.timerType == 0
+const visible = ref(false)
+const confirmLoading = ref(false)
+const formLoading = ref(false)
+const visibleTimerType = ref(true)
+const showHeaders = ref(true)
 
-        if (record.requestType === 0) {
-          this.onChangeRequestType(record.requestType)
-        }
+const jobNameLabel = ref('任务名称')
+const jobNameMode = ref('combobox')
+const jobNamePlaceholder = ref('请输入任务名')
+const requestParametersLabel = ref('请求参数')
+const requestParametersPlaceholder = ref('请输入请求参数')
 
-        setTimeout(() => {
-          this.form.setFieldsValue({
-            id: record.id,
-            jobName: record.jobName,
-            requestUrl: record.requestUrl,
-            requestType: record.requestType,
-            timerType: record.timerType,
-            cron: record.cron,
-            interval: record.interval,
-            headers: record.headers,
-            requestParameters: record.requestParameters,
-            remark: record.remark,
-            startNow: record.startNow,
-            doOnce: record.doOnce,
-            executeType: record.executeType
-          })
-        }, 100)
-      },
+const requestTypeEnumDataDropDown = ref([])
+const spareTimeTypeDropDown = ref([])
+const executeTypeDropDown = ref([])
+const localJobsDropDown = ref([])
+const jobNameData = ref([])
 
-      /**
-       * 获取枚举数据
-       */
-      sysEnumDataList() {
-        sysEnumDataList({
-          enumName: 'RequestTypeEnum'
-        }).then(res => {
-          this.requestTypeEnumDataDropDown = res.data
-        })
-        sysEnumDataListByField({
-          EntityName: 'SuperH2.Entity.System.SysTimer',
-          FieldName: 'TimerType'
-        }).then(res => {
-          this.spareTimeTypeDropDown = res.data
-        })
-        sysEnumDataListByField({
-          EntityName: 'SuperH2.Entity.System.SysTimer',
-          FieldName: 'ExecuteType'
-        }).then(res => {
-          this.executeTypeDropDown = res.data
-        })
-        this.formLoading = false
-      },
+const formRef = ref()
+const formState = reactive({
+  id: '',
+  jobName: '',
+  requestUrl: '',
+  requestType: 2,
+  headers: '',
+  requestParameters: '',
+  timerType: 0,
+  interval: null,
+  cron: '',
+  startNow: false,
+  doOnce: false,
+  executeType: 0,
+  remark: ''
+})
 
-      onChangeTimerType(e) {
-        this.VisibleTimerType = e === 0
-      },
+const rules = {
+  jobName: [{ required: true, message: '请输入任务名称!' }],
+  requestUrl: [{ required: true, message: '请输入请求地址' }],
+  requestType: [{ required: true, message: '请选择请求类别' }],
+  timerType: [{ required: true, message: '请选择定时器类型!' }],
+  executeType: [{ required: true, message: '请选择执行类型' }],
+  interval: [{ required: true, message: '请输入执行间隔!' }],
+  cron: [{ required: true, message: '请输入任务表达式' }]
+}
 
-      onChangeRequestType(e) {
-        this.showHeaders = e !== 0
-        if (!this.showHeaders) {
-          if (this.LocalJobsDropDown.length === 0) {
-            sysTimersLocalJobList().then(res => {
-              this.LocalJobsDropDown = res.data
-              this.JobNameData = res.data
-            })
-          } else {
-            this.JobNameData = this.LocalJobsDropDown
-          }
-          this.jobNameLabel = '任务方法'
-          this.jobNameMode = 'default'
-          this.jobNamePlaceholder = '请选择任务方法'
-          this.requestParametersLabel = '配置项参'
-          this.requestParametersPlaceholder = '请输入配置项参数'
-        } else {
-          this.JobNameData = []
-          this.jobNameLabel = '任务名称'
-          this.jobNameMode = 'combobox'
-          this.jobNamePlaceholder = '请输入任务名'
-          this.requestParametersLabel = '请求参数'
-          this.requestParametersPlaceholder = '请输入请求参'}
-        this.form.resetFields()
-      },
-
-      onChangeJobName(e) {
-        this.onChangeTimerType(e.timerType)
-        setTimeout(() => {
-          this.form.setFieldsValue({
-            requestUrl: e.requestUrl,
-            startNow: e.startNow,
-            doOnce: e.doOnce,
-            interval: e.interval,
-            timerType: e.timerType,
-            remark: e.remark,
-            executeType: e.executeType,
-            cron: e.cron
-          })
-        }, 100)
-      },
-
-      handleSubmit() {
-        const {
-          form: {
-            validateFields
-          }
-        } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            sysTimersEdit(values)
-              .then(res => {
-                if (res.success) {
-                  this.$message.success('编辑成功')
-                  this.visible = false
-                  this.confirmLoading = false
-                  this.$emit('ok', values)
-                  this.form.resetFields()
-                } else {
-                  this.$message.error('编辑失败::' + res.message)
-                }
-              })
-              .finally(res => {
-                this.confirmLoading = false
-              })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
+const edit = async (record) => {
+  visible.value = true
+  if (formRef.value) {
+    formRef.value.resetFields()
   }
+  Object.assign(formState, record)
+  await fetchEnumData()
+}
+
+const fetchEnumData = async () => {
+  try {
+    formLoading.value = true
+    const [requestTypeRes, spareTimeTypeRes, executeTypeRes] = await Promise.all([
+      sysEnumDataList({ enumName: 'RequestTypeEnum' }),
+      sysEnumDataListByField({ EntityName: 'SuperH2.Entity.System.SysTimer', FieldName: 'TimerType' }),
+      sysEnumDataListByField({ EntityName: 'SuperH2.Entity.System.SysTimer', FieldName: 'ExecuteType' })
+    ])
+    requestTypeEnumDataDropDown.value = requestTypeRes.data
+    spareTimeTypeDropDown.value = spareTimeTypeRes.data
+    executeTypeDropDown.value = executeTypeRes.data
+    
+    // After enums are loaded, trigger watchers
+    await handleRequestTypeChange(formState.requestType)
+
+  } finally {
+    formLoading.value = false
+  }
+}
+
+watch(() => formState.timerType, (newVal) => {
+  visibleTimerType.value = newVal === 0
+  if(formRef.value){
+     formRef.value.clearValidate(visibleTimerType.value ? 'cron' : 'interval');
+  }
+}, { immediate: true })
+
+
+watch(() => formState.requestType, (newVal) => {
+    handleRequestTypeChange(newVal)
+})
+
+const handleRequestTypeChange = async (requestType) => {
+  showHeaders.value = requestType !== 0
+  if (!showHeaders.value) { // 选择了Run类型
+    jobNameLabel.value = '任务方法'
+    jobNameMode.value = 'default'
+    jobNamePlaceholder.value = '请选择任务方法'
+    requestParametersLabel.value = '程序集'
+    requestParametersPlaceholder.value = '请输入任务所在程序集'
+
+    if (localJobsDropDown.value.length === 0) {
+      const res = await sysTimersLocalJobList()
+      localJobsDropDown.value = res.data
+    }
+    jobNameData.value = localJobsDropDown.value
+  } else { // 选择了Http/https类型
+    jobNameLabel.value = '任务名称'
+    jobNameMode.value = 'combobox'
+    jobNamePlaceholder.value = '请输入任务名'
+    requestParametersLabel.value = '请求参数'
+    requestParametersPlaceholder.value = '请输入请求参数'
+    jobNameData.value = []
+  }
+}
+
+const onChangeJobName = (value, option) => {
+  const selectedJob = jobNameData.value.find(item => item.jobName === value)
+  if(selectedJob){
+      formState.requestUrl = selectedJob.requestUrl
+      formState.requestParameters = selectedJob.requestParameters
+  }
+}
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate()
+    confirmLoading.value = true
+    await sysTimersEdit(formState)
+    message.success('编辑成功')
+    visible.value = false
+    emit('ok')
+  } catch (error) {
+    // console.error('validate error:', error)
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+const handleCancel = () => {
+  visible.value = false
+}
+
+defineExpose({
+  edit
+})
 </script>

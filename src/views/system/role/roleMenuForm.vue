@@ -3,215 +3,186 @@
     title="授权菜单"
     :width="600"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-form-item label="应用名称" :labelCol="labelCol" :wrapperCol="wrapperCol">
-          <a-select @change="appChange" v-model="selectValue">
-            <a-select-option v-for="(item, index) in appList" :key="index" :value="item.appCode">{{
-              item.appName
-            }}</a-select-option>
+      <a-form>
+        <a-form-item label="应用名称" :label-col="labelCol" :wrapper-col="wrapperCol">
+          <a-select v-model:value="selectValue" @change="appChange">
+            <a-select-option v-for="item in appList" :key="item.appCode" :value="item.appCode">
+              {{ item.appName }}
+            </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="菜单权限" :labelCol="labelCol" :wrapperCol="wrapperCol" class="grantMenuScrollbar">
+        <a-form-item label="菜单权限" :label-col="labelCol" :wrapper-col="wrapperCol" class="grantMenuScrollbar">
           <a-tree
-            v-model="checkedKeys"
+            v-model:checkedKeys="checkedKeys"
+            v-model:expandedKeys="expandedKeys"
             multiple
-            checkable  auto-expand-parent="autoExpandParent" : expanded-keys="expandedKeys"
+            checkable
+            auto-expand-parent
             :tree-data="menuTreeData"
-            :selected-keys="selectedKeys"
-            :replaceFields="replaceFields"
-            @expand="onExpand"
+            :replace-fields="replaceFields"
             @check="onCheck"
-          ></a>
+          />
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-import { SysMenuTreeForGrant } from '@/api/modular/system/menuManage'
-import { sysRoleOwnMenu, sysRoleGrantMenu } from '@/api/modular/system/roleManage'
+<script setup>
+import { ref } from 'vue';
+import { message } from 'ant-design-vue';
+import { SysMenuTreeForGrant } from '@/api/modular/system/menuManage';
+import { sysRoleOwnMenu, sysRoleGrantMenu } from '@/api/modular/system/roleManage';
 
-export default {
-  data() {
-    return {
-      labelCol: {
-        style: {
-          'padding-right': '20px',
-        },
-        xs: {
-          span: 24,
-        },
-        sm: {
-          span: 5,
-        },
-      },
-      wrapperCol: {
-        xs: {
-          span: 24,
-        },
-        sm: {
-          span: 15,
-        },
-      },
-      menuTreeData: [],
-      expandedKeys: [],
-      checkedKeys: [],
-      halfCheckedKeys: [],
-      visible: false,
-      confirmLoading: false,
-      formLoading: true,
-      autoExpandParent: true,
-      selectedKeys: [],
-      subValues: [],
-      tenantEntity: [],
-      replaceFields: {
-        key: 'id',
-      },
-      form: this.$form.createForm(this),
-      commitKeys: [],
-      leastChild: [],
-      appList: [],
-      menuList: [],
-      selectValue: null,
+const props = defineProps({
+  visible: Boolean,
+});
+
+const emit = defineEmits(['update:visible', 'ok']);
+
+const labelCol = {
+  style: { 'padding-right': '20px' },
+  xs: { span: 24 },
+  sm: { span: 5 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 15 },
+};
+
+const menuTreeData = ref([]);
+const expandedKeys = ref([]);
+const checkedKeys = ref([]);
+const confirmLoading = ref(false);
+const formLoading = ref(true);
+const replaceFields = { key: 'id', title: 'name' };
+const roleEntity = ref(null);
+const appList = ref([]);
+const menuList = ref([]);
+const selectValue = ref(null);
+const commitKeys = ref([]);
+const leastChild = ref([]);
+
+const roleMenu = async (record) => {
+  formLoading.value = true;
+  roleEntity.value = record;
+  try {
+    const menuRes = await SysMenuTreeForGrant({ type: 2 });
+    if (menuRes.success) {
+      appList.value = menuRes.data.appList;
+      menuList.value = menuRes.data.menuTree;
+      if (appList.value.length > 0) {
+        selectValue.value = appList.value[0].appCode;
+      }
     }
-  },
-
-  methods: {
-    // 初始化方法
-
-  roleMenu(record) {
-      this.formLoading = true
-      this.tenantEntity = record
-      this.visible = true
-      // 获取菜单列表
-
-    SysMenuTreeForGrant({type:2}).then((res) => {
-        if (res.success) {
-          this.appList = res.data.appList
-          this.menuList = res.data.menuTree
-          this.selectValue = this.appList[0].appCode
-          // 此租户已有菜单权限
-
-        sysRoleOwnMenu({
-            id: record.id,
-            type:2
-          }).then((res) => {
-            if (res.success) {
-              this.commitKeys = res.data
-              if (this.selectValue) {
-                this.appChange(this.selectValue)
-              }
-            }
-            this.formLoading = false
-          })
-        }
-      })
-    },
-    appChange(value) {
-      this.formLoading = true
-      this.selectValue = value
-      let menuList = this.menuList.filter((f) => f.appCode == value)
-      this.menuTreeData = menuList
-      this.getLeastChild(menuList)
-      // 默认展开目录
-
-    this.expandedKeys = []
-      menuList.forEach((item) => {
-        this.expandedKeys.push(item.id)
-      })
-      let menuInfo = this.commitKeys.find((f) => f.appCode == value)
-      if (!menuInfo) {
-        menuInfo = {
-          appCode: value,
-          menuIdList: [],
-        }
-        this.commitKeys.push(menuInfo)
+    const ownMenuRes = await sysRoleOwnMenu({ id: record.id, type: 2 });
+    if (ownMenuRes.success) {
+      commitKeys.value = ownMenuRes.data;
+      if (selectValue.value) {
+        appChange(selectValue.value);
       }
-      this.pickCheckedKeys(menuInfo.menuIdList)
-      this.formLoading = false
-    },
-    getLeastChild(data) {
-      data.forEach((item) => {
-        this.pushLeastChild(item)
-      })
-    },
-    pushLeastChild(e) {
-      if (e.children.length > 0) {
-        this.getLeastChild(e.children)
-        return
-      }
-      this.leastChild.push(e.id)
-    },
-    pickCheckedKeys(data) {
-      data.forEach((item) => {
-        if (this.leastChild.includes(item)) {
-          this.checkedKeys.push(item)
-        }
-      })
-    },
-    onExpand(expandedKeys) {
-      this.expandedKeys = expandedKeys
-      this.autoExpandParent = false
-    },
-    onCheck(checkedKeys, event) {
-      this.checkedKeys = checkedKeys
-      let index = this.commitKeys.findIndex((f) => f.appCode == this.selectValue)
-      this.commitKeys[index].menuIdList = checkedKeys.concat(event.halfCheckedKeys)
-    },
-    handleSubmit() {
-      const {
-        form: { validateFields },
-      } = this
-      this.confirmLoading = true
-      validateFields((errors, values) => {
-        if (!errors) {
-          let menuIdList = []
-          this.commitKeys.forEach((item) => {
-            item.menuIdList.forEach((menuId) => {
-              menuIdList.push(menuId)
-            })
-          })
-          sysRoleGrantMenu({
-            id: this.tenantEntity.id,
-            grantMenuIdList: menuIdList,
-            type:2
-          })
-            .then((res) => {
-              if (res.success) {
-                this.$message.success('授权成功')
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('授权失败:' + res.message)
-              }
-            })
-            .finally((res) => {
-              this.confirmLoading = false
-            })
-        } else {
-          this.confirmLoading = false
-        }
-      })
-    },
-    handleCancel() {
-      // 清空已选择的
+    }
+  } catch (error) {
+    message.error('加载数据失败');
+  } finally {
+    formLoading.value = false;
+  }
+};
 
-    this.checkedKeys = []
-      // 清空已展开的
+const appChange = (value) => {
+  formLoading.value = true;
+  const currentMenuList = menuList.value.filter((f) => f.appCode === value);
+  menuTreeData.value = currentMenuList;
 
-    this.expandedKeys = []
-      this.visible = false
-    },
-  },
-}
+  leastChild.value = [];
+  getLeastChild(currentMenuList);
+
+  expandedKeys.value = currentMenuList.map((item) => item.id);
+
+  let menuInfo = commitKeys.value.find((f) => f.appCode === value);
+  if (!menuInfo) {
+    menuInfo = { appCode: value, menuIdList: [] };
+    commitKeys.value.push(menuInfo);
+  }
+
+  const currentChecked = [];
+  menuInfo.menuIdList.forEach((item) => {
+    if (leastChild.value.includes(item)) {
+      currentChecked.push(item);
+    }
+  });
+  checkedKeys.value = currentChecked;
+  formLoading.value = false;
+};
+
+const getLeastChild = (data) => {
+  data.forEach((item) => {
+    pushLeastChild(item);
+  });
+};
+
+const pushLeastChild = (e) => {
+  if (e.children && e.children.length > 0) {
+    getLeastChild(e.children);
+    return;
+  }
+  leastChild.value.push(e.id);
+};
+
+const onCheck = (keys, event) => {
+  let index = commitKeys.value.findIndex((f) => f.appCode === selectValue.value);
+  if (index !== -1) {
+    commitKeys.value[index].menuIdList = keys.concat(event.halfCheckedKeys);
+  }
+};
+
+const handleSubmit = async () => {
+  confirmLoading.value = true;
+  try {
+    let menuIdList = [];
+    commitKeys.value.forEach((item) => {
+      item.menuIdList.forEach((menuId) => {
+        menuIdList.push(menuId);
+      });
+    });
+
+    const res = await sysRoleGrantMenu({
+      id: roleEntity.value.id,
+      grantMenuIdList: menuIdList,
+      type: 2,
+    });
+
+    if (res.success) {
+      message.success('授权成功');
+      emit('ok');
+      handleCancel();
+    } else {
+      message.error('授权失败: ' + res.message);
+    }
+  } catch (error) {
+    message.error('授权出错');
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+const handleCancel = () => {
+  checkedKeys.value = [];
+  expandedKeys.value = [];
+  selectValue.value = null;
+  emit('update:visible', false);
+};
+
+defineExpose({
+  roleMenu,
+});
 </script>
+
 <style scoped>
 .grantMenuScrollbar {
   height: 60vh;

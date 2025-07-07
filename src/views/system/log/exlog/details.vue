@@ -1,28 +1,28 @@
 <template>
-  <a-modal title="日志详情" :width="900" :open="visible" :confirmLoading="confirmLoading" @cancel="handleCancel">
-    <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
+  <a-modal title="日志详情" :width="900" :open="visible" :footer="null" @cancel="handleCancel">
+    <a-spin :spinning="loading">
+      <a-form :model="formState">
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
+          <a-col :md="12" :sm="24">
             <a-form-item label="方法名称" :labelCol="labelCol" :wrapperCol="wrapperCol">
-              <a-input v-decorator="['methodName']" ></a>
+              <a-input v-model:value="formState.methodName" readonly />
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
+          <a-col :md="12" :sm="24">
             <a-form-item label="类名" :labelCol="labelCol" :wrapperCol="wrapperCol">
-              <a-input v-decorator="['className']" ></a>
+              <a-input v-model:value="formState.className" readonly />
             </a-form-item>
           </a-col>
         </a-row>
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
+          <a-col :md="12" :sm="24">
             <a-form-item label="异常名称" :labelCol="labelCol" :wrapperCol="wrapperCol">
-              <a-input v-decorator="['exceptionName']" ></a>
+              <a-input v-model:value="formState.exceptionName" readonly />
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
+          <a-col :md="12" :sm="24">
             <a-form-item label="异常信息" :labelCol="labelCol" :wrapperCol="wrapperCol">
-              <a-textarea :rows="4" v-decorator="['exceptionMsg']" ></a>
+              <a-textarea v-model:value="formState.exceptionMsg" :rows="4" readonly />
             </a-form-item>
           </a-col>
         </a-row>
@@ -30,50 +30,44 @@
     </a-spin>
   </a-modal>
 </template>
-<script>
-  export default {
-    data() {
-      return {
-        labelCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 5
-          }
-        },
-        wrapperCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 15
-          }
-        },
-        visible: false,
-        confirmLoading: false,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      details(record) {
-        this.visible = true
-        setTimeout(() => {
-          this.form.setFieldsValue({
-            className: record.className,
-            methodName: record.methodName,
-            exceptionMsg: record.exceptionMsg,
-            exceptionName: record.exceptionName
-          })
-        }, 100)
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
-  }
+<script setup>
+import { ref, reactive, nextTick } from 'vue';
+
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 5 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 15 },
+};
+
+const visible = ref(false);
+const loading = ref(false);
+const formState = reactive({
+  methodName: '',
+  className: '',
+  exceptionName: '',
+  exceptionMsg: '',
+});
+
+const details = (record) => {
+  visible.value = true;
+  loading.value = true;
+  nextTick(() => {
+    Object.assign(formState, record);
+    loading.value = false;
+  });
+};
+
+const handleCancel = () => {
+  visible.value = false;
+  Object.keys(formState).forEach(key => {
+    formState[key] = '';
+  });
+};
+
+defineExpose({
+  details,
+});
 </script>

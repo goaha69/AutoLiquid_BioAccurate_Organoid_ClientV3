@@ -3,35 +3,30 @@
     title="选择外键关系"
     :width="900"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
     @cancel="handleCancel">
-    <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
+    <a-spin :spinning="loading">
+      <a-form ref="formRef" :model="formState" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="外键: has-feedback>
-              <a-select
-                style="width: 100%"
-                placeholder="请选择数据库表"
-                v-decorator="['tableName', { rules: [{ required: true, message: '请选择数据库表'}] }]">
+          <a-col :md="12" :sm="24">
+            <a-form-item label="外键表" name="tableName">
+              <a-select v-model:value="formState.tableName" placeholder="请选择数据库表">
                 <a-select-option
-                  v-for="(item, index) in tableNameData"
-                  :key="index"
-                  :value="item.entityName"
-                  @click="tableNameSele(item)">{{ item.entityName }}</a-select-option>
+                  v-for="item in tableNameData"
+                  :key="item.entityName"
+                  :value="item.entityName">
+                  {{ item.tableName }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item  labelCol="labelCol" : wrapperCol="wrapperCol" label="显示字段" has-feedback>
-              <a-select
-                style="width: 100%"
-                placeholder="请选择显示字段"
-                v-decorator="['columnName', { rules: [{ required: true, message: '请选择显示字段'}] }]">
-                <a-select-option v-for="(item, index) in cloumnNameData" :key="index" :value="item.columnName">{{
-                  item.columnName
-                }}</a-select-option>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="显示字段" name="columnName">
+              <a-select v-model:value="formState.columnName" placeholder="请选择显示字段">
+                <a-select-option v-for="item in columnNameData" :key="item.columnName" :value="item.columnName">
+                  {{ item.columnName }}
+                </a-select-option>
               </a-select>
             </a-form-item>
           </a-col>
@@ -41,97 +36,83 @@
   </a-modal>
 </template>
 
-<script>
-  import {
-    codeGenerateInformationList,
-    codeGenerateColumnList
-  } from '@/api/modular/gen/codeGenerateManage'
-  export default {
-    data() {
-      return {
-        labelCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 5
-          }
-        },
-        wrapperCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 15
-          }
-        },
-        visible: false,
-        confirmLoading: false,
-        tableNameData: [],
-        cloumnNameData: [],
-        row: undefined,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      show(row) {
-        this.row = row
-        this.visible = true
-        this.codeGenerateInformationList()
-      },
-      /**
-       * 获得所有数据库的表
-       */
-      codeGenerateInformationList() {
-        codeGenerateInformationList().then(res => {
-          this.confirmLoading = true
-          this.tableNameData = res.data
-          this.confirmLoading = false
-        })
-      },
-      /**
-       * 获得表下的所有列
-       */
-      codeGenerateColumnList(tableName) {
-        codeGenerateColumnList(tableName).then(res => {
-          this.confirmLoading = true
-          this.cloumnNameData = res.data
-          this.confirmLoading = false
-        })
-      },
+<script setup>
+import { ref, reactive, watch } from 'vue';
+import { codeGenerateInformationList, codeGenerateColumnList } from '@/api/modular/gen/codeGenerateManage';
 
-      /**
-       * 提交表单
-       */
-      handleSubmit() {
-        const {
-          form: {
-            validateFields
-          }
-        } = this
-        validateFields((errors, values) => {
-          if (!errors) {
-            this.row.fkEntityName = values.tableName
-            this.row.fkColumnName = values.columnName
-            this.row.fkColumnNetType = this.cloumnNameData.find(e => e.columnName === values.columnName).netType
+const labelCol = { xs: { span: 24 }, sm: { span: 5 } };
+const wrapperCol = { xs: { span: 24 }, sm: { span: 15 } };
 
-            this.handleCancel()
-          }
-        })
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-      },
-      /**
-       * 选择数据库列
-       */
-      tableNameSele(item) {
-        this.codeGenerateColumnList(item.tableName)
-      }
+const visible = ref(false);
+const confirmLoading = ref(false);
+const loading = ref(false);
+const formRef = ref();
+const rowRecord = ref(null);
+
+const tableNameData = ref([]);
+const columnNameData = ref([]);
+
+const formState = reactive({
+  tableName: undefined,
+  columnName: undefined,
+});
+
+const rules = {
+  tableName: [{ required: true, message: '请选择数据库表' }],
+  columnName: [{ required: true, message: '请选择显示字段' }],
+};
+
+watch(() => formState.tableName, (newTableName) => {
+  formState.columnName = undefined;
+  columnNameData.value = [];
+  if (newTableName) {
+    const selectedTable = tableNameData.value.find(t => t.entityName === newTableName);
+    if(selectedTable) {
+        loading.value = true;
+        codeGenerateColumnList(selectedTable.tableName).then(res => {
+            columnNameData.value = res.data;
+        }).finally(() => {
+            loading.value = false;
+        });
     }
   }
+});
+
+const show = async (row) => {
+  rowRecord.value = row;
+  visible.value = true;
+  formRef.value?.resetFields();
+  loading.value = true;
+  try {
+    const res = await codeGenerateInformationList();
+    tableNameData.value = res.data;
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate();
+    if (rowRecord.value) {
+      rowRecord.value.fkEntityName = formState.tableName;
+      rowRecord.value.fkColumnName = formState.columnName;
+      const selectedColumn = columnNameData.value.find(c => c.columnName === formState.columnName);
+      if(selectedColumn) {
+        rowRecord.value.fkColumnNetType = selectedColumn.netType;
+      }
+    }
+    handleCancel();
+  } catch (error) {
+    // validation error
+  }
+};
+
+const handleCancel = () => {
+  visible.value = false;
+};
+
+defineExpose({
+  show,
+});
 </script>

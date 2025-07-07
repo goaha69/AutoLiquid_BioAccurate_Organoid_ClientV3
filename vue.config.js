@@ -30,7 +30,10 @@ const vueConfig = {
     // webpack plugins
     plugins: [
       // Ignore all locale files of moment.js
-      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^\.\/locale$/,
+        contextRegExp: /moment$/,
+      }),
       // 配置compression-webpack-plugin压缩
       new CompressionWebpackPlugin({
         algorithm: 'gzip',
@@ -42,7 +45,7 @@ const vueConfig = {
     ],
     // if prod, add externals
     externals: isProd ? assetsCDN.externals : {},
-    devtool:"source map"
+    devtool: 'source-map'
   },
 
   chainWebpack: (config) => {
@@ -143,7 +146,7 @@ const vueConfig = {
       }
     },
     // 确保代理能正常工作
-    disableHostCheck: true
+    allowedHosts: 'all'
   },
 
   // disable source map in production

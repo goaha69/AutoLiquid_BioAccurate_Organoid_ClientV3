@@ -6,43 +6,44 @@
       </slot>
     </div>
     <div class="extra">
-      <a-avatar :src="avatar" size="small" ></a>
+      <a-avatar :src="avatar" size="small" />
       <a :href="href">{{ owner }}</a> 发布:<a :href="href">{{ href }}</a>
       <em>{{ updateAt | moment }}</em>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ArticleListContent',
-  props: {
-    prefixCls: {
-      type: String,
-      default: 'antd-pro-components-article-list-content-index-listContent'
-    },
-    description: {
-      type: String,
-      default: ''
-    },
-    owner: {
-      type: String,
-      required: true
-    },
-    avatar: {
-      type: String,
-      required: true
-    },
-    href: {
-      type: String,
-      required: true
-    },
-    updateAt: {
-      type: String,
-      required: true
-    }
+<script setup>
+defineOptions({
+  name: 'ArticleListContent'
+})
+
+const props = defineProps({
+  prefixCls: {
+    type: String,
+    default: 'antd-pro-components-article-list-content-index-listContent'
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  owner: {
+    type: String,
+    required: true
+  },
+  avatar: {
+    type: String,
+    required: true
+  },
+  href: {
+    type: String,
+    required: true
+  },
+  updateAt: {
+    type: String,
+    required: true
   }
-}
+})
 </script>
 
 <style lang="less" scoped>

@@ -1,5 +1,4 @@
 <template>
-
   <a-modal
     title="修改头像"
     :open="visible"
@@ -7,11 +6,12 @@
     :confirmLoading="confirmLoading"
     :width="800"
     :footer="null"
-    @cancel="cancelHandel">
+    @cancel="cancelHandel"
+  >
     <a-row>
       <a-col :xs="24" :md="12" :style="{height: '350px'}">
         <vue-cropper
-          ref="cropper"
+          ref="cropperRef"
           :img="options.img"
           :info="true"
           :autoCrop="options.autoCrop"
@@ -19,12 +19,11 @@
           :autoCropHeight="options.autoCropHeight"
           :fixedBox="options.fixedBox"
           @realTime="realTime"
-        >
-        </vue-cropper>
+        />
       </a-col>
       <a-col :xs="24" :md="12" :style="{height: '350px'}">
         <div class="avatar-upload-preview">
-          <img  src="previews.url" : style="previews.img"/>
+          <img :src="previews.url" :style="previews.img"/>
         </div>
       </a-col>
     </a-row>
@@ -32,156 +31,169 @@
     <a-row>
       <a-col :lg="2" :md="2">
         <a-upload name="file" :beforeUpload="beforeUpload" :showUploadList="false">
-          <a-button ><template #icon><upload-outlined ></upload></template>选择图片</a-button>
+          <a-button>
+            <template #icon><upload-outlined /></template>
+            选择图片
+          </a-button>
         </a-upload>
       </a-col>
       <a-col :lg="{span: 1, offset: 2}" :md="2">
-        <a-button ><template #icon><plus-outlined ></plus-outlined></template @click="changeScale(1)"/>
+        <a-button @click="changeScale(1)">
+          <template #icon><plus-outlined /></template>
+        </a-button>
       </a-col>
       <a-col :lg="{span: 1, offset: 1}" :md="2">
-        <a-button icon="minus" @click="changeScale(-1)"></a>
+        <a-button @click="changeScale(-1)">
+          <template #icon><minus-outlined /></template>
+        </a-button>
       </a-col>
       <a-col :lg="{span: 1, offset: 1}" :md="2">
-        <a-button icon="undo" @click="rotateLeft"></a>
+        <a-button @click="rotateLeft">
+          <template #icon><undo-outlined /></template>
+        </a-button>
       </a-col>
       <a-col :lg="{span: 1, offset: 1}" :md="2">
-        <a-button ><template #icon><redo-outlined ></redo></template @click="rotateRight"/>
+        <a-button @click="rotateRight">
+          <template #icon><redo-outlined /></template>
+        </a-button>
       </a-col>
       <a-col :lg="{span: 2, offset: 6}" :md="2">
         <a-button type="primary" @click="finish('blob')" :loading="uploading">保存</a-button>
       </a-col>
     </a-row>
   </a-modal>
-
 </template>
-<script>
-  import { sysFileInfoUploadAvatar } from '@/api/modular/system/fileManage'
-  import { sysUserUpdateAvatar } from '@/api/modular/system/userManage'
 
-  export default {
-  data () {
-    return {
-      visible: false,
-      id: null,
-      confirmLoading: false,
-      fileList: [],
-      uploading: false,
-      options: {
-        img: '',
-        autoCrop: true,
-        autoCropWidth: 200,
-        autoCropHeight: 200,
-        fixedBox: true
-      },
-      previews: {}
-    }
-  },
-  methods: {
-    edit (id) {
-      this.visible = true
-      this.id = id
-      /* 获取原始头像 */
-       */
-    },
-    close () {
-      this.id = null
-      this.visible = false
-    },
-    cancelHandel () {
-      this.close()
-    },
-    changeScale (num) {
-      num = num || 1
-      this.$refs.cropper.changeScale(num)
-    },
-    rotateLeft () {
-      this.$refs.cropper.rotateLeft()
-    },
-    rotateRight () {
-      this.$refs.cropper.rotateRight()
-    },
-    beforeUpload (file) {
-      this.fileList = file
-      const reader = new FileReader()
-      // 把Array Buffer转化为blob 如果是base64不需      // 转化为base64
+<script setup>
+import { ref, reactive } from 'vue'
+import { UploadOutlined, PlusOutlined, MinusOutlined, UndoOutlined, RedoOutlined } from '@ant-design/icons-vue'
+import { sysFileInfoUploadAvatar } from '@/api/modular/system/fileManage'
+import { sysUserUpdateAvatar } from '@/api/modular/system/userManage'
+import { message } from 'ant-design-vue'
 
-    reader.readAsDataURL(file)
-      reader.onload = () => {
-        this.options.img = reader.result
-      }
-      // 转化为blob
-      // reader.readAsArrayBuffer(file)
+const visible = ref(false)
+const id = ref(null)
+const confirmLoading = ref(false)
+const fileList = ref([])
+const uploading = ref(false)
+const cropperRef = ref()
 
-    return false
-    },
+const options = reactive({
+  img: '',
+  autoCrop: true,
+  autoCropWidth: 200,
+  autoCropHeight: 200,
+  fixedBox: true
+})
 
-    /**
-       * 上传图片(点击上传按钮)
-       */
-      finish (type) {
-      if (type === 'blob') {
-        this.uploading = true
-        this.$refs.cropper.getCropBlob((data) => {
-          const files = new window.File(
-            [data],
-            this.fileList.name,
-            { type: this.fileList.type }
-          )
-          const formData = new FormData()
-          formData.append('file', files)
-          sysFileInfoUploadAvatar(formData).then((res) => {
-            if (res.success) {
-              this.updateAvatar(res.data)
-              this.$emit('ok', res.data)
-            } else {
-              this.uploading = false
-              this.$message.error(res.message)
-            }
-          })
-        })
-      } else {
-        this.$refs.cropper.getCropData((data) => {
-          console.log(data)
-        })
-      }
-    },
-    updateAvatar (data) {
-      const params = {
-        id: this.id,
-        avatar: data
-      }
-      sysUserUpdateAvatar(params).then((res) => {
-        this.uploading = false
+const previews = ref({})
+
+const emits = defineEmits(['ok'])
+
+const edit = (userId) => {
+  visible.value = true
+  id.value = userId
+}
+
+const close = () => {
+  id.value = null
+  visible.value = false
+}
+
+const cancelHandel = () => {
+  close()
+}
+
+const changeScale = (num) => {
+  num = num || 1
+  cropperRef.value.changeScale(num)
+}
+
+const rotateLeft = () => {
+  cropperRef.value.rotateLeft()
+}
+
+const rotateRight = () => {
+  cropperRef.value.rotateRight()
+}
+
+const beforeUpload = (file) => {
+  fileList.value = file
+  const reader = new FileReader()
+  reader.readAsDataURL(file)
+  reader.onload = () => {
+    options.img = reader.result
+  }
+  return false
+}
+
+const finish = (type) => {
+  if (type === 'blob') {
+    uploading.value = true
+    cropperRef.value.getCropBlob((data) => {
+      const files = new window.File(
+        [data],
+        fileList.value.name,
+        { type: fileList.value.type }
+      )
+      const formData = new FormData()
+      formData.append('file', files)
+      sysFileInfoUploadAvatar(formData).then((res) => {
         if (res.success) {
-          this.visible = false
-          this.$message.success('头像上传修改成功')
+          updateAvatar(res.data)
+          emits('ok', res.data)
         } else {
-          this.$message.error(res.message)
+          uploading.value = false
+          message.error(res.message)
         }
       })
-    },
-    realTime (data) {
-      this.previews = data
-    }
+    })
+  } else {
+    cropperRef.value.getCropData((data) => {
+      console.log(data)
+    })
   }
 }
+
+const updateAvatar = (data) => {
+  const params = {
+    id: id.value,
+    avatar: data
+  }
+  sysUserUpdateAvatar(params).then((res) => {
+    uploading.value = false
+    if (res.success) {
+      visible.value = false
+      message.success('头像上传修改成功')
+    } else {
+      message.error(res.message)
+    }
+  })
+}
+
+const realTime = (data) => {
+  previews.value = data
+}
+
+defineExpose({
+  edit
+})
 </script>
 
 <style lang="less" scoped>
+.avatar-upload-preview {
+  position: absolute;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #ccc;
+  overflow: hidden;
 
-  .avatar-upload-preview {
-    position: absolute;
-    top: 50%;
-    transform: translate(50%, -50%);
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    box-shadow: 0 0 4px #ccc;
-    overflow: hidden;
-
-    img {
-      width: 100%;
-      height: 100%;
-    }
+  img {
+    width: 100%;
+    height: 100%;
   }
+}
 </style>

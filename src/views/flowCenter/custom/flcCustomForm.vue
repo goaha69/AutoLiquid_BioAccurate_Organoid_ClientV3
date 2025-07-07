@@ -2,7 +2,7 @@
     <a-spin :spinning="formLoading">
       <a-form :form="form">
         <a-form-item v-show="false">
-          <a-input v-decorator="['id']" ></a>
+          <a-input v-decorator="['id']" />
         </a-form-item>
         <a-form-item
           label="名称"
@@ -10,14 +10,14 @@
           :wrapperCol="wrapperCol"
           has-feedback
         >
-          <a-input placeholder="请输入名:" :disabled="disabled" v-decorator="['name', {rules: [{required: true, message: '请输入表单名称!'}]}]" ></a>
+          <a-input placeholder="请输入名:" :disabled="disabled" v-decorator="['name', {rules: [{required: true, message: '请输入表单名称!'}]}]" />
         </a-form-item>
         <a-form-item
           :labelCol="labelCol"
           :wrapperCol="wrapperCol"
           label="排序"
         >
-          <a-input-number placeholder="请输入排序" :disabled="disabled" style="width: 100%" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" ></a>
+          <a-input-number placeholder="请输入排序" :disabled="disabled" style="width: 100%" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" />
         </a-form-item>
 
         <a-form-item

@@ -2,21 +2,21 @@
   <div>
     <a-card :bordered="false">
       <div class="table-page-search-wrapper">
-        <a-form layout="inline">
+        <a-form layout="inline" @finish="handleSearch">
           <a-row :gutter="48">
-            <a-col  md="8" : sm="24">
+            <a-col :md="8" :sm="24">
               <a-form-item label="类型名称">
-                <a-input v-model  value="queryParam.name" allow-clear placeholder="请输入类型名 : ></a>
+                <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入类型名称" />
               </a-form-item>
             </a-col>
-            <a-col" :md="8" :sm="24">
+            <a-col :md="8" :sm="24">
               <a-form-item label="唯一编码">
-                <a-input v-model="queryParam.code" allow-clear placeholder="请输入唯一编码"></a>
+                <a-input v-model:value="queryParam.code" allow-clear placeholder="请输入唯一编码" />
               </a-form-item>
             </a-col>
-            <a-col  md="8" : sm="24">
+            <a-col :md="8" :sm="24">
               <span class="table-page-search-submitButtons">
-                <a-button type="primary" @click="handleSearch">查询</a-button>
+                <a-button type="primary" html-type="submit">查询</a-button>
                 <a-button style="margin-left: 8px" @click="handleReset">重置</a-button>
               </span>
             </a-col>
@@ -26,198 +26,212 @@
 
       <div class="table-operator">
         <a-button type="primary" @click="handleAddClick">
-          <template #icon><plus-outlined ></plus-outlined></template>
+          <template #icon><PlusOutlined /></template>
           新增类型
         </a-button>
         <a-button @click="refreshDicCache" type="primary">
-          <template #icon><redo-outlined ></redo></template>
+          <template #icon><RedoOutlined /></template>
           刷新缓存
         </a-button>
       </div>
 
       <a-table
         :columns="columns"
-        :data-source="dataSource"
+        :dataSource="dataSource"
         :loading="loading"
         :pagination="pagination"
-        :row-key="record => record.id"
+        :row-key="(record) => record.id"
         @change="handleTableChange"
       >
-        <template #status="{ text }">
-          {{ statusFilter(text) }}
-        </template>
-        <template #action="{ record }">
-          <a @click="handleDictClick(record)">字典</a>
-          <a-divider type="vertical"></a>
-          <a @click="handleEditClick(record)">编辑</a>
-          <a-divider type="vertical"></a>
-          <a-popconfirm placement="topRight" title="确认删除" @confirm="() => handleDelete(record)">
-            <a>删除</a>
-          </a-popconfirm>
+        <template #bodyCell="{ column, text, record }">
+          <template v-if="column.dataIndex === 'status'">
+            {{ statusFilter(text) }}
+          </template>
+          <template v-if="column.dataIndex === 'action'">
+            <a @click="handleDictClick(record)">字典</a>
+            <a-divider type="vertical" />
+            <a @click="handleEditClick(record)">编辑</a>
+            <a-divider type="vertical" />
+            <a-popconfirm placement="topRight" title="确认删除？" @confirm="() => handleDelete(record)">
+              <a>删除</a>
+            </a-popconfirm>
+          </template>
         </template>
       </a-table>
+
+      <add-form ref="addFormRef" @ok="handleOk" />
+      <edit-form ref="editFormRef" @ok="handleOk" />
+      <dict-data-form ref="dictDataFormRef" />
     </a-card>
   </div>
 </template>
 
-<script>
-import { sysDictTypePage, sysDictTypeDelete, sysDictTypeDropDown } from '@/api/modular/system/dictManage'
-import { mapActions } from 'vuex'
-import { DownOutlined, PlusOutlined, RedoOutlined } from '@ant-design/icons-vue'
+<script setup>
+import { ref, onMounted, reactive } from 'vue';
+import { sysDictTypePage, sysDictTypeDelete, sysDictTypeDropDown } from '@/api/modular/system/dictManage';
+import { useStore } from 'vuex';
+import { message } from 'ant-design-vue';
+import { PlusOutlined, RedoOutlined } from '@ant-design/icons-vue';
+import AddForm from './addForm.vue';
+import EditForm from './editForm.vue';
+import DictDataForm from './dictData.vue';
 
-export default {
-  name: "sys_dict_mgr",
-  components: {
-    DownOutlined,
-    PlusOutlined,
-    RedoOutlined
+const queryParam = ref({});
+const dataSource = ref([]);
+const loading = ref(false);
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+});
+
+const columns = [
+  {
+    title: '类型名称',
+    dataIndex: 'name',
   },
-  data() {
-    return {
-      queryParam: {},
-      dataSource: [],
-      loading: false,
-      pagination: {
-        current: 1,
-        pageSize: 10,
-        total: 0,
-        showSizeChanger: true,
-        showQuickJumper: true,
-        showTotal: (total, range) => `${range[0]}-${range[1]} :${total} 条`
-      },
-      columns: [
-        {
-          title: '类型名称',
-          dataIndex: 'name'
-        },
-        {
-          title: '唯一编码',
-          dataIndex: 'code'
-        },
-        {
-          title: '排序',
-          dataIndex: 'sort'
-        },
-        {
-          title: '备注',
-          dataIndex: 'remark',
-          width: 200
-        },
-        {
-          title: '状',
-          dataIndex: 'status',
-          slots: { customRender: 'status' }
-        },
-        {
-          title: '操作',
-          width: '150px',
-          dataIndex: 'action',
-          slots: { customRender: 'action' }
-        }
-      ],
-      statusDict: []
-    }
+  {
+    title: '唯一编码',
+    dataIndex: 'code',
   },
-  created() {
-    this.loadStatusDict()
-    this.loadData()
+  {
+    title: '排序',
+    dataIndex: 'sort',
   },
-  methods: {
-    ...mapActions(['dictTypeData']),
-    
-    loadData() {
-      this.loading = true
-      const params = {
-        pageNo: this.pagination.current,
-        pageSize: this.pagination.pageSize,
-        ...this.queryParam
+  {
+    title: '备注',
+    dataIndex: 'remark',
+    width: 200,
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+  },
+  {
+    title: '操作',
+    width: '150px',
+    dataIndex: 'action',
+  },
+];
+
+const statusDict = ref([]);
+const addFormRef = ref();
+const editFormRef = ref();
+const dictDataFormRef = ref();
+const store = useStore();
+
+const loadData = () => {
+  loading.value = true;
+  const params = {
+    ...queryParam.value,
+    pageNo: pagination.current,
+    pageSize: pagination.pageSize,
+  };
+  sysDictTypePage(params)
+    .then((res) => {
+      if (res.success) {
+        dataSource.value = res.data.records || [];
+        pagination.total = res.data.total || 0;
+      } else {
+        message.error('加载数据失败：' + res.message);
       }
-      
-      sysDictTypePage(params).then((res) => {
-        if (res.success) {
-          this.dataSource = res.data.records || []
-          this.pagination.total = res.data.total || 0
-        } else {
-          this.$message.error('加载数据失败:' + res.message)
-        }
-      }).catch((err) => {
-        this.$message.error('加载数据错误:' + err.message)
-      }).finally(() => {
-        this.loading = false
-      })
-    },
-    
-    loadStatusDict() {
-      sysDictTypeDropDown({ code: 'common_status' }).then((res) => {
-        if (res.success) {
-          this.statusDict = res.data || []
-        }
-      }).catch((err) => {
-        console.warn('加载状态字典失:', err)
-      })
-    },
-    
-    statusFilter(status) {
-      const values = this.statusDict.filter(item => item.code == status)
-      if (values.length > 0) {
-        return values[0].value
+    })
+    .catch((err) => {
+      message.error('加载数据错误：' + err.message);
+    })
+    .finally(() => {
+      loading.value = false;
+    });
+};
+
+const loadStatusDict = () => {
+  sysDictTypeDropDown({ code: 'common_status' })
+    .then((res) => {
+      if (res.success) {
+        statusDict.value = res.data || [];
       }
-      return status
-    },
-    
-    handleSearch() {
-      this.pagination.current = 1
-      this.loadData()
-    },
-    
-    handleReset() {
-      this.queryParam = {}
-      this.pagination.current = 1
-      this.loadData()
-    },
-    
-    handleTableChange(pagination) {
-      this.pagination.current = pagination.current
-      this.pagination.pageSize = pagination.pageSize
-      this.loadData()
-    },
-    
-    handleDelete(record) {
-      sysDictTypeDelete(record).then((res) => {
-        if (res.success) {
-          this.$message.success('删除成功')
-          this.loadData()
-        } else {
-          this.$message.error('删除失败::' + res.message)
-        }
-      }).catch((err) => {
-        this.$message.error('删除错误::' + err.message)
-      })
-    },
-    
-    refreshDicCache() {
-      this.dictTypeData().then(() => {
-        this.$message.success('刷新成功')
-      }).catch((err) => {
-        this.$message.error('刷新失败?' + err.message)
-      })
-    },
-    
-    // 临时处理方法,等待表单组件Vue 3兼容性修
-  handleAddClick() {
-      this.$message.info('新增功能暂时不可用,正在进行Vue 3兼容性修?)
-    },
-    handleEditClick(record) {
-      this.$message.info('编辑功能暂时不可用,正在进行Vue 3兼容性修:')
-    },
-    handleDictClick(record) {
-      this.$message.info('字典数据管理功能暂时不可用,正在进行Vue 3兼容性修:')
-    }
+    })
+    .catch((err) => {
+      console.warn('加载状态字典失败：', err);
+    });
+};
+
+const statusFilter = (status) => {
+  const values = statusDict.value.filter((item) => item.code == status);
+  if (values.length > 0) {
+    return values[0].value;
   }
-}
+  return status;
+};
+
+const handleSearch = () => {
+  pagination.current = 1;
+  loadData();
+};
+
+const handleReset = () => {
+  queryParam.value = {};
+  pagination.current = 1;
+  loadData();
+};
+
+const handleTableChange = (pag) => {
+  pagination.current = pag.current;
+  pagination.pageSize = pag.pageSize;
+  loadData();
+};
+
+const handleDelete = (record) => {
+  sysDictTypeDelete(record)
+    .then((res) => {
+      if (res.success) {
+        message.success('删除成功');
+        loadData();
+      } else {
+        message.error('删除失败：' + res.message);
+      }
+    })
+    .catch((err) => {
+      message.error('删除错误：' + err.message);
+    });
+};
+
+const refreshDicCache = () => {
+  store.dispatch('dictTypeData')
+    .then(() => {
+      message.success('刷新成功');
+    })
+    .catch((err) => {
+      message.error('刷新失败：' + err.message);
+    });
+};
+
+const handleAddClick = () => {
+  addFormRef.value.add();
+};
+
+const handleEditClick = (record) => {
+  editFormRef.value.edit(record);
+};
+
+const handleDictClick = (record) => {
+  dictDataFormRef.value.dictData(record);
+};
+
+const handleOk = () => {
+  loadData();
+};
+
+onMounted(() => {
+  loadStatusDict();
+  loadData();
+});
 </script>
 
-<style lang="less">
+<style lang="less" scoped>
 .table-operator {
   margin-bottom: 18px;
 }

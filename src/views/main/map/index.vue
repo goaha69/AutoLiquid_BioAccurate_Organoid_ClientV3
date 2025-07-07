@@ -2,10 +2,12 @@
   <div>
     <div id="map">
       <a-drawer
-        title="图元属:" placement="right"
+        title="设备详情"
+        placement="right"
         :width="600"
         :closable="false"
-        v-model  open="drawerVisible" : get-container="false"
+        v-model:open="drawerVisible"
+        :get-container="false"
         :wrap-style="{ position: 'absolute' }"
         @close="onCloseDrawer">
         <p>{{ geosjonData }}</p>

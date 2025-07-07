@@ -1,76 +1,76 @@
 <template>
-  <a-modal title="ʵ" :width="900" :open="visible" :maskClosable="false" @ok="handleSubmit" @cancel="handleCancel">
+  <a-modal title="新增实验流程" :width="900" :open="visible" :maskClosable="false" @ok="handleSubmit" @cancel="handleCancel">
     <a-spin :spinning="formLoading">
       <a-form :form="form">
 
         <a-row :gutter="8">
           <div>            
-            <sp-input label="̱" :labelWidth="110" :isError="errors.code" :inputWidth="250" :required="true" v-model="attributeData.code" ></sp>
-            <sp-input label="" :labelWidth="110" :isError="errors.name" :inputWidth="250" :required="true" v-model="attributeData.name" ></sp>
+            <sp-input label="编号" :labelWidth="110" :isError="errors.code" :inputWidth="250" :required="true" v-model="attributeData.code" />
+            <sp-input label="名称" :labelWidth="110" :isError="errors.name" :inputWidth="250" :required="true" v-model="attributeData.name" />
           </div>
 
           <div style="margin-top:10px;"> 
-            <span class="span-label" style="width:120px;">ͣ</span>
-            <a-select style="width: 250px;color: black;" placeholder="ѡ" v-model : value="attributeData.type">
+            <span class="span-label" style="width:120px;">类型：</span>
+            <a-select style="width: 250px;color: black;" placeholder="请选择类型" v-model:value="attributeData.type">
               <a-select-option v-for="(item, index) in flowTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
             
-            <span class="span-label" style="width: 120px; margin-left : 40px;">ִͣ</span>
-            <a-select style="width: 250px;color: black;" placeholder="ѡִ" v-model : value="attributeData.executeType">
+            <span class="span-label" style="width: 120px; margin-left : 40px;">执行类型：</span>
+            <a-select style="width: 250px;color: black;" placeholder="请选择执行类型" v-model:value="attributeData.executeType">
               <a-select-option v-for="(item, index) in executeTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
           </div>
 
           <div style="margin-top:10px;"> 
-            <span class="span-label" style="width:120px;">ʱִ̣</span>
-            <a-select style="width: 250px;color: black;" placeholder="ѡʱִ" v-model : value="attributeData.nextFlowId" clearable>
+            <span class="span-label" style="width:120px;">下次执行流程：</span>
+            <a-select style="width: 250px;color: black;" placeholder="请选择下次执行流程" v-model:value="attributeData.nextFlowId" clearable>
               <a-select-option v-for="(item, index) in flowData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
             </a-select>
             
-            <sp-input-number label="ʱִʱ" :step="1" :labelWidth="150"  :inputWidth="150" :rightEmpty="true" v-model="attributeData.executeNextFlowTime" ></sp>
-            <a-select style="width: 95px;color : black; margin-left: -35px;" placeholder="ѡʱִ" v-model : value="attributeData.executeNextFlowType">
+            <sp-input-number label="下次执行时间" :step="1" :labelWidth="150"  :inputWidth="150" :rightEmpty="true" v-model="attributeData.executeNextFlowTime" />
+            <a-select style="width: 95px;color : black; margin-left: -35px;" placeholder="请选择下次执行时间" v-model:value="attributeData.executeNextFlowType">
               <a-select-option v-for="(item, index) in executeNextFlowTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
           </div>
 
           <div style="margin-top:10px;">            
-            <sp-input-number label="" :step="1" :labelWidth="110"  :inputWidth="100" :required="true" v-model="attributeData.sort" ></sp>
-            <span class="span-label" style="margin-left:130px;">沼֣</span>
-            <a-select style="width: 250px;color: black;" placeholder="ѡ沼" v-model : value="attributeData.layoutId">
+            <sp-input-number label="排序" :step="1" :labelWidth="110"  :inputWidth="100" :required="true" v-model="attributeData.sort" />
+            <span class="span-label" style="margin-left:130px;">盘面布局：</span>
+            <a-select style="width: 250px;color: black;" placeholder="请选择盘面布局" v-model:value="attributeData.layoutId">
               <a-select-option v-for="(item, index) in layoutData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
             </a-select>
-            <a-button style="margin-left:5px;" type="primary" size="small" @click="showPreviewLayout">鿴</a-button>
+            <a-button style="margin-left:5px;" type="primary" size="small" @click="showPreviewLayout">查看</a-button>
           </div>
         </a-row>
 
-        <a-divider orientation="left" style="margin-top:130px;">ԶϢ</a-divider>
+        <a-divider orientation="left" style="margin-top:130px;">属性信息</a-divider>
         <a-row  gutter="8" style="min-height : 400px;">
           <a-col :span="24">
             <a-table size="middle" :columns="columns" :dataSource="attributeData.attributes" :pagination="false" :loading="attributeLoading" rowKey="key" :scroll="{  y: 320 }">   
-              <!-- Զ -->
+              <!-- 自定义序号列 -->
               <template #serial="{ text, record, index }"><span>
                 {{ index + 1 }}
               </span></template>
               <template #name="{ text, record }"><span>
-                  <a-input v-model="record.name" placeholder=""></a>
+                  <a-input v-model:value="record.name" placeholder="名称" />
               </span></template>
               <template #type="{ text, record }"><span>
-                  <a-select v-model  value="record.type" key="dataType" style="width : 100%" placeholder="ѡ">
+                  <a-select v-model:value="record.type" key="dataType" style="width : 100%" placeholder="请选择类型">
                   <a-select-option v-for="(item, index) in dataTypeSelectData" :key="index" :value="item.value">
                     {{ item.value }}</a-select-option>
                 </a-select>
               </span></template>   
               <template #value="{ text, record }"><span>
-                  <a-input v-model="record.value" placeholder="ֵ"></a>
+                  <a-input v-model:value="record.value" placeholder="值" />
               </span></template>
               <template #keyStr="{ text, record }"><span>
-                <a-input v-model="record.keyStr" placeholder="ؼ"></a>
+                <a-input v-model:value="record.keyStr" placeholder="关键字" />
               </span></template> 
               <template #operation="{ text, record }">
-                <a @click="removeAttribute(record.key)">ɾ</a>
+                <a @click="removeAttribute(record.key)">删除</a>
               </template>
             </a-table>
-            <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" ><template #icon><plus-outlined ></plus-outlined></template @click="newAttribute"></a-button>
+            <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" @click="newAttribute"><template #icon><plus-outlined /></template>增行</a-button>
           </a-col>
         </a-row>
 
@@ -144,7 +144,7 @@
             slots: { customRender: 'type' }
           },
           {
-            title: 'ؼ',
+            title: '关键字',
             align: 'center',
             key:'keyStr',
             width: '100',
@@ -153,7 +153,7 @@
             slots: { customRender: 'keyStr' }
           },
           {
-            title: 'ֵ',
+            title: '值',
             align: 'center',
             key:'value',
             width: '100',
@@ -298,7 +298,7 @@
         console.log(this.attributeData)
         const length = this.attributeData.attributes.length        
         this.attributeData.attributes.push({
-          key: length === 0  '1' : (parseInt(this.attributeData.attributes[length - 1].key) + 1).toString(),
+          key: length === 0 ? '1' : (parseInt(this.attributeData.attributes[length - 1].key) + 1).toString(),
           flowId:0,
           name:'',
           type:this.attributeDefaultType,
@@ -329,7 +329,7 @@
           this.$emit('preview-layout', layoutId)
         }
         else
-          this.$message.warning("ѡ沼֣")
+          this.$message.warning("请选择盘面布局")
       },
       validateFields()
       {
@@ -356,7 +356,7 @@
         this.formLoading = true        
         exp_flow_add(this.attributeData).then((res) => {
           if (res.success) {
-            this.$message.success('ɹ')
+            this.$message.success('添加成功')
             this.$emit('ok', this.attributeData)
             this.handleCancel()
           } else {

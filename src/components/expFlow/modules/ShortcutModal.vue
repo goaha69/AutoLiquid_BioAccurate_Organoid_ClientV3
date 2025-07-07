@@ -30,7 +30,7 @@
 						width: '50%'
 					},
 					{
-						title: '快捷:,
+						title: '快捷键',
 						align: 'center',
 						key: 'codeName',
 						dataIndex: 'codeName',

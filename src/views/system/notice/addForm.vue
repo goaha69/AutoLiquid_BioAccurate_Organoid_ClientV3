@@ -7,211 +7,171 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-form-item
-          label="标题"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-        >
-          <a-input placeholder="请输入标:" v-decorator="['title', {rules: [{required: true, message: '请输入标题!'}]}]" ></a>
+      <a-form ref="formRef" :model="form" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item label="标题" name="title">
+          <a-input v-model:value="form.title" placeholder="请输入标题" />
         </a-form-item>
-        <a-form-item
-          label="类型"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-        >
-          <a-radio-group v-decorator="['type',{rules: [{ required: true, message: '请选择类型'}]}]" >
-            <a-radio-button v-for="(item,index) in typeDictTypeDropDown" :key="index" :value="parseInt(item.code)">{{ item.value }}</a-radio-button>
+        <a-form-item label="类型" name="type">
+          <a-radio-group v-model:value="form.type">
+            <a-radio-button v-for="item in typeDictTypeDropDown" :key="item.code" :value="parseInt(item.code)">
+              {{ item.value }}
+            </a-radio-button>
           </a-radio-group>
         </a-form-item>
-        <a-form-item
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          label="内容"
-        >
-          <antd-editor  uploadConfig="editorUploadConfig" v-model : value="editorContent" @onchange="changeEditor" @oninit="getEditor" ></antd>
+        <a-form-item label="内容" name="content">
+          <antd-editor v-model:value="form.content" :upload-config="editorUploadConfig" @onchange="changeEditor" />
         </a-form-item>
-        <a-form-item
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          label="通知到的'
-        >
-          <a-transfer" :data-source="mockData"
+        <a-form-item label="通知对象" name="noticeUserIdList">
+          <a-transfer
+            :data-source="mockData"
             show-search
-            :list-style="{
-              width: '40%',
-              height: '300px',
-            }"
+            :list-style="{ width: '40%', height: '300px' }"
             :filter-option="filterOption"
             :target-keys="targetKeys"
-            :render="item => item.title"
+            :render="(item) => item.title"
             @change="handleChange"
           />
         </a-form-item>
-        <a-divider ></a>
+        <a-divider />
         <a-form-item class="subForm-item">
-          <a-button type="primary" class="subButton" @click="handleSubmit(1)">发布</a-button>
-          <a-button type="danger" class="subButton" @click="handleSubmit(0)">存为草稿</a-button>
+          <a-button type="primary" class="subButton" @click="handleSubmit(1)" :loading="confirmLoading">发布</a-button>
+          <a-button type="danger" class="subButton" @click="handleSubmit(0)" :loading="confirmLoading">存为草稿</a-button>
           <a-button class="subButton" @click="handleCancel">取消</a-button>
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
-<script>
-  import { sysNoticeAdd } from '@/api/modular/system/noticeManage'
-  import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
-  import { sysFileInfoUploadEditor } from '@/api/modular/system/fileManage'
-  import { AntdEditor } from '@/components'
-  import { sysUserSelector } from '@/api/modular/system/userManage'
-  export default {
-    name: 'AddForm',
-    components: {
-      AntdEditor
-    },
-    data () {
-      return {
-        labelCol: {
-          xs: { span: 24 },
-          sm: { span: 3 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 18 }
-        },
-        visible: false,
-        confirmLoading: false,
-        form: this.$form.createForm(this),
-        editorContent: '',
-        editorContentText: '',
-        editorUploadConfig: {
-          method: 'http',
-          callback: this.editorUploadImage
-        },
-        mockData: [],
-        targetKeys: [],
-        typeDictTypeDropDown: [], // 0通知 1公告
 
-      formLoading: true
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
+import { sysNoticeAdd } from '@/api/modular/system/noticeManage';
+import { sysDictTypeDropDown } from '@/api/modular/system/dictManage';
+import { sysFileInfoUploadEditor } from '@/api/modular/system/fileManage';
+import { AntdEditor } from '@/components';
+import { sysUserSelector } from '@/api/modular/system/userManage';
+
+const props = defineProps({
+  visible: Boolean,
+});
+const emit = defineEmits(['update:visible', 'ok']);
+
+const labelCol = { xs: { span: 24 }, sm: { span: 3 } };
+const wrapperCol = { xs: { span: 24 }, sm: { span: 18 } };
+
+const formRef = ref();
+const formLoading = ref(true);
+const confirmLoading = ref(false);
+const typeDictTypeDropDown = ref([]);
+const mockData = ref([]);
+const targetKeys = ref([]);
+
+const form = reactive({
+  title: '',
+  type: undefined,
+  content: '',
+  noticeUserIdList: [],
+});
+
+const rules = {
+  title: [{ required: true, message: '请输入标题!' }],
+  type: [{ required: true, message: '请选择类型' }],
+  content: [{ required: true, message: '请填写内容' }],
+  noticeUserIdList: [{ required: true, message: '请选择通知对象' }],
+};
+
+const editorUploadConfig = {
+  method: 'http',
+  callback: async (files, insert) => {
+    const formData = new FormData();
+    files.forEach((file) => formData.append('file', file));
+    try {
+      const res = await sysFileInfoUploadEditor(formData);
+      if (res.success) {
+        insert(`${process.env.VUE_APP_API_BASE_URL}/${res.data}`);
+      } else {
+        message.error(`编辑器上传图片失败：${res.message}`);
       }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      add () {
-        this.visible = true
-        this.sysDictTypeDropDown()// 先注
-      this.getMock()
-      },
-      /**
-       * 获取字典数据
-       */
-      sysDictTypeDropDown () {
-        sysDictTypeDropDown({ code: 'notice_type' }).then((res) => {
-          this.typeDictTypeDropDown = res.data
-        })
-      },
-      /**
-       * 编辑器回调上传及回传图片url
-       */
-      editorUploadImage (files, insert) {
-        const formData = new FormData()
-        files.forEach(file => {
-          formData.append('file', file)
-        })
-        sysFileInfoUploadEditor(formData).then((res) => {
-          if (res.success) {
-            insert(process.env.VUE_APP_API_BASE_URL + '/' + res.data)
-          } else {
-            this.$message.error('编辑器上传图片失败::' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('预览错误::' + err.message)
-        })
-      },
-      getEditor (editor) {
-        this.editor = editor
-      },
-      changeEditor (html, ele) {
-        this.editorContent = html
-        this.editorContentText = ele.text()
-      },
-      /**
-       * 穿梭
-       */
-      getMock () {
-        const targetKeys = []
-        const mockData = []
-        sysUserSelector().then((res) => {
-          this.formLoading = false
-          for (let i = 0; i < res.data.length; i++) {
-            const data = {
-              key: res.data[i].id.toString(),
-              title: res.data[i].name,
-              description: `description of ${res.data[i].name}`
-            }
-            mockData.push(data)
-          }
-        })
-        this.mockData = mockData
-        this.targetKeys = targetKeys
-      },
-      filterOption (inputValue, option) {
-        return option.description.indexOf(inputValue) > -1
-      },
-      handleChange (targetKeys, direction, moveKeys) {
-        this.targetKeys = targetKeys
-      },
-      handleSubmit (types) {
-        const { form: { validateFields } } = this
-        /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.editorContent == '') {
-          this.$message.error('请填写内:')
-          return
-        }
-        if (this.targetKeys.length < 1) {
-          this.$message.error('请选择通知到的:')
-          return
-        }
-         validateFields((errors, values) => {
-            if (!errors) {
-              this.formLoading = true
-              values.content = this.editorContent
-              values.status = types
-              values.noticeUserIdList = this.targetKeys
-              sysNoticeAdd(values).then((res) => {
-                if (res.success) {
-                  this.$message.success('新增成功')
-                  this.$emit('ok', values)
-                  this.handleCancel()
-                } else {
-                  this.$message.error('新增失败::' + res.message)
-                }
-              }).finally((res) => {
-                this.formLoading = false
-              })
-            }
-          })
-      },
-      handleCancel () {
-        this.editor.txt.clear()
-        this.targetKeys = []
-        this.editorContent = ''
-        this.form.resetFields()
-        this.visible = false
-        this.formLoading = true
-      }
+    } catch (err) {
+      message.error(`预览错误：${err.message}`);
     }
+  },
+};
+
+const changeEditor = (html) => {
+  form.content = html;
+};
+
+const loadDictData = async () => {
+  const res = await sysDictTypeDropDown({ code: 'notice_type' });
+  typeDictTypeDropDown.value = res.data;
+};
+
+const loadUserSelector = async () => {
+  const res = await sysUserSelector();
+  mockData.value = res.data.map((user) => ({
+    key: user.id.toString(),
+    title: user.name,
+    description: `description of ${user.name}`,
+  }));
+};
+
+onMounted(async () => {
+  await loadDictData();
+  await loadUserSelector();
+  formLoading.value = false;
+});
+
+const add = () => {
+  emit('update:visible', true);
+};
+
+const filterOption = (inputValue, option) => {
+  return option.description.indexOf(inputValue) > -1;
+};
+
+const handleChange = (keys) => {
+  targetKeys.value = keys;
+  form.noticeUserIdList = keys;
+};
+
+const handleSubmit = async (status) => {
+  try {
+    const values = await formRef.value.validate();
+    confirmLoading.value = true;
+    const params = { ...values, status, noticeUserIdList: targetKeys.value };
+    const res = await sysNoticeAdd(params);
+    if (res.success) {
+      message.success('新增成功');
+      emit('ok');
+      handleCancel();
+    } else {
+      message.error(`新增失败：${res.message}`);
+    }
+  } catch (error) {
+    console.error(error)
+  } finally {
+    confirmLoading.value = false;
   }
+};
+
+const handleCancel = () => {
+  formRef.value.resetFields();
+  targetKeys.value = [];
+  form.content = '';
+  emit('update:visible', false);
+};
+
+defineExpose({ add });
 </script>
+
 <style>
-  .subButton{
-    float: right;
-  }
-  .subForm-item{
-    margin-bottom: 0px;
-  }
+.subButton {
+  float: right;
+  margin-left: 8px;
+}
+.subForm-item {
+  margin-bottom: 0px;
+}
 </style>

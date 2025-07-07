@@ -9,15 +9,15 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
+      <a-form ref="formRef" :model="formData" :rules="formRules">
         <a-form-item
           label="机构"
           :labelCol="labelCol"
           :wrapperCol="wrapperCol"
-          has-feedback
+          name="orgId"
         >
           <a-tree-select
-            v-decorator="['orgId']"
+            v-model:value="formData.orgId"
             style="width: 100%"
             :dropdownStyle="{ maxHeight: '300px', overflow: 'auto' }"
             :treeData="orgTree"
@@ -25,159 +25,180 @@
             treeDefaultExpandAll
             @change="e => initrOrgName(e)"
           >
-            <template #title="{ { id } }"><span>{{ id }}</span></template>
+            <template #title="{ id }"><span>{{ id }}</span></template>
           </a-tree-select>
         </a-form-item>
         <a-form-item
           label="表单名称"
           :labelCol="labelCol"
           :wrapperCol="wrapperCol"
-          has-feedback
+          name="name"
         >
-          <a-input placeholder="请输入表单名:" v-decorator="['name', {rules: [{required: true, message: '请输入表单名称!'}]}]" ></a>
+          <a-input placeholder="请输入表单名:" v-model:value="formData.name" />
         </a-form-item>
 
         <a-form-item
           label="表单类型"
           :labelCol="labelCol"
           :wrapperCol="wrapperCol"
-          has-feedback         
+          name="frmType"
         >
           <a-select
             style="width: 100%"
             placeholder="请选择表单类型"
             @change="e => handleChange(e)"
-            has-feedback
-            v-decorator="['frmType', {rules: [{required: true, message: '请选择表单类型'}]}]"
+            v-model:value="formData.frmType"
           >
             <a-select-option v-for="(item,indexs) in formTypeList" :key="indexs" :value="item.id">{{ item.name }}</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item
-          label="自定义表'" :labelCol="labelCol"
+          label="自定义表单路径"
+          :labelCol="labelCol"
           :wrapperCol="wrapperCol"
-          has-feedback
+          name="webId"
           v-show="webIdShow"
         >
-          <a-input placeholder="请输入自定义表单路径" v-decorator="['webId']" ></a>
+          <a-input placeholder="请输入自定义表单路径" v-model:value="formData.webId" />
         </a-form-item>
         
         <a-form-item
           :labelCol="labelCol"
           :wrapperCol="wrapperCol"
           label="排序"
+          name="sort"
         >
-          <a-input-number placeholder="请输入排序 style="width: 100%" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" ></a>
+          <a-input-number placeholder="请输入排序" style="width: 100%" v-model:value="formData.sort" :min="1" :max="1000" />
         </a-form-item>
 
         <a-form-item
           label="备注"
           :labelCol="labelCol"
           :wrapperCol="wrapperCol"
-          has-feedback
+          name="remark"
         >
-          <a-textarea :rows="4" placeholder="请输入备注" v-decorator="['remark']"></a-textarea>
+          <a-textarea :rows="4" placeholder="请输入备注" v-model:value="formData.remark" />
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import { getOrgTree, getOrgList } from '@/api/modular/system/orgManage'
-  import { flcFormAdd } from '@/api/modular/flowCenter/formManage'
-  export default {
-    data () {
-      return {
-        labelCol: {
-          xs: { span: 24 },
-          sm: { span: 5 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 15 }
-        },
-        orgTree: [],
-        selfForms: [],
-        frmType:0,
-        formTypeList:[{id:0,name:"动态表'},{id:1,name:"自定义表:}],
-        visible: false,
-        confirmLoading: false,
-        formLoading: true,
-        webIdShow:false,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      add () {
-        this.visible = true
-        this.getSelfForms()
-        this.getOrgDate() 
-      },
-      /**
-       * 选择子表单单项触
-       */
-      handleChange (value) {
-        if (value) {
-          this.frmType = value
-        }
-        this.webIdShow = !!value  true : false;
-      },
-      /**
-       * 获取机构树,并加载于表单
-       */
-      getOrgDate () {
-          this.formLoading = false
-        getOrgTree().then((res) => {
-          this.orgTree = res.data
-        })
-        getOrgList().then((res) => {
-          this.orgList = res.data
-        })
-      },
-      /**
-       * 选择树机构,初始化机构名称于表单
-       */
-      initrOrgName (value) {
-        this.form.getFieldDecorator('sysEmpParam.orgName', { initialValue: this.orgList.find(item => value === item.id).name })
-      },
-      /**
-       * 获取自定义表单,并加载于表单
-       */
-      getSelfForms () {
-        this.selfForms=[]
-      },
+<script setup>
+import { ref, reactive, getCurrentInstance } from 'vue'
+import { getOrgTree, getOrgList } from '@/api/modular/system/orgManage'
+import { flcFormAdd } from '@/api/modular/flowCenter/formManage'
+import { message } from 'ant-design-vue'
 
-      handleSubmit () {
-        const { form: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            flcFormAdd(values).then((res) => {
-              if (res.success) {
-                this.$message.success('新增成功')
-                this.visible = false
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.form.resetFields()
-              } else {
-                this.$message.error('新增失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel () {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
+defineOptions({
+  name: 'AddForm'
+})
+
+const emit = defineEmits(['ok'])
+const { proxy } = getCurrentInstance()
+
+const labelCol = reactive({
+  xs: { span: 24 },
+  sm: { span: 5 }
+})
+
+const wrapperCol = reactive({
+  xs: { span: 24 },
+  sm: { span: 15 }
+})
+
+const orgTree = ref([])
+const orgList = ref([])
+const selfForms = ref([])
+const frmType = ref(0)
+const formTypeList = ref([
+  { id: 0, name: "动态表单" },
+  { id: 1, name: "自定义表单" }
+])
+const visible = ref(false)
+const confirmLoading = ref(false)
+const formLoading = ref(true)
+const webIdShow = ref(false)
+const formRef = ref(null)
+
+const formData = reactive({
+  orgId: null,
+  name: '',
+  frmType: 0,
+  webId: '',
+  sort: 100,
+  remark: ''
+})
+
+const formRules = reactive({
+  name: [
+    { required: true, message: '请输入表单名称!', trigger: 'blur' }
+  ],
+  frmType: [
+    { required: true, message: '请选择表单类型', trigger: 'change' }
+  ]
+})
+
+const add = () => {
+  visible.value = true
+  getSelfForms()
+  getOrgDate()
+}
+
+const handleChange = (value) => {
+  if (value) {
+    frmType.value = value
   }
+  webIdShow.value = !!value
+}
+
+const getOrgDate = () => {
+  formLoading.value = false
+  getOrgTree().then((res) => {
+    orgTree.value = res.data
+  })
+  getOrgList().then((res) => {
+    orgList.value = res.data
+  })
+}
+
+const initrOrgName = (value) => {
+  // Initialize org name logic if needed
+}
+
+const getSelfForms = () => {
+  selfForms.value = []
+}
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validateFields()
+    confirmLoading.value = true
+    
+    const res = await flcFormAdd(formData)
+    if (res.success) {
+      message.success('新增成功')
+      visible.value = false
+      emit('ok', formData)
+      formRef.value.resetFields()
+    } else {
+      message.error('新增失败::' + res.message)
+    }
+  } catch (error) {
+    console.error('Form validation failed:', error)
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+const handleCancel = () => {
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+  visible.value = false
+}
+
+defineExpose({
+  add
+})
 </script>

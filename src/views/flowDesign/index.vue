@@ -10,13 +10,13 @@
         <a-space>
           <a-button type="primary" @click="handleCreate">
             <template #icon>
-              <plus-outlined ></plus>
+              <plus-outlined />
             </template>
             新建流程
           </a-button>
           <a-button @click="handleRefresh">
             <template #icon>
-              <reload-outlined ></reload>
+              <reload-outlined />
             </template>
             刷新
           </a-button>
@@ -33,19 +33,19 @@
             >
               <template #cover>
                 <div class="flow-cover">
-                  <apartment-outlined style="font-size: 48px; color: #1890ff;" ></apartment>
+                  <apartment-outlined style="font-size: 48px; color: #1890ff;" />
                 </div>
               </template>
               
               <a-card-meta 
                 :title="flow.name" 
                 :description="flow.description"
-              ></a>
+              />
               
               <template #actions>
-                <edit-outlined @click.stop="handleEdit(flow)" title="编辑" ></edit>
-                <copy-outlined @click.stop="handleCopy(flow)" title="复制" ></copy>
-                <delete-outlined @click.stop="handleDelete(flow)" title="删除" ></delete>
+                <edit-outlined @click.stop="handleEdit(flow)" title="编辑" />
+                <copy-outlined @click.stop="handleCopy(flow)" title="复制" />
+                <delete-outlined @click.stop="handleDelete(flow)" title="删除" />
               </template>
             </a-card>
           </a-col>
@@ -65,7 +65,7 @@
     <!-- 新建/编辑流程弹窗 -->
     <a-modal
       v-model:open="modalVisible"
-      :title="editingFlow : '编辑流程' : '新建流程'"
+      :title="editingFlow ? '编辑流程' : '新建流程'"
       @ok="handleSubmit"
       @cancel="handleCancel"
       :confirmLoading="submitLoading"
@@ -77,7 +77,7 @@
         layout="vertical"
       >
         <a-form-item label="流程名称" name="name">
-          <a-input v-model:value="formData.name" placeholder="请输入流程名称" ></a>
+          <a-input v-model:value="formData.name" placeholder="请输入流程名称" />
         </a-form-item>
         
         <a-form-item label="流程描述" name="description">
@@ -85,14 +85,15 @@
             v-model:value="formData.description" 
             placeholder="请输入流程描述"
             :rows="3"
-          ></a>
+          />
         </a-form-item>
       </a-form>
     </a-modal>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
 import { 
   PlusOutlined, 
   ReloadOutlined, 
@@ -103,140 +104,129 @@ import {
 } from '@ant-design/icons-vue'
 import { message, Modal } from 'ant-design-vue'
 
-export default {
-  name: 'FlowDesign',
-  components: {
-    PlusOutlined,
-    ReloadOutlined,
-    EditOutlined,
-    CopyOutlined,
-    DeleteOutlined,
-    ApartmentOutlined
+defineOptions({
+  name: 'FlowDesign'
+})
+
+const flowList = ref([
+  {
+    id: 1,
+    name: '实验审批流程',
+    description: '实验项目申请和审批的标准流程'
   },
-  data() {
-    return {
-      flowList: [
-        {
-          id: 1,
-          name: '实验审批流程',
-          description: '实验项目申请和审批的标准流程'
-        },
-        {
-          id: 2,
-          name: '设备使用流程',
-          description: '实验设备申请使用的管理流程'
-        },
-        {
-          id: 3,
-          name: '样本处理流程',
-          description: '生物样本采集、处理和存储流程'
-        }
-      ],
-      modalVisible: false,
-      editingFlow: null,
-      submitLoading: false,
-      formData: {
-        name: '',
-        description: ''
-      },
-      formRules: {
-        name: [
-          { required: true, message: '请输入流程名称', trigger: 'blur' }
-        ]
-      }
+  {
+    id: 2,
+    name: '设备使用流程',
+    description: '实验设备申请使用的管理流程'
+  },
+  {
+    id: 3,
+    name: '样本处理流程',
+    description: '生物样本采集、处理和存储流程'
+  }
+])
+
+const modalVisible = ref(false)
+const editingFlow = ref(null)
+const submitLoading = ref(false)
+const formRef = ref(null)
+
+const formData = reactive({
+  name: '',
+  description: ''
+})
+
+const formRules = reactive({
+  name: [
+    { required: true, message: '请输入流程名称', trigger: 'blur' }
+  ]
+})
+
+// 加载流程列表
+const loadFlowList = () => {
+  // 这里应该调用API获取流程列表
+  console.log('🔍 加载流程列表')
+}
+
+// 新建流程
+const handleCreate = () => {
+  editingFlow.value = null
+  formData.name = ''
+  formData.description = ''
+  modalVisible.value = true
+}
+
+// 编辑流程
+const handleEdit = (flow) => {
+  console.log('🔍 编辑流程:', flow)
+  editingFlow.value = flow
+  formData.name = flow.name
+  formData.description = flow.description
+  modalVisible.value = true
+}
+
+// 复制流程
+const handleCopy = (flow) => {
+  console.log('🔍 复制流程:', flow)
+  message.success('流程复制成功')
+}
+
+// 删除流程
+const handleDelete = (flow) => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除流程 "${flow.name}" 吗？`,
+    onOk: () => {
+      console.log('🔍 删除流程:', flow)
+      message.success('流程删除成功')
+      // 这里应该调用API删除流程
     }
-  },
-  mounted() {
-    console.log('🔍 FlowDesign 页面已加载')
-    this.loadFlowList()
-  },
-  methods: {
-    // 加载流程列表
-    loadFlowList() {
-      // 这里应该调用API获取流程列表
-      console.log('🔍 加载流程列表')
-    },
+  })
+}
+
+// 刷新列表
+const handleRefresh = () => {
+  console.log('🔍 刷新流程列表')
+  loadFlowList()
+  message.success('刷新成功')
+}
+
+// 提交表单
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validateFields()
+    submitLoading.value = true
     
-    // 新建流程
-    handleCreate() {
-      this.editingFlow = null
-      this.formData = {
-        name: '',
-        description: ''
-      }
-      this.modalVisible = true
-    },
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // 编辑流程
-    handleEdit(flow) {
-      console.log('🔍 编辑流程:', flow)
-      this.editingFlow = flow
-      this.formData = {
-        name: flow.name,
-        description: flow.description
-      }
-      this.modalVisible = true
-    },
-    
-    // 复制流程
-    handleCopy(flow) {
-      console.log('🔍 复制流程:', flow)
-      message.success('流程复制成功')
-    },
-    
-    // 删除流程
-    handleDelete(flow) {
-      Modal.confirm({
-        title: '确认删除',
-        content: `确定要删除流程 "${flow.name}" 吗`,
-        onOk: () => {
-          console.log('🔍 删除流程:', flow)
-          message.success('流程删除成功')
-          // 这里应该调用API删除流程
-        }
-      })
-    },
-    
-    // 刷新列表
-    handleRefresh() {
-      console.log('🔍 刷新流程列表')
-      this.loadFlowList()
-      message.success('刷新成功')
-    },
-    
-    // 提交表单
-    async handleSubmit() {
-      try {
-        await this.$refs.formRef.validateFields()
-        this.submitLoading = true
-        
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        if (this.editingFlow) {
-          console.log('🔍 更新流程:', this.formData)
-          message.success('流程更新成功')
-        } else {
-          console.log('🔍 创建流程:', this.formData)
-          message.success('流程创建成功')
-        }
-        
-        this.modalVisible = false
-        this.loadFlowList()
-      } catch (error) {
-        console.error('表单验证失败:', error)
-      } finally {
-        this.submitLoading = false
-      }
-    },
-    
-    // 取消编辑
-    handleCancel() {
-      this.modalVisible = false
-      this.editingFlow = null
+    if (editingFlow.value) {
+      console.log('🔍 更新流程:', formData)
+      message.success('流程更新成功')
+    } else {
+      console.log('🔍 创建流程:', formData)
+      message.success('流程创建成功')
     }
+    
+    modalVisible.value = false
+    loadFlowList()
+  } catch (error) {
+    console.error('表单验证失败:', error)
+  } finally {
+    submitLoading.value = false
   }
 }
+
+// 取消编辑
+const handleCancel = () => {
+  modalVisible.value = false
+  editingFlow.value = null
+}
+
+onMounted(() => {
+  console.log('🔍 FlowDesign 页面已加载')
+  loadFlowList()
+})
 </script>
 
 <style lang="less" scoped>

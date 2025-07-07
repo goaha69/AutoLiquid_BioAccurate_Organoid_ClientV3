@@ -8,123 +8,112 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
-
-        <a-form-item
-          style="display: none;" : labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          has-feedback
-        >
-          <a-input v-decorator="['id']" ></a>
+      <a-form ref="formRef" :model="formState" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item style="display: none" name="id">
+          <a-input v-model:value="formState.id" />
         </a-form-item>
 
         <a-form-item
           label="职位名称"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
+          name="name"
+          :rules="[{ required: true, message: '请输入职位名称!' }]"
           has-feedback
         >
-          <a-input placeholder="请输入职位名称" v-decorator="['name', {rules: [{required: true, message: '请输入职位名称!'}]}]" ></a>
+          <a-input v-model:value="formState.name" placeholder="请输入职位名称" />
         </a-form-item>
 
         <a-form-item
           label="唯一编码"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
+          name="code"
+          :rules="[{ required: true, message: '请输入唯一编码' }]"
           has-feedback
         >
-          <a-input placeholder="请输入唯一编码" v-decorator="['code', {rules: [{required: true, message: '请输入唯一编码'}]}]" ></a>
+          <a-input v-model:value="formState.code" placeholder="请输入唯一编码" />
         </a-form-item>
 
-        <a-form-item
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          label="排序"
-          has-feedback
-        >
-          <a-input-number style="width: 100%" placeholder="请输入排序" v-decorator="['sort', { initialValue : 100 }]" :min="1" :max="1000" ></a>
+        <a-form-item label="排序" name="sort" has-feedback>
+          <a-input-number
+            v-model:value="formState.sort"
+            style="width: 100%"
+            placeholder="请输入排序"
+            :min="1"
+            :max="1000"
+          />
         </a-form-item>
 
-        <a-form-item
-          label="备注"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          has-feedback
-        >
-          <a-textarea :rows="4" placeholder="请输入备注" v-decorator="['remark']"></a-textarea>
+        <a-form-item label="备注" name="remark" has-feedback>
+          <a-textarea v-model:value="formState.remark" :rows="4" placeholder="请输入备注" />
         </a-form-item>
-
       </a-form>
-
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import { sysPosEdit } from '@/api/modular/system/posManage'
+<script setup>
+import { ref, reactive, nextTick } from 'vue';
+import { sysPosEdit } from '@/api/modular/system/posManage';
+import { message } from 'ant-design-vue';
 
-  export default {
-    data () {
-      return {
-        labelCol: {
-          xs: { span: 24 },
-          sm: { span: 5 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 15 }
-        },
-        visible: false,
-        confirmLoading: false,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      edit (record) {
-        this.visible = true
-        setTimeout(() => {
-          this.form.setFieldsValue(
-            {
-              id: record.id,
-              name: record.name,
-              code: record.code,
-              sort: record.sort,
-              remark: record.remark
-            }
-          )
-        }, 100)
-      },
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 5 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 15 },
+};
 
-      handleSubmit () {
-        const { form: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            sysPosEdit(values).then((res) => {
-              if (res.success) {
-                this.$message.success('编辑成功')
-                this.visible = false
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.form.resetFields()
-              } else {
-                this.$message.error('编辑失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
+const visible = ref(false);
+const confirmLoading = ref(false);
+const formRef = ref();
+const formState = reactive({
+  id: '',
+  name: '',
+  code: '',
+  sort: 100,
+  remark: '',
+});
+
+const emit = defineEmits(['ok']);
+
+const edit = (record) => {
+  visible.value = true;
+  nextTick(() => {
+    Object.assign(formState, record);
+  });
+};
+
+const handleSubmit = () => {
+  confirmLoading.value = true;
+  formRef.value
+    .validate()
+    .then(() => {
+      sysPosEdit(formState)
+        .then((res) => {
+          if (res.success) {
+            message.success('编辑成功');
+            visible.value = false;
+            emit('ok', formState);
+            formRef.value.resetFields();
           } else {
-            this.confirmLoading = false
+            message.error('编辑失败：' + res.message);
           }
         })
-      },
-      handleCancel () {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
-  }
+        .finally(() => {
+          confirmLoading.value = false;
+        });
+    })
+    .catch(() => {
+      confirmLoading.value = false;
+    });
+};
+
+const handleCancel = () => {
+  formRef.value.resetFields();
+  visible.value = false;
+};
+
+defineExpose({
+  edit,
+});
 </script>

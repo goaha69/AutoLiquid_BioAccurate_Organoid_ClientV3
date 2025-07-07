@@ -7,7 +7,7 @@
       :data="data"
       :scale="scale"
       :padding="0">
-      <v-tooltip ></v>
+      <v-tooltip />
       <v-interval
         :shape="['liquid-fill-gauge']"
         position="transfer*value"
@@ -25,7 +25,7 @@
             };
           },
         ]"
-      ></v-interval>
+      />
       <v-guide
         v-for="(row, index) in data"
         :key="index"
@@ -41,25 +41,36 @@
           textAlign: 'center',
           opacity: 0.75,
         }"
-      ></v>
+      />
     </v-chart>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Liquid',
-  props: {
-    height: {
-      type: Number,
-      default: 0
-    },
-    width: {
-      type: Number,
-      default: 0
-    }
+<script setup>
+import { computed } from 'vue'
+
+const props = defineProps({
+  height: {
+    type: Number,
+    default: 0
+  },
+  width: {
+    type: Number,
+    default: 0
+  },
+  data: {
+    type: Array,
+    default: () => []
   }
-}
+})
+
+defineOptions({
+  name: 'Liquid'
+})
+
+const scale = computed(() => ({
+  value: { min: 0, max: 100 }
+}))
 </script>
 
 <style scoped>

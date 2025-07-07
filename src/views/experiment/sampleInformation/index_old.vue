@@ -8,7 +8,7 @@
           <a-row :gutter="48">
             <a-col :span="5">
               <a-form-item label="样品编号:">
-                <a-input v-model  value="queryParam.sampleCode" allow-clear placeholder="请输入样品编 : " ></a>
+                <a-input v-model:value="queryParam.sampleCode" allow-clear placeholder="请输入样品编号" />
               </a-form-item>
             </a-col>
             <!-- <a-col :span="5">
@@ -299,11 +299,10 @@ export default {
 
     statusModal: {
         visible: false,
-        record: {},// 存储当前操作的记
-      originalStatus: null // 新增属性保存原状      },
-      // 384孔板模态框是否打开
-
-    Modal384: {
+        record: {},
+        originalStatus: null
+      },
+      Modal384: {
         visible: false,
         rows: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P'],
         data: [],
@@ -445,26 +444,25 @@ export default {
       showStatusModal(record) {
       this.statusModal.visible = true;
       this.statusModal.record = { ...record }; // 复制记录,避免直接修改原数据
-
-    this.statusModal.originalStatus = record.status; /**
-       * 保存原状 },
-       */
-      handleStatusConfirm() {
+      this.statusModal.originalStatus = record.status;
+    },
+    /**
+     * 保存原状态
+     */
+    handleStatusConfirm() {
       const { id, status } = this.statusModal.record;
       exp_flow_case_UpdateSampleStatus({ id, status }).then(res => {
         if (res.success) {
-          this.$message.success('状态更新成:);
+          this.$message.success('状态更新成功');
           // 更新表格数据
-
-        this.$refs.table.refresh()
+          this.$refs.table.refresh();
           // const index = this.sampleModal.sampleData.findIndex(item => item.id === id);
           // if (index !== -1) {
           //   this.$set(this.sampleModal.sampleData, index, { ...this.statusModal.record });
           // }
-
-        this.statusModal.visible = false;
+          this.statusModal.visible = false;
         } else {
-          this.$message.error(res.message || '状态更新失:);
+          this.$message.error(res.message || '状态更新失败');
         }
       }).catch(err => {
         this.$message.error('请求失败');

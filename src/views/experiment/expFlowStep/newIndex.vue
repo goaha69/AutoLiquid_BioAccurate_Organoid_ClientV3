@@ -18,23 +18,24 @@
         <a-col :span="7">
             <a-card title="程序集列:" :bordered="false" style="height: auto; min-height: 700px;">
                 <div class="table-operator" v-if="hasPerm('exp_flow_step:add')">
-                    <a-button type="primary" v-if="hasPerm('exp_flow_step:add')" @click="addParentForm"><template #icon><plus-outlined></plus-outlined></template>新增程序</a-button>
+                    <a-button type="primary" v-if="hasPerm('exp_flow_step:add')" @click="addParentForm"><template #icon><plus-outlined /></template>新增程序</a-button>
                 </div>
                 <div>
                     <a-table
                         ref="parentTable" size="middle" :pagination="false" :row-key="(record, index) => record.id" :columns="stepParentColumns" draggable="false"
                         :dataSource="stepParentData" :loading="parentLoading" :customRow="stepParentCustomRow" :expandIconAsCell="false" :expandIconColumnIndex="-1" :scroll="{  y: 810 }"> 
-                        <span #serial #default="text, record, index">
+                        <template #serial="{ text, record, index }">
                         {{ index + 1}}
                         </template> 
-                        <template #action="text, record">
+                        <template #action="{ text, record }">
                         <a v-if="hasPerm('exp_flow_step:edit')" @click="executeSummary(record)">执行</a>
-                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:edit')" ></a>
-                        <a-dropdown  v-if="hasPerm('exp_flow_step  edit') || hasPerm('exp_flow_step : delete')">
+                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:edit')" />
+                        <a-dropdown  v-if="hasPerm('exp_flow_step:edit') || hasPerm('exp_flow_step:delete')">
                         <a class="ant-dropdown-link">
-                            更多<down-outlined ></down>
+                            更多<down-outlined />
                         </a>
-                        <a-menu #overlay>
+                        <template #overlay>
+                        <a-menu>
                             <a-menu-item v-if="hasPerm('exp_flow_step:edit')">
                                 <a v-if="hasPerm('exp_flow_step:edit')" @click="copySummary(record)">复制</a>
                             </a-menu-item>
@@ -47,12 +48,8 @@
                                 </a-popconfirm>
                             </a-menu-item>
                         </a-menu>
+                        </template>
                         </a-dropdown>
-                        <!-- <a v-if="hasPerm('exp_flow_step:edit')" @click="$refs.editParentForm.edit(record)">编辑</a>
-                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:edit')" ></a>          
-                        <a-popconfirm v-if="hasPerm('exp_flow_step:delete')" placement="topRight" title="确认删除本步骤与子步骤" @confirm="() => exp_flow_step_delete(1,record)">
-                            <a>删除</a>
-                        </a-popconfirm> -->
                         </template>
                     </a-table>
                 </div>
@@ -65,7 +62,7 @@
                     <div v-if="stepRowRunning">                        
                         <a-button type="primary" icon="stop" @click="setCurrentStatus(3)" v-if="currentStatus==1 || currentStatus==2">停止</a-button>
                         <a-button type="primary" icon="pause" @click="setCurrentStatus(2)" v-if="currentStatus==1">暂停</a-button>
-                        <a-button type="primary" ><template #icon><redo-outlined ></redo></template @click="setCurrentStatus(1)" v-if="currentStatus==2">继续</a-button>
+                        <a-button type="primary" @click="setCurrentStatus(1)" v-if="currentStatus==2"><template #icon><redo-outlined /></template>继续</a-button>
                     </div>                    
                 </template>
 
@@ -73,22 +70,22 @@
                     style="font-size: 14px;min-width: 100px;margin-top : 10px;"
                     v-for="(item,index) in typeData" :key="index" :value="item.code">{{ item.value }}</a-button>
             
-                <a-divider type="horizontal" ></a>
+                <a-divider type="horizontal" />
                 <div @drop="onDrop" @dragover.prevent  style="min-height:600px;">
                     <a-table
                         ref="stepTable" size="middle" :pagination="paginationConfig" :row-key="(record, index) => record.id" :columns="stepColumns" 
                         :dataSource="stepData" :loading="stepLoading" :customRow="stepCustomRow" draggable="false"> 
-                        <span #serial #default="text, record, index">
-                            {{ index' + 1 }}
+                        <template #serial="{ text, record, index }">
+                            {{ index + 1 }}
                         </template>
-                        <span #description #default="text, record">
+                        <template #description="{ text, record }">
                             {{ getFlowStepDesc(record) }}
                         </template>
-                        <template #action="text, record">
+                        <template #action="{ text, record }">
                         <a v-if="hasPerm('exp_flow_step:edit')" @click="doMethod(record)">执行</a>
-                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:edit')" ></a>
+                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:edit')" />
                         <a v-if="hasPerm('exp_flow_step:edit')" @click="$refs.editStepForm.edit(record)">编辑</a>
-                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:delete')" ></a>          
+                        <a-divider type="vertical" v-if="hasPerm('exp_flow_step:delete')" />          
                         <a-popconfirm v-if="hasPerm('exp_flow_step:delete')" placement="topRight" title="确认删除本步骤" @confirm="() => exp_flow_step_delete(2,record)">
                             <a>删除</a>
                         </a-popconfirm>
@@ -98,57 +95,57 @@
             </a-card>
         </a-col>
     </a-row>
-    <edit-parent-form ref="editParentForm" @ok="handleParentOk" ></edit>     
-    <edit-step-form ref="editStepForm" @ok="handleOk" ></edit>  
+    <edit-parent-form ref="editParentForm" @ok="handleParentOk" />     
+    <edit-step-form ref="editStepForm" @ok="handleOk" />  
 
     <a-modal :open="interventionModal.visible" :title="interventionModal.title" :maskClosable="false" @ok="handleIntervention" @cancel="interventionModal.visible=false">
       <div>
-        <span class="span-label">案例编号:</template>
-        <span style="color:black;">{{interventionModal.flowCode}}</template>
+        <span class="span-label">案例编号:</span>
+        <span style="color:black;">{{interventionModal.flowCode}}</span>
       </div>
       <div style="margin-top:10px;">
-        <span class="span-label">案例名称:</template>
-        <span style="color:black;">{{interventionModal.flowName}}</template>
+        <span class="span-label">案例名称:</span>
+        <span style="color:black;">{{interventionModal.flowName}}</span>
       </div>
       <div style="margin-top:10px;">
-        <span class="span-label">节点名称:</template>
-        <span style="color:black;">{{interventionModal.nodeName}}</template>
+        <span class="span-label">节点名称:</span>
+        <span style="color:black;">{{interventionModal.nodeName}}</span>
       </div>
       <div style="margin-top:10px;">
-        <span class="span-label">步骤名称:</template>
-        <span style="color:black;">{{interventionModal.stepName}}</template>
+        <span class="span-label">步骤名称:</span>
+        <span style="color:black;">{{interventionModal.stepName}}</span>
       </div>
       <div style="margin-top:10px;">
-        <span class="span-label">描述:</template>
-        <span style="color:black;">{{interventionModal.content}}</template>
+        <span class="span-label">描述:</span>
+        <span style="color:black;">{{interventionModal.content}}</span>
       </div>
       <div style="margin-top: 10px;display: flex; align-items : flex-start;">
-        <span class="span-label">处理意见:</template>
-        <a-textarea placeholder="请输入处理意:" style="width: 250px;font-size : 16px;color: black;" rows="3" v-model : value="interventionModal.remark" allow-clear></a>
+        <span class="span-label">处理意见:</span>
+        <a-textarea placeholder="请输入处理意见" style="width: 250px;font-size : 16px;color: black;" rows="3" v-model:value="interventionModal.remark" allow-clear />
      </div>
     </a-modal>
 
     <a-modal :open="copyModal.visible" title="复制程序:" :maskClosable="false" @ok="handleCopy" @cancel="copyModal.visible=false">
       <div>
-        <span class="span-label">来源:</template>
-        <span style="color:black;">{{copyModal.oldName}}</template>
+        <span class="span-label">来源:</span>
+        <span style="color:black;">{{copyModal.oldName}}</span>
       </div>
       <div style="margin-top:10px;">
-        <sp-input label="名称" :inputWidth="200" v-model="copyModal.newName" ></sp>
+        <sp-input label="名称" :inputWidth="200" v-model="copyModal.newName" />
      </div>
     </a-modal>  
 
     <a-modal :open="copyAllModal.visible" title="复制所有程序集" :maskClosable="false" @ok="handleCopyAll" @cancel="copyAllModal.visible=false">
       <div>
-        <span class="span-label">源布局:</template>
-        <a-select style="width: 250px;color: black;" placeholder="请选择盘面布局" v-model : value="copyAllModal.oldLayoutId">
+        <span class="span-label">源布局:</span>
+        <a-select style="width: 250px;color: black;" placeholder="请选择盘面布局" v-model:value="copyAllModal.oldLayoutId">
             <a-select-option v-for="(item, index) in layoutData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
         </a-select>
       </div>
       
       <div style="margin-top: 5px;">
-        <span class="span-label">新布局:</template>
-        <a-select style="width: 250px;color: black;" placeholder="请选择盘面布局" v-model : value="copyAllModal.newLayoutId">
+        <span class="span-label">新布局:</span>
+        <a-select style="width: 250px;color: black;" placeholder="请选择盘面布局" v-model:value="copyAllModal.newLayoutId">
             <a-select-option v-for="(item, index) in layoutData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
         </a-select>
       </div>
@@ -214,32 +211,10 @@
           },   
           {
             title: '编号',
-            width:'90px',
+            width:'100px',
             dataIndex: 'code'
           },
           {
-            title: '程序名称',
-            dataIndex: 'name'
-          }
-        ],
-        stepColumns: [   
-          {
-            title: '序号',
-            key: 'serial',
-            align: 'center',
-            width: '45px',
-            slots: { customRender: 'serial' }
-          },       
-        //   {
-        // 
-  title: '编号',
-        // 
-  width:'100px',
-        // 
-  dataIndex: 'code'
-        //   },
-     
-        {
             title: '步骤名称:',
             width:'120px',
             dataIndex: 'name'
@@ -313,7 +288,7 @@
 
         refreshTime:null,
         mySocket:null,
-        base_url:site_config.proxy:'':site_config.api_service
+        base_url: site_config.proxy ? site_config.proxy : site_config.api_service
       }
     },
     created () {
@@ -546,7 +521,7 @@
                 var data={
                     type:1,
                     flowId:this.selectStepParentNode.id,
-                    code:this.selectStepParentNode.code' + "_"+key,
+                    code:this.selectStepParentNode.code + "_"+key,
                     name:this.selectStepParentNode.name+"_"+key,
                     sampleCode:this.selectStepParentNode.code+"_"+key,
                 }                
@@ -555,13 +530,12 @@
                         this.stepRowRunning=true;
                         this.currentStatus=1;
                         this.startSocket();
-                        this.$message.success('任务发送成:')
+                        this.$message.success('任务发送成功')
                     } else {
                         this.stepRowRunning=false;
                         this.stepRowRunningIndex=0;
-                        this.$message.error('任务发送失:) // ' + res.message
-
-                  }
+                        this.$message.error('任务发送失败: ' + res.message)
+                    }
                 })
             }
         },
@@ -580,13 +554,12 @@
                 if (res.success) {
                      this.stepRowRunning=true;
                     this.currentStatus=1;
-                    this.$message.success('任务发送成:')
+                    this.$message.success('任务发送成功')
                 } else {
                     this.stepRowRunning=false;
                     this.stepRowRunningIndex=0;
-                    this.$message.error('任务发送失:) // ' + res.message
-
-              }
+                    this.$message.error('任务发送失败: ' + res.message)
+                }
             })
         },
         getFlowStepDesc(record)
@@ -620,26 +593,21 @@
                     remark=equipmentName.concat(' ').concat(fl[0].value).concat(' ul').concat(' 枪头');
                     break;
                 case 2:// 退枪头
-
-                  var f1=(record.releaseTipSourcePos)?'退回原?:'丢弃'
-                    var f2=(record.useReleaseTipSourcePos)?'复用':'不复'
+                  var f1=(record.releaseTipSourcePos)?'退回原位':'丢弃'
+                    var f2=(record.useReleaseTipSourcePos)?'复用':'不复用'
                     remark= equipmentName.concat(' ').concat(f1).concat(' ').concat(f2);
                     break;
                 case 3:// 吸液
-
-                  remark= equipmentName.concat(' ').concat(tagName).concat(' ').concat(liquidName).concat(' ').concat(record.volume).concat('ul').concat(' ?: ').concat(record.holeIndexStr);
+                  remark= equipmentName.concat(' ').concat(tagName).concat(' ').concat(liquidName).concat(' ').concat(record.volume).concat('ul').concat(' 孔位: ').concat(record.holeIndexStr);
                     break;
                 case 4:// 喷液
-
-                  remark= equipmentName.concat(' ').concat(tagName).concat(' ').concat(liquidName).concat(' ').concat(record.volume).concat('ul').concat(' ?: ').concat(record.holeIndexStr);
+                  remark= equipmentName.concat(' ').concat(tagName).concat(' ').concat(liquidName).concat(' ').concat(record.volume).concat('ul').concat(' 孔位: ').concat(record.holeIndexStr);
                     break;
                 case 5:// 混合
-
-                  remark= equipmentName.concat(' ').concat(tagName).concat(' ').concat(liquidName).concat(' ').concat(record.volume).concat('ul').concat(' ?: ').concat(record.holeIndexStr).concat(' ').concat(record.mixTime).concat(' :);
+                  remark= equipmentName.concat(' ').concat(tagName).concat(' ').concat(liquidName).concat(' ').concat(record.volume).concat('ul').concat(' 孔位: ').concat(record.holeIndexStr).concat(' ').concat(record.mixTime).concat(' 次');
                     break;
                 case 6:// 等待
-
-                  remark= '等待时间 : '.concat(record.waitTime).concat(':);
+                  remark= '等待时间: '.concat(record.waitTime).concat('秒');
                     break;
                 case 7:// 夹取
                 
@@ -669,9 +637,9 @@
                 var temp=JSON.parse(params)
                 var data=[];
                 temp.forEach(item => {
-                    data.push(""' + item.paramName+":"+item.value+"")
+                    data.push("" + item.paramName+":"+item.value+"")
                 })
-                var str="("+data.map(item => item).join(',')' + ")"
+                var str="("+data.map(item => item).join(',') + ")"
                 return str;                
             }
         },
@@ -679,9 +647,8 @@
         {
             if(this.selectLayoutNode==null)
             {
-                this.$message.info('请先选择布局!') // ' + res.message
-
-              return;
+                this.$message.info('请先选择布局!')
+                return;
             }
             this.$refs.editParentForm.add({
                 id:0,
@@ -724,9 +691,8 @@
                         this.removeEmptyChildren(this.stepData)
                     }
                 } else {
-                    this.$message.error('数据加载失败') // ' + res.message
-
-              }
+                    this.$message.error('数据加载失败')
+                }
             }).finally(() => {
                 this.parentLoading=false;
                 this.stepLoading=false;
@@ -745,7 +711,7 @@
                     }
                 },                
                 style: {
-                    backgroundColor: this.selectLayoutNode==record : ('#'+this.$store.getters.color.slice(1)+'15') : '', // Change background color based on age
+                    backgroundColor: this.selectLayoutNode==record ? ('#'+this.$store.getters.color.slice(1)+'15') : '', // Change background color based on age
 
               },
             };
@@ -769,7 +735,7 @@
                         // 获取源数id
 
                       this.sourceObj = record;
-                        console.log("源数:"' + this.sourceObj.id);
+                        console.log("源数据:" + this.sourceObj.id);
 
                     },
                     dragover: (event) => {
@@ -792,18 +758,15 @@
                                 if (res.success) {
                                     this.loadFlowStepData(1)
                                 } else {
-                                    this.$message.error('数据刷新失败') // ' + res.message
-
-                              }
+                                    this.$message.error('数据刷新失败')
+                                }
                             })
                         }
                     },
                     
                 },
                 style: {
-                    // backgroundColor:this.getStepRowBackground(record)
-
-                  backgroundColor  this.selectStepParentNode==record  ('#'+this.$store.getters.color.slice(1)+'15') : '', // Change background color based on age
+                    backgroundColor: this.selectStepParentNode==record ? ('#'+this.$store.getters.color.slice(1)+'15') : '', // Change background color based on age
                 },
             };
         },
@@ -837,7 +800,7 @@
                     pids:'[0],['+this.selectStepParentNode.id+']',
                     layoutId:this.selectLayoutNode.id,
                     type:this.draggedData.code,
-                    sort:this.stepData.length' + 1,
+                    sort:this.stepData.length+1,
 
                     // type:-1,
                     // pid:'0',
@@ -896,7 +859,7 @@
                         // 获取源数id
 
                       this.sourceObj = record;
-                        console.log("源数:"' + this.sourceObj.id);
+                        console.log("源数据:" + this.sourceObj.id);
 
                     },
                     dragover: (event) => {
@@ -941,7 +904,7 @@
                     return "";
             }
             else            
-                return this.selectStepNode==record  ('#'+this.$store.getters.color.slice(1)+'15') : '';
+                return this.selectStepNode==record ? ('#'+this.$store.getters.color.slice(1)+'15') : '';
         },
         getConsumableTagData() {
           var data={id:this.selectLayoutNode.id}
@@ -1044,12 +1007,10 @@ button {
 }
 .ant-table-selection-column {
     display: none; /* This will hide the checkbox column */
-       */
 }
 
 .selected-row {
   background-color: #e6f7ff; /* 选中行的背景颜色 */
-       */
 }
 
  :deep(.ant-table-body){
@@ -1065,9 +1026,9 @@ button {
 
 
 ::v-deep.row-running {
-  background-color: #d5eb0b; /* 设置高亮行的背景: */
+  background-color: #d5eb0b; /* 设置高亮行的背景 */
 }
 ::v-deep.row-finish {
-  background-color: #a6e698; /* 设置高亮行的背景: */
+  background-color: #a6e698; /* 设置高亮行的背景 */
 }
 </style>

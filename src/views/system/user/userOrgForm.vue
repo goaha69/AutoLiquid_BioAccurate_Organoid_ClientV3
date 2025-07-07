@@ -1,165 +1,92 @@
 <template>
   <a-modal
-    title="授权数据"
+    title="授权数据范围"
     :width="600"
     :open="visible"
-    :confirmLoading="confirmLoading"
-    :destroyOnClose="true"
+    :confirm-loading="confirmLoading"
+    :destroy-on-close="true"
     @ok="handleSubmit"
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-form-item
-          label="选择机构"
-          :labelCol="labelCol"
-          :wrapperCol="wrapperCol"
-          class="grantOrgScrollbar"
-        >
-
+      <div class="grant-org-scrollbar">
           <a-tree
-            v-model="checkedKeys"
+            v-if="orgTreeData.length > 0"
+            v-model:checkedKeys="checkedKeys"
             checkable
-            checkStrictly  auto-expand-parent="autoExpandParent" : expanded-keys="expandedKeys"
             :tree-data="orgTreeData"
-            :selected-keys="selectedKeys"
-            :replaceFields="replaceFields"
-            @expand="onExpand"
-            @select="onSelect"
-          ></a>
-        </a-form-item>
-
-      </a-form>
+            :field-names="replaceFields"
+            default-expand-all
+          />
+      </div>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import { getOrgTree } from '@/api/modular/system/orgManage'
-  import { sysUserOwnData, sysUserGrantData } from '@/api/modular/system/userManage'
+<script setup>
+import { ref } from 'vue';
+import { message } from 'ant-design-vue';
+import { getOrgTree } from '@/api/modular/system/orgManage';
+import { sysUserOwnData, sysUserGrantData } from '@/api/modular/system/userManage';
 
-  export default {
-    data () {
-      return {
-        labelCol: {
-          style: { 'padding-right': '20px' },
-          xs: { span: 24 },
-          sm: { span: 5 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 15 }
-        },
-        orgTreeData: [],
-        expandedKeys: [],
-        checkedKeys: [],
-        visible: false,
-        confirmLoading: false,
-        formLoading: true,
-        autoExpandParent: true,
-        selectedKeys: [],
-        userEntity: [],
-        replaceFields: {
-          key: 'id'
-        },
-        form: this.$form.createForm(this)
-      }
-    },
+const visible = ref(false);
+const confirmLoading = ref(false);
+const formLoading = ref(true);
+const orgTreeData = ref([]);
+const checkedKeys = ref([]);
+const currentUser = ref(null);
+const replaceFields = { key: 'id', title: 'name' };
 
-    methods: {
-      /**
-       * 初始化方法
-       */
-      userOrg (record) {
-        this.userEntity = record
-        this.visible = true
-        // 获取机构树
+const emit = defineEmits(['ok']);
 
-      this.getOrgTree()
-        // 已关联数据
+const userOrg = (record) => {
+  currentUser.value = record;
+  visible.value = true;
+  formLoading.value = true;
 
-      this.sysUserOwnData(this.userEntity)
-      },
-
-      /**
-       * 获取机构树
-       */
-      getOrgTree () {
-        this.formLoading = true
-        getOrgTree().then((res) => {
-           if (res.success) {
-             this.orgTreeData = res.data
-             // 默认展开
-
-           this.orgTreeData.forEach(item => {
-               this.expandedKeys.push(item.id)
-             })
-           }
-        })
-      },
-
-      /**
-       * 此用户已有数据列表
-       */
-      sysUserOwnData (record) {
-        sysUserOwnData({ id: record.id }).then((res) => {
-          if (res.success) {
-            this.checkedKeys = res.data
-          }
-          this.formLoading = false
-        })
-      },
-
-      onExpand (expandedKeys) {
-        this.expandedKeys = expandedKeys
-        this.autoExpandParent = false
-      },
-      onCheck (checkedKeys) {
-        this.checkedKeys = checkedKeys
-      },
-      onSelect (selectedKeys, info) {
-        this.selectedKeys = selectedKeys
-      },
-
-      handleSubmit () {
-        const { form: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            const checkedKeys = this.checkedKeys.checked === undefined  this.checkedKeys : this.checkedKeys.checked
-            sysUserGrantData({ id: this.userEntity.id, grantOrgIdList: checkedKeys }).then((res) => {
-              if (res.success) {
-                this.$message.success('授权成功')
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('授权失败:' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel () {
-        this.form.resetFields()
-        // 清空已选择的
-
-      this.checkedKeys = []
-        // 清空已展开的
-
-      this.expandedKeys = []
-        this.visible = false
-      }
+  Promise.all([
+    getOrgTree(),
+    sysUserOwnData({ id: record.id })
+  ]).then(([orgRes, ownDataRes]) => {
+    if (orgRes.success) {
+      orgTreeData.value = orgRes.data;
     }
-  }
+    if (ownDataRes.success) {
+      checkedKeys.value = ownDataRes.data;
+    }
+  }).finally(() => {
+    formLoading.value = false;
+  });
+};
+
+const handleSubmit = () => {
+  confirmLoading.value = true;
+  
+  sysUserGrantData({ id: currentUser.value.id, grantOrgIdList: checkedKeys.value }).then(res => {
+    if (res.success) {
+      message.success('授权成功');
+      handleCancel();
+      emit('ok');
+    } else {
+      message.error('授权失败：' + res.message);
+    }
+  }).finally(() => {
+    confirmLoading.value = false;
+  });
+};
+
+const handleCancel = () => {
+  visible.value = false;
+  orgTreeData.value = [];
+  checkedKeys.value = [];
+  currentUser.value = null;
+};
+
+defineExpose({ userOrg });
 </script>
 
 <style scoped>
-.grantOrgScrollbar {
+.grant-org-scrollbar {
   max-height: 60vh;
   overflow-y: auto;
 }

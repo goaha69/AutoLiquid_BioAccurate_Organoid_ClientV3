@@ -1,586 +1,449 @@
 <template>
   <a-row :gutter="24">
     <a-col :md="4" :sm="24" style="padding: 0 0 0 0;">
-      <a-card  bordered="false" : loading="treeLoading" class="leftTree">
-        <div v-if="this.docTree!='' ">
-          <a-tree style="scroll: true" : treeData="docTree" v-if="docTree.length" @select="handleClick"
-                  :defaultExpandAll="false" :defaultExpandedKeys="defaultExpandedKeys" :replaceFields="replaceFields"></a>
+      <a-card :bordered="false" :loading="treeLoading" class="leftTree">
+        <div v-if="docTree.length > 0">
+          <a-tree
+            style="scroll: true"
+            :tree-data="docTree"
+            @select="handleClick"
+            :default-expand-all="false"
+            :default-expanded-keys="defaultExpandedKeys"
+            :replace-fields="replaceFields"
+          />
         </div>
         <div v-else>
-          <a-empty :image="simpleImage"></a>
+          <a-empty :image="Empty.PRESENTED_IMAGE_SIMPLE" />
         </div>
       </a-card>
     </a-col>
     <a-col :md="20" :sm="24">
-      <a-card  bordered="false" : bodyStyle="tstyle">
-        <div class="table-page-search-wrapper" v-if="hasPerm('Document:page')">
-          <a-form layout="inline">
-            <a-row :gutter="48">
-              <a-col  md="6" : sm="24">
-                <a-form-item label="名称">
-                  <a-input v-model  value="queryParam.name" allow-clear placeholder="请输入名 : ></a>
-                </a-form-item>
-              </a-col>
-              <a-col" :md="6" :sm="24">
-                <a-form-item label="类型">
-                  <a-select style="width: 100%" v-model : value="queryParam.fileType" placeholder="请选择类型">
-                    <a-select-option v-for="(item,index) in fileTypeData" :key="index" :value="item.name">{{
-                      item.name
-                      }}
-                    </a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-              <a-col  md="6" : sm="24">
-                <a-form-item label="标签">
-                  <a-select style="width: 100%" v-model : value="queryParam.label" placeholder="请选择标签">
-                    <a-select-option v-for="(item, index) in documentlabelData" :key="index" :value="item.code">{{
-                      item.name
-                      }}
-                    </a-select-option>
-                  </a-select>
-                </a-form-item>
-              </a-col>
-
-              <a-col  md="6" : sm="24">
-                <span class="table-page-search-submitButtons">
-                  <a-button type="primary" @click="$refs.table.refresh(true)">查询</a-button>
-                  <a-button style="margin-left: 8px" @click="() => queryParam = {}">重置</a-button>
-                </span>
-              </a-col>
-            </a-row>
-          </a-form>
-        </div>
+      <a-card :bordered="false" :bodyStyle="tstyle">
+        <a-form layout="inline" :model="queryParam" v-if="hasPerm('Document:page')">
+          <a-row :gutter="48">
+            <a-col :md="6" :sm="24">
+              <a-form-item label="名称">
+                <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入名称" />
+              </a-form-item>
+            </a-col>
+            <a-col :md="6" :sm="24">
+              <a-form-item label="类型">
+                <a-select v-model:value="queryParam.fileType" placeholder="请选择类型" style="width: 100%">
+                  <a-select-option v-for="item in fileTypeData" :key="item.name" :value="item.name">
+                    {{ item.name }}
+                  </a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :md="6" :sm="24">
+              <a-form-item label="标签">
+                <a-select v-model:value="queryParam.label" placeholder="请选择标签" style="width: 100%">
+                  <a-select-option v-for="item in documentlabelData" :key="item.code" :value="item.code">
+                    {{ item.name }}
+                  </a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :md="6" :sm="24">
+              <span class="table-page-search-submitButtons">
+                <a-button type="primary" @click="handleQuery">查询</a-button>
+                <a-button style="margin-left: 8px" @click="resetQuery">重置</a-button>
+              </span>
+            </a-col>
+          </a-row>
+        </a-form>
       </a-card>
       <a-card :bordered="false">
-        <s-table
-          ref="table"
-          :columns="columns"
-          :data="loadData"
-          :alert="true"
-          :rowKey="(record) => record.id"
-          :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }">
-          <template class="table-operator" #operator v-if="hasPerm('Document:add')">
-            <div class="file-tool">
-              <div class="btn-tool">
-                <a-button type="primary" v-if="hasPerm('Document:add')" @click="$refs.addForm.add(pId)">
-                  <template #icon><FolderAddOutlined ></FolderAddOutlined></template>
-                  新建文件:                </a-button>
-                <a-dropdown>
-                  <a-menu #overlay>
-                    <a-menu-item key="1" @click="$refs.uploadFiles.upload(pId)">
-                      上传文件
-                    </a-menu-item>
-                    <a-menu-item key="2" @click="$refs.uploadFolder.upload(pId)">
-                      上传文件:                    </a-menu-item>
+        <template #title>
+          <div class="file-tool">
+            <div class="btn-tool">
+              <a-button type="primary" v-if="hasPerm('Document:add')" @click="handleAdd">
+                <template #icon><folder-add-outlined /></template>
+                新建文件夹
+              </a-button>
+              <a-dropdown>
+                <template #overlay>
+                  <a-menu>
+                    <a-menu-item key="1" @click="handleUploadFiles">上传文件</a-menu-item>
+                    <a-menu-item key="2" @click="handleUploadFolder">上传文件夹</a-menu-item>
                   </a-menu>
-                  <a-button v-if="hasPerm('Document:add')">
-                    <template #icon><UploadOutlined ></UploadOutlined></template>
-                    上传
-                    <DownOutlined ></DownOutlined>
-                  </a-button>
-                </a-dropdown>
-                <a-button type="danger" v-if="hasPerm('Document:delete')" :disabled="!hasSelected" @click="massDelete" :loading="loading">
-                  <template #icon><DeleteOutlined ></DeleteOutlined></template>
-                  删除
-                </a-button>
-                <a-button v-if="hasPerm('Document:edit')" :disabled="!hasSelected" @click="massEdit" :loading="loading">
-                  <template #icon><EditOutlined ></EditOutlined></template>
-                  移动
-                </a-button>
-                <a-button type="dashed" :disabled="!hasSelected" @click="clearSelected"
-                          :loading="loading">清空选择
-                </a-button>
-              </div>
-              <div class="path-tool">
-                <template v-if="pathStack.length">
-                  <a @click="goBack">返回上一</a>
-                  <a-divider type="vertical"></a>
                 </template>
-                <a @click="goHome" style="margin-right: 6px">全部文件</a>
-                <template v-for="item in pathStack" :key="item.id">
-                  <RightOutlined ></RightOutlined>
-                  <a @click="go(item.id)" style="margin: 0 6px;">{{item.name}}</a>
-                </template>
-              </div>
-            </div>
-          </template>
-          <template #nameSlots="{ text, record }">
-            <template v-if="record.fileType === '文件:">
-              <FolderOpenTwoTone two-tone-color="#F7C709" ></FolderOpenTwoTone>
-              <a @click="NextFolder(record)" style="margin-left: 5px;">{{ text }}</a>
-            </template>
-
-            <template v-else>
-              <FileTextOutlined v-if="record.fileType === '文档'" ></FileTextOutlined>
-              <FileImageOutlined v-else-if="record.fileType === '图片'" ></FileImageOutlined>
-              <FileZipOutlined v-else-if="record.fileType === '压缩:" ></FileZipOutlined>
-              <FileOutlined v-else-if="record.fileType === '应用程序'" ></FileOutlined>
-              <FileOutlined v-else ></FileOutlined>
-              <a-tooltip placement="top">
-                <template #title>
-                  <span>{{ text }}</span>
-                </template>
-                <span style="margin-left: 5px;">{{ text }}</span>
-              </a-tooltip>
-            </template>
-          </template>
-          <template #fileTypeSlots="{ text }">
-            <span>
-              <a-tag v-if="text === '文件:" color="#ffcc00" style="margin: 0;font-size : 14px">{{text}}</a-tag>
-              <a-tag v-else-if="text === '文档'" color="#3399ff" style="margin: 0;font-size : 14px">{{text}}</a-tag>
-              <a-tag v-else-if="text === '图片'" color="#ff3333" style="margin: 0;font-size : 14px">{{text}}</a-tag>
-              <a-tag v-else-if="text === '应用程序'" color="#A2A2A2" style="margin: 0;font-size : 14px">{{text}}</a-tag>
-              <a-tag v-else-if="text === '压缩:" color="#76CD76" style="margin: 0;font-size : 14px">{{text}}</a-tag>
-              <a-tag v-else color="grey" style="margin: 0;font-size : 14px">{{text}}</a-tag>
-            </span>
-          </template>
-          <template #tagsSlots="{ text }">
-            <span>
-              <!--        <a-tag v-for="tag in tags" :key="tag" :color="tag === '1' : 'volcano' :" tag=== '2' : 'geekblue' : 'green'">
-              {{documentlabelData[tag - 1].name}}
-            </a-tag> -->
-              <a-tag v-if="text > 0" color="geekblue" style="margin: 0;font-size : 14px">
-                {{ getDocLabel(text) }}
-              </a-tag>
-            </span>
-          </template>
-          <!--  <template #fileSizeSlots="{ text }"><span>
-            <a-tag v-for="tag in tags" :key="tag" :color="tag === '1' : 'volcano' :" tag=== '2' : 'geekblue' : 'green'">
-              {{documentlabelData[tag - 1].name}}
-            </a-tag>
-          </span></template> -->
-          <template #action="{ text, record }">
-            <span>
-              <a v-if="hasPerm('Document:edit')" @click="$refs.editForm.edit(record)">重命</a>
-             <!-- <a-divider type="vertical" v-if="hasPerm('Document  edit') & hasPerm('Document : download') & record.documentType ===2 "></a>
-              <a v-if="hasPerm('Document:download') & record.documentType ===2 " @click="sysFileInfoDownload(record)" >下载</a> -->
-               <!-- <a-divider type="vertical" v-if="hasPerm('Document  edit') & hasPerm('Document : delete')"></a> -->
-     <!--         <a-popconfirm v-if="hasPerm('Document:delete')" placement="topRight" title="确认删除'" @confirm="() => DocumentDelete(record)">
-                <a>删除</a> -->
-             <a-divider type="vertical"></a>
-             <a-dropdown>
-                <a class="ant-dropdown-link">
-                  更多 <down-outlined ></down>
-                </a>
-                <a-menu #overlay>
-                  <a-menu-item v-if="hasPerm('Document:download') & (record.fileType ==='文档'||record.fileType ==='图片')">
-                    <a @click="preview(record)">预览</a>
-                  </a-menu-item>
-                  <a-menu-item v-if="hasPerm('Document:download')  &(record.fileSuffix === 'doc' || record.fileSuffix === 'docx') ">
-                    <a @click="$refs.editForm.edit(record)">编辑</a>
-                  </a-menu-item>
-                  <a-menu-item v-if="hasPerm('Document:download')">
-                    <a @click="DocumentDownload(record)">下载</a>
-                  </a-menu-item>
-                  <a-menu-item v-if="hasPerm('Document:delete')">
-                    <a-popconfirm placement="topRight" title="确认删除" @confirm="() => DocumentDelete(record)">
-                      <a>删除</a>
-                    </a-popconfirm>
-                  </a-menu-item>
-                </a-menu>
+                <a-button v-if="hasPerm('Document:add')">
+                  <template #icon><upload-outlined /></template>
+                  上传
+                  <down-outlined />
+                </a-button>
               </a-dropdown>
-            </span>
+              <a-button type="danger" v-if="hasPerm('Document:delete')" :disabled="!hasSelected" @click="handleMassDelete" :loading="loading">
+                <template #icon><delete-outlined /></template>
+                删除
+              </a-button>
+              <a-button v-if="hasPerm('Document:edit')" :disabled="!hasSelected" @click="handleMassEdit" :loading="loading">
+                <template #icon><edit-outlined /></template>
+                移动
+              </a-button>
+              <a-button type="dashed" :disabled="!hasSelected" @click="clearSelected" :loading="loading">
+                清空选择
+              </a-button>
+            </div>
+            <div class="path-tool">
+              <template v-if="pathStack.length">
+                <a @click="goBack">返回上一级</a>
+                <a-divider type="vertical" />
+              </template>
+              <a @click="goHome" style="margin-right: 6px">全部文件</a>
+              <template v-for="item in pathStack" :key="item.id">
+                <right-outlined />
+                <a @click="go(item.id)" style="margin: 0 6px;">{{ item.name }}</a>
+              </template>
+            </div>
+          </div>
+        </template>
+        <a-table
+          :columns="columns"
+          :data-source="dataSource"
+          :loading="tableLoading"
+          :pagination="pagination"
+          :row-key="(record) => record.id"
+          :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+          @change="handleTableChange"
+        >
+          <template #bodyCell="{ column, text, record }">
+            <template v-if="column.dataIndex === 'name'">
+              <template v-if="record.fileType === '文件夹'">
+                <folder-open-two-tone two-tone-color="#F7C709" />
+                <a @click="handleNextFolder(record)" style="margin-left: 5px;">{{ text }}</a>
+              </template>
+              <template v-else>
+                <file-text-outlined v-if="record.fileType === '文档'" />
+                <file-image-outlined v-else-if="record.fileType === '图片'" />
+                <file-zip-outlined v-else-if="record.fileType === '压缩包'" />
+                <file-outlined v-else-if="record.fileType === '应用程序'" />
+                <file-outlined v-else />
+                <a-tooltip placement="top">
+                  <template #title><span>{{ text }}</span></template>
+                  <span style="margin-left: 5px;">{{ text }}</span>
+                </a-tooltip>
+              </template>
+            </template>
+            <template v-if="column.dataIndex === 'fileType'">
+              <a-tag v-if="text === '文件夹'" color="#ffcc00">{{text}}</a-tag>
+              <a-tag v-else-if="text === '文档'" color="#3399ff">{{text}}</a-tag>
+              <a-tag v-else-if="text === '图片'" color="#ff3333">{{text}}</a-tag>
+              <a-tag v-else-if="text === '应用程序'" color="#A2A2A2">{{text}}</a-tag>
+              <a-tag v-else-if="text === '压缩包'" color="#76CD76">{{text}}</a-tag>
+              <a-tag v-else color="grey">{{text}}</a-tag>
+            </template>
+            <template v-if="column.dataIndex === 'label'">
+               <a-tag v-if="text > 0" color="geekblue">{{ getDocLabel(text) }}</a-tag>
+            </template>
+            <template v-if="column.dataIndex === 'action'">
+              <a-space>
+                <a @click="handleRename(record)" v-if="hasPerm('Document:edit')">重命名</a>
+                <a-dropdown>
+                   <a class="ant-dropdown-link">更多 <down-outlined /></a>
+                   <template #overlay>
+                     <a-menu>
+                        <a-menu-item v-if="hasPerm('Document:download') && (record.fileType ==='文档'||record.fileType ==='图片')">
+                          <a @click="handlePreview(record)">预览</a>
+                        </a-menu-item>
+                        <a-menu-item v-if="hasPerm('Document:download') && (record.fileSuffix === 'doc' || record.fileSuffix === 'docx')">
+                          <a @click="handleEdit(record)">编辑</a>
+                        </a-menu-item>
+                        <a-menu-item v-if="hasPerm('Document:download')">
+                          <a @click="handleDownload(record)">下载</a>
+                        </a-menu-item>
+                        <a-menu-item v-if="hasPerm('Document:delete')">
+                           <a-popconfirm placement="topRight" title="确认删除" @confirm="() => handleDelete(record)">
+                             <a>删除</a>
+                           </a-popconfirm>
+                        </a-menu-item>
+                     </a-menu>
+                   </template>
+                </a-dropdown>
+              </a-space>
+            </template>
           </template>
-        </s-table>
-        <add-form ref="addForm" @ok="handleOk"></add>
-        <edit-form ref="editForm" @ok="handleOk"></edit>
-        <upload-files ref="uploadFiles" @ok="handleOk"></upload>
-        <upload-folder ref="uploadFolder" @ok="handleOk"></upload>
-        <mass-edit-form ref="massEditForm" @ok="handleOk"></mass>
-          <preview-form ref="previewForm"></preview>
+        </a-table>
+
+        <add-form ref="addFormRef" @ok="handleOk" />
+        <edit-form ref="editFormRef" @ok="handleOk" />
+        <upload-files ref="uploadFilesRef" @ok="handleOk" />
+        <upload-folder ref="uploadFolderRef" @ok="handleOk" />
+        <mass-edit-form ref="massEditFormRef" @ok="handleOk" />
+        <preview-form ref="previewFormRef" />
       </a-card>
     </a-col>
   </a-row>
 </template>
-<script>
-  import {
-    STable
-  } from '@/components'
-  import {
-    Empty
-  } from 'ant-design-vue'
-  import { FolderAddOutlined, UploadOutlined, DownOutlined, RightOutlined, FolderOpenTwoTone, FileTextOutlined, FileImageOutlined, FileZipOutlined, FileOutlined, DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined, RedoOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons-vue'
-  import {
-    DocumentPage,
-    DocumentTree,
-    DocumentDelete,
-    DocumentDeletes,
-    DocumentDownload,
-    DocumentPreview
-  } from '@/api/modular/system/fileManage/documentManage'
-  import addForm from './addForm.vue'
-  import editForm from './editForm.vue'
-  import uploadFiles from './upload/uploadFiles.vue'
-  import uploadFolder from './upload/uploadFolder.vue'
-  import previewForm from './previewForm'
-  
-  import {
-    findParents
-  } from '../../../../utils/treeUtils'
-  import MassEditForm from './massEditForm'
-  import { downloadfile } from '@/utils/util'
-  export default {
-    name:"sys_document_mgr",
-    components: {
-      MassEditForm,
-      STable,
-      addForm,
-      editForm,
-      previewForm,
-      uploadFiles,
-      uploadFolder,
-      FolderAddOutlined,
-      UploadOutlined,
-      DownOutlined,
-      RightOutlined,
-      FolderOpenTwoTone,
-      FileTextOutlined,
-      FileImageOutlined,
-      FileZipOutlined,
-      FileOutlined,
-      DeleteOutlined,
-      EditOutlined
-    },
-    data() {
-      return {
-        queryParam: {},
-        columns: [{
-          title: '名称',
-          align: 'left',
-          width: '240px',
-          ellipsis: true,
-          dataIndex: 'name',
-          slots: {
-            customRender: 'nameSlots'
-          }
-        },
-          {
-            title: '类型',
-            align: 'left',
-            dataIndex: 'fileType',
-            slots: {
-              customRender: 'fileTypeSlots'
-            }
-          },
-          {
-            title: '创建时间',
-            align: 'left',
-            ellipsis: true,
-            dataIndex: 'createdTime'
-          },
-          {
-            title: '创建',
-            align: 'left',
-            ellipsis: true,
-            dataIndex: 'createdUserName'
-          },
-          {
-            title: '修改时间',
-            align: 'left',
-            ellipsis: true,
-            dataIndex: 'updatedTime'
-          },
-          {
-            title: '修改',
-            align: 'left',
-            ellipsis: true,
-            dataIndex: 'updatedUserName'
-          },
-          {
-            title: '大小',
-            align: 'left',
-            dataIndex: 'fileSize'
-          },
-          {
-            title: '标签',
-            align: 'left',
-            dataIndex: 'label',
-            // ellipsis: true,
 
-          slots: {
-              customRender: 'tagsSlots'
-            }
-          },
-          {
-            title: '备注',
-            align: 'left',
-            ellipsis: true,
-            dataIndex: 'remark'
-          }
-        ],
-        tstyle: {
-          'padding-bottom': '0px',
-          'margin-bottom': '10px'
-        },
-        // 加载数据方法 必须Promise 对象
+<script setup>
+import { ref, reactive, onMounted, computed } from 'vue';
+import {
+  DocumentPage,
+  DocumentTree,
+  DocumentDelete,
+  DocumentDeletes,
+  DocumentDownload,
+  DocumentPreview
+} from '@/api/modular/system/fileManage/documentManage';
+import { dictTypeData } from '@/api/modular/system/dictTypeManage';
+import { message, Modal, Empty } from 'ant-design-vue';
+import { hasPerm } from '@/core/permission/permission';
+import { findParents } from '@/utils/treeUtils';
+import { downloadfile } from '@/utils/util';
+import addForm from './addForm.vue';
+import editForm from './editForm.vue';
+import uploadFiles from './upload/uploadFiles.vue';
+import uploadFolder from './upload/uploadFolder.vue';
+import massEditForm from './massEditForm.vue';
+import previewForm from './previewForm.vue';
+import {
+  FolderAddOutlined,
+  UploadOutlined,
+  DownOutlined,
+  RightOutlined,
+  FolderOpenTwoTone,
+  FileTextOutlined,
+  FileImageOutlined,
+  FileZipOutlined,
+  FileOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from '@ant-design/icons-vue';
 
-      loadData: parameter => {
-          return DocumentPage(Object.assign(parameter, this.queryParam)).then((res) => {
-            return res.data
-          })
-        },
-        selectedRowKeys: [],
-        selectedRows: [],
-        loading: false, // 清空选择按钮loading
+const tstyle = {
+  'padding-bottom': '0px',
+  'margin-bottom': '10px',
+};
 
-      fileTypeData: [],
-        documentlabelData: [],
-        pId: 0,
-        pathStack: [], // 文件
-      docTree: [],
-        defaultExpandedKeys: [],
-        autoExpandParent: true,
-        treeLoading: true,
-        simpleImage: Empty.PRESENTED_IMAGE_SIMPLE,
-        replaceFields: {
-          key: 'id',
-          title: 'name',
-          value: 'id'
-        }
-      }
-    },
-    computed: {
-      getDocLabel() { // 传参需要让计算属性返回方
-      return function(code) {
-          return this.documentlabelData.find(item => item.code === code.toString()):.name || ''}
-      },
-      /**
-       * 返回当前是否有选中
-       */
-      hasSelected() {
-        return this.selectedRowKeys.length > 0
-      }
-    },
-    created() {
-      if (this.hasPerm('Document:edit') || this.hasPerm('Document:delete')) {
-        this.columns.push({
-          title: '操作',
-          width: '150px',
-          dataIndex: 'action',
-          slots: {
-            customRender: 'action'
-          }
-        })
-      }
-      this.fileTypeData = this.$options.filters['dictData']('file_type')
-      this.documentlabelData = this.$options.filters['dictData']('doc_label')
-      this.DocumentTree()
-    },
-    methods: {
-      DocumentTree() {
-        DocumentTree().then(res => {
-          this.treeLoading = false
-          if (!res.success) {
-            return
-          }
-          // 添加根节
-        this.docTree = [{
-            id: 0,
-            name: '全部文件',
-            children: res.data
-          }]
-          this.queryParam.pId = this.docTree[0].id
-          this.pId = 0
-        })
-      },
-      /**
-       * 查询参数组装
-       */
-      switchingDate() {
-        const obj = JSON.parse(JSON.stringify(this.queryParam))
-        return obj
-      },
-      massDelete() {
-        this.$confirm({
-          title: '提示',
-          content: '要将上述文件放入回收站吗 :',
-          okText: '确定',
-          cancelText: '取消',
-          onOk: () => {
-            DocumentDeletes({ ids: this.selectedRowKeys }).then(res => {
-              if (res.success) {
-                this.$message.success('删除成功')
-                this.clearSelected()
-                this.$refs.table.refresh()
-              } else {
-                this.$message.error('删除失败') // ' + res.message
+const queryParam = reactive({});
+const docTree = ref([]);
+const treeLoading = ref(false);
+const defaultExpandedKeys = ref([]);
+const replaceFields = { children: 'children', title: 'name', key: 'id' };
 
-            }
-            })
-          }
-        })
-      },
-      massEdit() {
-        this.$refs.massEditForm.edit(this.selectedRowKeys)
-      },
-      DocumentDelete(record) {
-        DocumentDelete(record).then((res) => {
-          if (res.success) {
-            this.$message.success('删除成功')
-            this.clearSelected()
-            this.$refs.table.refresh()
-          } else {
-            this.$message.error('删除失败') // ' + res.message
+const dataSource = ref([]);
+const tableLoading = ref(false);
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+});
+const selectedRowKeys = ref([]);
+const loading = ref(false);
+const pathStack = ref([]);
+const pId = ref(0);
 
-        }
-        })
-      },
-      /**
-       * 返回上一
-       */
-      goHome() {
-        this.queryParam = {}
-        // this.$set(this.queryParam, 'pId', 0)
+const fileTypeData = ref([]);
+const documentlabelData = ref([]);
 
-      this.pathStack = []
-        this.pId = 0
-        this.refresh()
-      },
-      /**
-       * 返回所点层
-       */
-      go(id) {
-        this.queryParam.pId = id
-        this.pId = id
-        const index = this.pathStack.findIndex(item => item.id === id)
-        this.pathStack = this.pathStack.slice(0, index' + 1)
-        this.refresh()
-      },
-      /**
-       * 返回上一
-       */
-      goBack() {
-        const path = this.pathStack.pop()
-        this.queryParam.pId = path.pId
-        this.pId = path.pId
-        this.refresh()
-      },
-      NextFolder(record) {
-        this.queryParam.pId = record.id
-        this.pId = record.id
-        this.pathStack.push({
-          id: record.id,
-          name: record.name,
-          pId: record.pId
-        }) // 文件路径入栈
+const addFormRef = ref();
+const editFormRef = ref();
+const uploadFilesRef = ref();
+const uploadFolderRef = ref();
+const massEditFormRef = ref();
+const previewFormRef = ref();
 
-      this.refresh()
-      },
-      /**
-       * 文件树点击跳 * @param e 选中节点数组
-       */
-      handleClick(e) {
-        this.queryParam = {
-          pid: e.toString()
-        }
-        this.pId=e.toString()
-        /**
-       * this.pId = _pid;
-       */
-      if (e[0] !== 0 && e[0] !== undefined ) { // 过滤根节
-        this.pathStack = findParents(e[0], this.docTree[0].children) // 传递文件树时不传根节点
-        } else {
-          this.pathStack = [] // 当为根节点时清空文件路径
-      }
-        this.refresh()
-      },
-      handleOk() {
-        this.DocumentTree();
-        this.$refs.table.refresh()
-      },
-      refresh(){
-        this.clearSelected()
-        this.$refs.table.refresh()
-      },
-      /**
-       * 预览文件(微软插件)
-       */
-      preview (record) {
-        DocumentPreview({ id: record.id }).then((res) => {
-          const url = process.env.VUE_APP_API_BASE_URL +'/file/'+res.data
-          console.log(url)
-          window.open('http  // 127.0.0.1 : 8012/onlinePreviewurl='+encodeURIComponent(this.getEncode64(url)));
-          // window.open('https:// view.officeapps.live.com/op/view.aspxsrc=' + process.env.VUE_APP_API_BASE_URL + '/Document/downloadid=' + record.id)
-        }).catch((err) => {
-          this.$message.error('预览错误::' + err.message)
-        })
-      },
-      /**
-       * base64转字符串
-       */
-      getEncode64(str){
-           // 对字符串进行编码
+const columns = [
+  { title: '名称', dataIndex: 'name', width: '240px', ellipsis: true },
+  { title: '类型', dataIndex: 'fileType' },
+  { title: '创建时间', dataIndex: 'createdTime', ellipsis: true },
+  { title: '创建者', dataIndex: 'createdUserName', ellipsis: true },
+  { title: '修改时间', dataIndex: 'updatedTime', ellipsis: true },
+  { title: '修改者', dataIndex: 'updatedUserName', ellipsis: true },
+  { title: '大小', dataIndex: 'fileSize' },
+  { title: '标签', dataIndex: 'label' },
+  { title: '备注', dataIndex: 'remark', ellipsis: true },
+  { title: '操作', dataIndex: 'action', width: '200px' },
+];
 
-         var encode = encodeURI(str);
-           // 对编码的字符串转化base64
+const hasSelected = computed(() => selectedRowKeys.value.length > 0);
 
-         var base64 = btoa(encode);
-           return base64;
-         },
-      /**
-       * 下载文件(所有文件)
-       */
-      DocumentDownload (record) {
-        this.cardLoading = true
-        DocumentDownload({ id: record.id }).then((res) => {
-          this.cardLoading = false
-          downloadfile(res)
-        // eslint-disable-next-line handle-callback-err
+const getDocLabel = (code) => {
+  const label = documentlabelData.value.find(item => item.code === code.toString());
+  return label ? label.name : '';
+};
 
-      }).catch((err) => {
-          this.cardLoading = false
-          this.$message.error('下载错误:获取文件流错误')
-        })
-      },
-      /**
-       * 清空table选中
-       */
-      clearSelected() {
-        this.loading = true
-        // ajax request after empty completing
-
-      setTimeout(() => {
-          this.loading = false
-          this.$refs.table.clearSelected()
-        }, 200)
-      },
-      /**
-       * 记录可翻页的选中 * @param selectedRowKeys
-       * @param selectedRows
-       */
-      onSelectChange(selectedRowKeys, selectedRows) {
-        this.selectedRowKeys = selectedRowKeys
-        selectedRows = selectedRows.concat(this.selectedRows.filter(oldRow => { // 拼接去重后的选中得到所有选中包含
-
-        const hasRow = selectedRows.find(row => oldRow.id === row.id)
-          return !hasRow
-        })).filter(row => { // 过滤掉所有选中行中将选中改为未选中的行
-
-        const item = this.selectedRowKeys.find(rowKey => rowKey === row.id)
-          return item
-        })
-        this.selectedRows = selectedRows
-        this.$refs.table.updateSelect(selectedRowKeys, selectedRows)
-      }
+const loadTreeData = async () => {
+  treeLoading.value = true;
+  try {
+    const res = await DocumentTree();
+    docTree.value = res.data;
+    if (res.data.length > 0) {
+      defaultExpandedKeys.value = [res.data[0].id];
     }
+  } finally {
+    treeLoading.value = false;
   }
+};
+
+const fetchData = async () => {
+  tableLoading.value = true;
+  const params = {
+    pId: pId.value,
+    ...queryParam,
+    current: pagination.value.current,
+    size: pagination.value.pageSize,
+  };
+  try {
+    const res = await DocumentPage(params);
+    dataSource.value = res.data.records;
+    pagination.value.total = res.data.total;
+  } finally {
+    tableLoading.value = false;
+  }
+};
+
+const loadDicts = async () => {
+  fileTypeData.value = await dictTypeData({ dictTypeCode: 'file_type' });
+  documentlabelData.value = await dictTypeData({ dictTypeCode: 'doc_label' });
+};
+
+onMounted(() => {
+  loadTreeData();
+  fetchData();
+  loadDicts();
+});
+
+const handleOk = () => {
+  fetchData();
+  loadTreeData();
+};
+
+const handleClick = (selectedKeys, e) => {
+  pId.value = selectedKeys[0];
+  pathStack.value = findParents(docTree.value, pId.value);
+  handleQuery();
+};
+
+const handleQuery = () => {
+  pagination.value.current = 1;
+  fetchData();
+};
+
+const resetQuery = () => {
+  Object.keys(queryParam).forEach(key => delete queryParam[key]);
+  handleQuery();
+};
+
+const handleTableChange = (pag) => {
+  pagination.value = pag;
+  fetchData();
+};
+
+const onSelectChange = (keys) => {
+  selectedRowKeys.value = keys;
+};
+
+const clearSelected = () => {
+  selectedRowKeys.value = [];
+};
+
+const handleAdd = () => {
+  addFormRef.value.add(pId.value);
+};
+
+const handleUploadFiles = () => {
+  uploadFilesRef.value.upload(pId.value);
+};
+
+const handleUploadFolder = () => {
+  uploadFolderRef.value.upload(pId.value);
+};
+
+const handleMassDelete = async () => {
+  loading.value = true;
+  try {
+    const res = await DocumentDeletes({ ids: selectedRowKeys.value.join(',') });
+    if (res.success) {
+      message.success('删除成功');
+      fetchData();
+      clearSelected();
+    } else {
+      message.error('删除失败：' + res.message);
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleMassEdit = () => {
+  massEditFormRef.value.edit(selectedRowKeys.value);
+};
+
+const goBack = () => {
+  if (pathStack.value.length > 0) {
+    pId.value = pathStack.value[pathStack.value.length - 1].pId;
+    pathStack.value.pop();
+    handleQuery();
+  }
+};
+
+const goHome = () => {
+  pId.value = 0;
+  pathStack.value = [];
+  handleQuery();
+};
+
+const go = (id) => {
+  pId.value = id;
+  pathStack.value = findParents(docTree.value, id);
+  handleQuery();
+};
+
+const handleNextFolder = (record) => {
+  pId.value = record.id;
+  pathStack.value = findParents(docTree.value, record.id);
+  handleQuery();
+};
+
+const handleRename = (record) => {
+  editFormRef.value.edit(record);
+};
+
+const handlePreview = (record) => {
+  previewFormRef.value.preview(record);
+};
+
+const handleEdit = (record) => {
+  editFormRef.value.edit(record);
+};
+
+const handleDownload = async (record) => {
+  try {
+    const res = await DocumentDownload({ id: record.id });
+    downloadfile(res);
+  } catch(e) {
+    message.error('下载失败');
+  }
+};
+
+const handleDelete = async (record) => {
+  try {
+    const res = await DocumentDelete({ id: record.id });
+    if (res.success) {
+      message.success('删除成功');
+      fetchData();
+    } else {
+      message.error('删除失败：' + res.message);
+    }
+  } catch(e) {
+    message.error('删除失败');
+  }
+};
 </script>
-<style lang="less">
-  .table-operator {
-    margin-bottom: 18px;
-  }
 
-  button {
-    margin-right: 8px;
-  }
-
-  .file-tool {
-    display: flex;
-    flex-direction: column;
-
-    .path-tool {
-      margin-top: 12px;
-    }
-  }
+<style scoped>
+.leftTree {
+  height: calc(100vh - 100px);
+  overflow: auto;
+}
+.file-tool {
+  display: flex;
+  justify-content: space-between;
+}
+.btn-tool > .ant-btn {
+  margin-right: 8px;
+}
 </style>

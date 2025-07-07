@@ -4,33 +4,33 @@
     <a-spin :spinning="formLoading">
       <a-form :form="form">
         <a-form-item v-show="false">
-          <a-input v-decorator="['id']" ></a>
+          <a-input v-decorator="['id']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['orgId']" ></a>
+          <a-input v-decorator="['orgId']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['sort']" ></a>
+          <a-input v-decorator="['sort']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['remark']" ></a>
+          <a-input v-decorator="['remark']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['schemeName']" ></a>
+          <a-input v-decorator="['schemeName']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['contentParse']" ></a>
+          <a-input v-decorator="['contentParse']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['schemeContent',{rules: [{ required: true}]}]" ></a>
+          <a-input v-decorator="['schemeContent',{rules: [{ required: true}]}]" />
         </a-form-item>
         <a-form-item>
           <vfd ref="vfd" style="background-color: white;" :needShow="true" :fieldNames="fieldNames" @openUser="openUser()" @openRole="openRole()"></vfd>
         </a-form-item>
       </a-form>
     </a-spin>
-    <user-list-form ref="userListForm" @ok="handleOkUser"></user>
-    <role-list-form ref="roleListForm" @ok="handleOkRole"></role>
+    <user-list-form ref="userListForm" @ok="handleOkUser"></user-list-form>
+    <role-list-form ref="roleListForm" @ok="handleOkRole"></role-list-form>
   </a-modal>
 </template>
 
@@ -80,7 +80,7 @@
               contentParse: record.contentParse,
               schemeCode: record.schemeCode,
               frmId: record.frmId,
-              orgId: !!record.orgId&&record.orgId!=0  record.orgId : null,
+              orgId: !!record.orgId&&record.orgId!=0 ? record.orgId : null,
               sort: record.sort,
               remark: record.remark
             }

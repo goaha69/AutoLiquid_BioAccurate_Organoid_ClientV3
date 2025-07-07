@@ -2,29 +2,31 @@
 	<div>
 		<a-tabs size="small" defaultActiveKey="flow-attr" :activeKey="activeKey">
 			<a-tab-pane key="flow-attr">
-				<span #tab>
-					<a-icon type="cluster" ></a>
-					流程属:				</span>
+				<template #tab>
+					<a-icon type="cluster" />
+					流程属性
+				</template>
 				<a-form layout="horizontal">
 					<a-form-item label="流程id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-						<a-input :value="flowData.attr.id" disabled ></a>
+						<a-input :value="flowData.attr.id" disabled />
 					</a-form-item>
 				</a-form>
 			</a-tab-pane>
 			<a-tab-pane key="node-attr">
-				<span #tab>
-					<a-icon type="profile" ></a>
-					节点属:				</span>
+				<template #tab>
+					<a-icon type="profile" />
+					节点属性
+				</template>
 				<template v-if="currentSelect.type == 'start round mix'">
 					<a-form layout="horizontal">
 						<a-form-item label="类型" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
 							<a-tag color="purple">{{ currentSelect.type }}</a-tag>
 						</a-form-item>
 						<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="currentSelect.id" disabled ></a>
+							<a-input :value="currentSelect.id" disabled />
 						</a-form-item>
 						<a-form-item label="名称" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" ></a>
+							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" />
 						</a-form-item>
 					</a-form>
 				</template>
@@ -34,10 +36,10 @@
 							<a-tag color="purple">{{ currentSelect.type }}</a-tag>
 						</a-form-item>
 						<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="currentSelect.id" disabled ></a>
+							<a-input :value="currentSelect.id" disabled />
 						</a-form-item>
 						<a-form-item label="名称" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" ></a>
+							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" />
 						</a-form-item>
 					</a-form>
 				</template>
@@ -47,10 +49,10 @@
 							<a-tag color="purple">{{ currentSelect.type }}</a-tag>
 						</a-form-item>
 						<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="currentSelect.id" disabled ></a>
+							<a-input :value="currentSelect.id" disabled />
 						</a-form-item>
 						<a-form-item label="名称" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" ></a>
+							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" />
 						</a-form-item>
 						<a-form-item label="驳回类型" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
 							<a-select v-model="setInfo.nodeRejectType"  @change="e => nodeRejectTypeChange(e)">
@@ -63,31 +65,35 @@
 							</a-select>
 						</a-form-item>
 						<a-form-item label="回调URL" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="setInfo.thirdPartyUrl " @change="linkThirdPartyUrlChange" ></a>
+							<a-input :value="setInfo.thirdPartyUrl" @change="linkThirdPartyUrlChange" />
 						</a-form-item>
 						<a-form-item label="执行权限" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-select  default-value="setInfo.nodeDesignate" v-model : value="setInfo.nodeDesignate" @change="e => nodeDesignateChange(e)">
+							<a-select default-value="setInfo.nodeDesignate" v-model:value="setInfo.nodeDesignate" @change="e => nodeDesignateChange(e)">
 								<a-select-option v-for="(item,index) in nodeDesignateData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
 							</a-select>
 						</a-form-item>
 						<a-form-item  v-show="specialShow" v-if="setInfo.nodeDesignate=='SPECIAL_USER'" label="指定用户" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-col  md="18" : sm="18">
-								<a-input disabled="disabled" v-model="specialName" ></a>
+							<a-col md="18" sm="18">
+								<a-input disabled="disabled" v-model="specialName" />
 							</a-col>
-							<a-col  md="6" : sm="6">
-								<a-button ><template #icon><search-outlined ></search></template @click="setUser()"/>
+							<a-col md="6" sm="6">
+								<a-button @click="setUser()">
+									<template #icon><search-outlined /></template>
+								</a-button>
 							</a-col>
 						</a-form-item>
 						<a-form-item  v-show="specialShow" v-else label="指定角色" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-col  md="18" : sm="18">
-								<a-input disabled="disabled" v-model="specialName" ></a>
+							<a-col md="18" sm="18">
+								<a-input disabled="disabled" v-model="specialName" />
 							</a-col>
-							<a-col  md="6" : sm="6">
-								<a-button ><template #icon><search-outlined ></search></template @click="setRole()"/>
+							<a-col md="6" sm="6">
+								<a-button @click="setRole()">
+									<template #icon><search-outlined /></template>
+								</a-button>
 							</a-col>
 						</a-form-item>
 						<a-form-item label="当前部门" v-if="setInfo.nodeDesignate=='SPECIAL_ROLE'" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
- 							<a-switch checkedChildren=":" unCheckedChildren=":" v-model="currentDepart" @click="currentDepartChange"></a><!-- defaultChecked -->
+ 							<a-switch checkedChildren="是" unCheckedChildren="否" v-model="currentDepart" @click="currentDepartChange" /><!-- defaultChecked -->
 						</a-form-item>
 					</a-form>
 				</template>
@@ -97,10 +103,10 @@
 							<a-tag color="purple">{{ currentSelect.type }}</a-tag>
 						</a-form-item>
 						<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="currentSelect.id" disabled ></a>
+							<a-input :value="currentSelect.id" disabled />
 						</a-form-item>
 						<a-form-item label="名称" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" ></a>
+							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" />
 						</a-form-item>
 					</a-form>
 				</template>
@@ -110,10 +116,10 @@
 							<a-tag color="purple">{{ currentSelect.type }}</a-tag>
 						</a-form-item>
 						<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="currentSelect.id" disabled ></a>
+							<a-input :value="currentSelect.id" disabled />
 						</a-form-item>
 						<a-form-item label="名称" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" ></a>
+							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" />
 						</a-form-item>
 						<a-form-item label="驳回类型" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
 							<a-select v-model="setInfo.nodeRejectType"  @change="e => nodeRejectTypeChange(e)">
@@ -126,31 +132,35 @@
 							</a-select>
 						</a-form-item>
 						<a-form-item label="回调URL" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="setInfo.thirdPartyUrl" @change="linkThirdPartyUrlChange" ></a>
+							<a-input :value="setInfo.thirdPartyUrl" @change="linkThirdPartyUrlChange" />
 						</a-form-item>
 						<a-form-item label="执行权限" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-select  default-value="setInfo.nodeDesignate" v-model : value="setInfo.nodeDesignate"  @change="e => nodeDesignateChange(e)">
+							<a-select default-value="setInfo.nodeDesignate" v-model:value="setInfo.nodeDesignate" @change="e => nodeDesignateChange(e)">
 								<a-select-option v-for="(item,index) in nodeDesignateData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
 							</a-select>
 						</a-form-item>
 						<a-form-item  v-show="specialShow" v-if="setInfo.nodeDesignate=='SPECIAL_USER'" label="指定用户" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-col  md="18" : sm="18">
-								<a-input disabled="disabled" v-model="specialName" ></a>
+							<a-col md="18" sm="18">
+								<a-input disabled="disabled" v-model="specialName" />
 							</a-col>
-							<a-col  md="6" : sm="6">
-								<a-button ><template #icon><search-outlined ></search></template @click="setUser()"/>
+							<a-col md="6" sm="6">
+								<a-button @click="setUser()">
+									<template #icon><search-outlined /></template>
+								</a-button>
 							</a-col>
 						</a-form-item>
 						<a-form-item  v-show="specialShow" v-else label="指定角色" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-col  md="18" : sm="18">
-								<a-input disabled="disabled" v-model="specialName" ></a>
+							<a-col md="18" sm="18">
+								<a-input disabled="disabled" v-model="specialName" />
 							</a-col>
-							<a-col  md="6" : sm="6">
-								<a-button ><template #icon><search-outlined ></search></template @click="setRole()"/>
+							<a-col md="6" sm="6">
+								<a-button @click="setRole()">
+									<template #icon><search-outlined /></template>
+								</a-button>
 							</a-col>
 						</a-form-item>
 						<a-form-item label="当前部门" v-if="setInfo.nodeDesignate=='SPECIAL_ROLE'"  :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
- 							<a-switch checkedChildren=":" unCheckedChildren=":" v-model="currentDepart" @click="currentDepartChange"></a><!-- defaultChecked -->
+ 							<a-switch checkedChildren="是" unCheckedChildren="否" v-model="currentDepart" @click="currentDepartChange" /><!-- defaultChecked -->
 						</a-form-item>
 					</a-form>
 				</template>
@@ -160,71 +170,79 @@
 							<a-tag color="purple">{{ currentSelect.type }}</a-tag>
 						</a-form-item>
 						<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input :value="currentSelect.id" disabled ></a>
+							<a-input :value="currentSelect.id" disabled />
 						</a-form-item>
 						<a-form-item label="名称" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" ></a>
+							<a-input placeholder="请输入节点名:" :value="currentSelect.name" @change="nameChange" />
 						</a-form-item>
 					</a-form>
 				</template>
 			</a-tab-pane>
 			<a-tab-pane key="link-attr">
-				<span #tab>
-					<a-icon type="branches" ></a>
-					连线属:				</span>
+				<template #tab>
+					<a-icon type="branches" />
+					连线属性
+				</template>
 				<a-form layout="horizontal">
 					<a-form-item label="id" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-						<a-input :value="currentSelect.id" disabled ></a>
+						<a-input :value="currentSelect.id" disabled />
 					</a-form-item>
-					<a-form-item label="源节:" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-						<a-input :value="currentSelect.sourceId" disabled ></a>
+					<a-form-item label="源节点" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
+						<a-input :value="currentSelect.sourceId" disabled />
 					</a-form-item>
 					<a-form-item label="目标节点" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-						<a-input :value="currentSelect.targetId" disabled ></a>
+						<a-input :value="currentSelect.targetId" disabled />
 					</a-form-item>
 					<a-form-item label="文本" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-						<a-input :value="currentSelect.label" @change="linkLabelChange" ></a>
+						<a-input :value="currentSelect.label" @change="linkLabelChange" />
 					</a-form-item>
 					<a-form-item label="添加条件" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-						<a-button ><template #icon><plus-outlined ></plus-outlined></template @click="addList()"/>
+						<a-button @click="addList()">
+							<template #icon><plus-outlined /></template>
+						</a-button>
 					</a-form-item>
 					<div :key="i"  v-for="(item,i) in compares">
 						<a-form-item :label="'条件'+i" :label-col="formItemLayout.labelCol" :wrapper-col="formItemLayout.wrapperCol">
-							<a-col  md="10" : sm="10">
+							<a-col md="10" sm="10">
 								<a-select placeholder="关系" v-model="compares[i].condition" @change="e => conditionChange(i,e)">
 									<a-select-option v-for="(condition,index) in conditions" :key="index" :value="condition.id">{{ condition.name }}</a-select-option>
 								</a-select>
 							</a-col>
-							<a-col  md="10" : sm="10">
-								<a-select placeholder="属:" v-model="compares[i].fieldName" @change="e => fieldNameChange(i,e)">
+							<a-col md="10" sm="10">
+								<a-select placeholder="属性" v-model="compares[i].fieldName" @change="e => fieldNameChange(i,e)">
 									<a-select-option v-for="(fieldName,index) in fieldNames" :key="index" :value="fieldName.id">{{ fieldName.name }}</a-select-option>
 								</a-select>
 							</a-col>
 							<a-col :md="4" :sm="4">		
 								<a-button icon="minus" @click="subList(i)" v-if="compares.length>0"/>
 							</a-col>
-							<a-col  md="10" : sm="10">
+							<a-col md="10" sm="10">
 							<a-select placeholder="比较" v-model="compares[i].operation" @change="e => operationChange(i,e)">
 								<a-select-option v-for="(operation,index) in operations" :key="index" :value="operation.id">{{ operation.name }}</a-select-option>
 								</a-select>
 							</a-col>
 							<a-col :md="10" :sm="10" v-if="compares[i].fieldName=='CreatedUserId'||compares[i].fieldName=='CreatedOrgId'">
 								<a-tooltip placement="topLeft">
-									<span v-if="compares[i].valueName" #title>{{ compares[i].valueName }}</span>
-									<template v-else #title></template>
+									<template #title>
+										<span v-if="compares[i].valueName">{{ compares[i].valueName }}</span>
+									</template>
 									<div>	
-										<a-input :disabled="true" v-model  value="compares[i].valueName" clearable placeholder=" : ></a>	
+										<a-input :disabled="true" v-model:value="compares[i].valueName" placeholder="请选择" />	
 									</div>
 								</a-tooltip>
 							</a-col>
-							<a-col" :md="10" :sm="10" v-else>
-								<a-input v-model  value="compares[i].value" clearable placeholder=" : " @change="e => valueChange(i,e)" />
+							<a-col :md="10" :sm="10" v-else>
+								<a-input v-model:value="compares[i].value" placeholder="请输入值" @change="e => valueChange(i,e)" />
 							</a-col>
-							<a-col  md="4" : sm="4" v-if="compares[i].fieldName=='CreatedUserId'">		
-								<a-button ><template #icon><search-outlined ></search></template @click="setUser(i)" v-if="compares.length>0"/>
+							<a-col md="4" sm="4" v-if="compares[i].fieldName=='CreatedUserId'">		
+								<a-button @click="setUser(i)" v-if="compares.length>0">
+									<template #icon><search-outlined /></template>
+								</a-button>
 							</a-col>
 							<a-col :md="4" :sm="4" v-if="compares[i].fieldName=='CreatedOrgId'">		
-								<a-button ><template #icon><search-outlined ></search></template @click="setRole(i)" v-if="compares.length>0"/>
+								<a-button @click="setRole(i)" v-if="compares.length>0">
+									<template #icon><search-outlined /></template>
+								</a-button>
 							</a-col>
 						</a-form-item>
 					</div>
@@ -262,19 +280,19 @@
 				],	
 				conditions:[
 					{id:'and',name:'并且'},
-					{id:'or',name:'或?}
+					{id:'or',name:'或'}
 				],		
 				specialShow:false,
 				nodeDesignateData:[
-					{id:'ALL_USER',name:'所有用?},
+					{id:'ALL_USER',name:'所有用户'},
 					{id:'SPECIAL_USER',name:'指定用户'},
 					{id:'SPECIAL_ROLE',name:'指定角色'},
-					{id:'RUNTIME_SPECIAL_ROLE',name:'运行时指定角?},
-					{id:'RUNTIME_SPECIAL_USER',name:'运行时指定用?}
+					{id:'RUNTIME_SPECIAL_ROLE',name:'运行时指定角色'},
+					{id:'RUNTIME_SPECIAL_USER',name:'运行时指定用户'}
 				],
 				nodeRejectType:[
-					{id:"0",name:"前一:},
-					{id:"1",name:"第一:}
+					{id:"0",name:"前一节点"},
+					{id:"1",name:"第一节点"}
 				],
 				nodeConfluenceType:[
 					{id:"all",name:"全部通过"},
@@ -444,7 +462,9 @@
 				if(nodeDesignate == 'SPECIAL_USER')
 				{
 					that.specialShow = true;
-				}
+              this.specialName = this.currentSelect.setInfo.nodeDesignateName;
+              this.currentDepart=this.currentSelect.setInfo.currentDepart;
+				}	
 				else if(nodeDesignate == 'SPECIAL_ROLE')
 				{
 					that.specialShow = true;

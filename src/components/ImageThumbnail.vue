@@ -50,8 +50,11 @@ export default {
   },
   data() {
     return {
-      selectedImage: null, // 当前选中的大图路      currentPage: 1, // 当前页码
-      itemsPerPage: 20, // 每页显示的图像数      currentImageIndex: -1, // 当前选中的图像索    };
+      selectedImage: null, // 当前选中的大图路径
+      currentPage: 1, // 当前页码
+      itemsPerPage: 20, // 每页显示的图像数
+      currentImageIndex: -1, // 当前选中的图像索引
+    };
   },
   created() {
     this.currentPage = 1;
@@ -59,7 +62,8 @@ export default {
   },
   computed: {
     visibleImages() {
-      // 确保 this.images 是一个数      if (!Array.isArray(this.images)) {
+      // 确保 this.images 是一个数组
+      if (!Array.isArray(this.images)) {
         return [];
       }
 
@@ -69,11 +73,13 @@ export default {
       return this.images.slice(start, end);
     },
     totalPages() {
-      // 确保 this.images 是一个数      if (!Array.isArray(this.images)) {
+      // 确保 this.images 是一个数组
+      if (!Array.isArray(this.images)) {
         return 0;
       }
 
-      // 计算总页      return Math.ceil(this.images.length / this.itemsPerPage);
+      // 计算总页数
+      return Math.ceil(this.images.length / this.itemsPerPage);
     },
   },
   methods: {
@@ -84,9 +90,11 @@ export default {
       console.log("===clearFormData===");
     },
     showImage(filePath) {
-      // 设置当前选中的大图路      this.selectedImage = filePath;
-      // 找到当前选中的图像索      this.currentImageIndex = this.images.findIndex((img) => img.filePath === filePath);
-      console.log(`Showing image  ${filePath}, Index : ${this.currentImageIndex}`);
+      // 设置当前选中的大图路径
+      this.selectedImage = filePath;
+      // 找到当前选中的图像索引
+      this.currentImageIndex = this.images.findIndex((img) => img.filePath === filePath);
+      console.log(`Showing image: ${filePath}, Index: ${this.currentImageIndex}`);
     },
     closeImage() {
       // 关闭全屏显示
@@ -96,34 +104,34 @@ export default {
     },
     nextPage() {
       /**
-       * 下一 */
+       * 下一页 */
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
       }
     },
     prevPage() {
       /**
-       * 上一 */
+       * 上一页 */
       if (this.currentPage > 1) {
         this.currentPage--;
       }
     },
     prevImage() {
       /**
-       * 显示上一张图 */
+       * 显示上一张图片 */
       if (this.currentImageIndex > 0) {
         this.currentImageIndex--;
         this.selectedImage = this.images[this.currentImageIndex].filePath;
-        console.log(`Switched to previous image  ${this.selectedImage}, Index : ${this.currentImageIndex}`);
+        console.log(`Switched to previous image: ${this.selectedImage}, Index: ${this.currentImageIndex}`);
       }
     },
     nextImage() {
       /**
-       * 显示下一张图 */
+       * 显示下一张图片 */
       if (this.currentImageIndex < this.images.length - 1) {
         this.currentImageIndex++;
         this.selectedImage = this.images[this.currentImageIndex].filePath;
-        console.log(`Switched to next image  ${this.selectedImage}, Index : ${this.currentImageIndex}`);
+        console.log(`Switched to next image: ${this.selectedImage}, Index: ${this.currentImageIndex}`);
       }
     },
   },
@@ -178,7 +186,7 @@ export default {
   cursor: not-allowed;
 }
 
-/* 全屏覆盖层样:*/
+/* 全屏覆盖层样式 */
 .fullscreen-overlay {
   position: fixed;
   top: 0;
@@ -226,7 +234,7 @@ export default {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-/* 上一张和下一张按钮样:*/
+/* 上一张和下一张按钮样式 */
 .prev-button,
 .next-button {
   position: absolute;

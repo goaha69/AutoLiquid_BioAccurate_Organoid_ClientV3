@@ -7,54 +7,57 @@
 
         <a-row :gutter="8">
           <div>            
-            <sp-input label="ֱ" :labelWidth="120" :isError="errors.code" :inputWidth="300" :required="true" v-model="attributeData.code" ></sp>
-            <sp-input label="" :labelWidth="120" :isError="errors.name" :inputWidth="300" :required="true" v-model="attributeData.name" ></sp>
+            <sp-input label="ֱ" :labelWidth="120" :isError="errors.code" :inputWidth="300" :required="true" v-model="attributeData.code" />
+            <sp-input label="" :labelWidth="120" :isError="errors.name" :inputWidth="300" :required="true" v-model="attributeData.name" />
           </div>
           <div style="margin-top:10px;">
-            <sp-input-number label="Xߴ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.xSize" ></sp>
-            <sp-input-number label="Yߴ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.ySize" ></sp>
-            <sp-input-number label="Xƫ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.xOffset" ></sp>
-            <sp-input-number label="Yƫ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.yOffset" ></sp>
+            <sp-input-number label="Xߴ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.xSize" />
+            <sp-input-number label="Yߴ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.ySize" />
+            <sp-input-number label="Xƫ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.xOffset" />
+            <sp-input-number label="Yƫ" :labelWidth="120" unit="mm" :required="true" v-model="attributeData.yOffset" />
           </div>
         </a-row>
 
         <a-divider orientation="left">λϢ</a-divider>
-        <a-form-item v-show="false"><a-input v-decorator="['shippingSpaces']" ></a></a-form-item>
+        <a-form-item v-show="false"><a-input v-decorator="['shippingSpaces']" /></a-form-item>
         <a-row :gutter="8">
           <a-col :span="24">
             <a-form-item>
               <a-table size="middle" :columns="columns" :dataSource="shippingSpaces" :pagination="false" :loading="shippingSpaceLoading" rowKey="key" :scroll="{  y: 320 }">   
                 <!-- Զ -->
                 <template #serial="{ text, record, index }"><span>
-                  {{ index' + 1 }}
+                  {{ index + 1 }}
                 </span></template>
                 <template #name="{ text, record }"><span>
-                   <a-input v-model="record.name" placeholder=""></a>
+                   <a-input v-model:value="record.name" placeholder="" />
                 </span></template>
                 <template #isStorage="{ text, record }"><span>
-                   <a-checkbox v-model="record.isStorage" ></a>
+                   <a-checkbox v-model:checked="record.isStorage" />
                 </span></template>   
                 <template #xSize="{ text, record }"><span>
-                   <sp-input-number v-model="record.xSize" placeholder="Xߴ"></sp>
+                   <sp-input-number v-model="record.xSize" placeholder="Xߴ" />
                 </span></template>
                 <template #ySize="{ text, record }"><span>
-                   <sp-input-number v-model="record.ySize" placeholder="Yߴ"></sp>
+                   <sp-input-number v-model="record.ySize" placeholder="Yߴ" />
                 </span></template>
                 <template #xOffset="{ text, record }"><span>
-                   <sp-input-number v-model="record.xOffset" placeholder="Xƫ"></sp>
+                   <sp-input-number v-model="record.xOffset" placeholder="Xƫ" />
                 </span></template>
                 <template #yOffset="{ text, record }"><span>
-                   <sp-input-number v-model="record.yOffset" placeholder="Yƫ"></sp>
+                   <sp-input-number v-model="record.yOffset" placeholder="Yƫ" />
                 </span></template>
                 <template #zOffset="{ text, record }"><span>
-                   <sp-input-number v-model="record.zOffset" placeholder="λ߶"></sp>
+                   <sp-input-number v-model="record.zOffset" placeholder="λ߶" />
                 </span></template>
                 
                 <template #operation="{ text, record }">
                   <a @click="removeShippingSpace(record.key)">ɾ</a>
                 </template>
               </a-table>
-              <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" ><template #icon><plus-outlined ></plus-outlined></template @click="newShippingSpace">Ӳλ</a-button>
+              <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" @click="newShippingSpace">
+                <template #icon><plus-outlined /></template>
+                Ӳλ
+              </a-button>
             </a-form-item>
           </a-col>
         </a-row>
@@ -71,9 +74,9 @@
   export default {
     components: {
       SpInputNumber,
-      SpInput
-    ,
-    PlusOutlined},
+      SpInput,
+      PlusOutlined
+    },
     data () {
       return {
         statusData: [],
@@ -175,7 +178,7 @@
       {
           const length = this.shippingSpaces.length
           this.shippingSpaces.push({
-            key: length === 0  '1' : (parseInt(this.shippingSpaces[length - 1].key)' + 1).toString(),
+            key: length === 0 ? '1' : (parseInt(this.shippingSpaces[length - 1].key) + 1).toString(),
             xSize: 0.00,
             ySize: 0.00,
             xOffset:0.00,
@@ -256,16 +259,12 @@
 <style scoped>
 .ant-form-item-label {
   width: 120px; /* Set your desired width */
-       */
   text-align: right; /* Align text to the right for better appearance */
-       */
 }
 
 /* Optional: Adjust the wrapper column to align with the label width */
-       */
 .ant-form-item-control {
   margin-left: 10px; /* Adjust margin as needed */
-       */
 }
 
 .my-input-number1{

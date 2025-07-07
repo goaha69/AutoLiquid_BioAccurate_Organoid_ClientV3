@@ -10,41 +10,47 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
-        <a-form-item v-show="false">
-          <a-input v-decorator="['id']" ></a>
+      <a-form ref="formRef" :model="formData">
+        <a-form-item name="id" style="display: none;">
+          <a-input v-model:value="formData.id" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['orgId']" ></a>
+        <a-form-item name="orgId" style="display: none;">
+          <a-input v-model:value="formData.orgId" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['sort']" ></a>
+        <a-form-item name="sort" style="display: none;">
+          <a-input v-model:value="formData.sort" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['remark']" ></a>
+        <a-form-item name="remark" style="display: none;">
+          <a-input v-model:value="formData.remark" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['name']" ></a>
+        <a-form-item name="name" style="display: none;">
+          <a-input v-model:value="formData.name" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['content']" ></a>
+        <a-form-item name="content" style="display: none;">
+          <a-input v-model:value="formData.content" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['contentData']" ></a>
+        <a-form-item name="contentData" style="display: none;">
+          <a-input v-model:value="formData.contentData" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['contentParse']" ></a>
+        <a-form-item name="contentParse" style="display: none;">
+          <a-input v-model:value="formData.contentParse" />
         </a-form-item>
-        <a-form-item v-show="false">
-          <a-input v-decorator="['fields']" ></a>
+        <a-form-item name="fields" style="display: none;">
+          <a-input v-model:value="formData.fields" />
         </a-form-item>
         <a-form-item>
-          <k-form-design :showHead="false" :toolbars="['reset', 'importJson','exportJson', 'preview','exportCode']" style="background-color: white;" ref='kfd' ></k>
+          <k-form-design 
+            :showHead="false" 
+            :toolbars="['reset', 'importJson','exportJson', 'preview','exportCode']" 
+            style="background-color: white;" 
+            ref="kfd" 
+          />
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
+
 <style scoped>
 .centered-modal {
   display: flex;
@@ -62,116 +68,142 @@
   margin-top: 0;
 }
 </style>
-<script>
-  import 'k-form-design/styles/k-form-design.less'
-  import { flcFormEdit } from '@/api/modular/flowCenter/formManage'
-  export default {
-    data () {
-      return {
-        labelCol: {
-          xs: { span: 24 },
-          sm: { span: 5 }
-        },
-        wrapperCol: {
-          xs: { span: 24 },
-          sm: { span: 15 }
-        },
-        visible: false,
-        confirmLoading: false,
-        formLoading: true,
-        name:null,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      edit (record) {
-        this.visible = true
-        this.formLoading = false
-        this.name=record.name
-        setTimeout(() => {
-          this.form.setFieldsValue(
-            {
-              id: record.id,
-              name: record.name,
-              content: record.content,
-              contentParse: record.contentParse,
-              contentData: record.contentData,
-              frmType: record.frmType,
-              webId: record.webId,
-              orgId: !!record.orgId&&record.orgId!=0  record.orgId : null,
-              sort: record.sort,
-              active: record.active,
-              remark: record.remark
-            }
-          )
-          this.importData(record.content)
-        }, 100)
-      },
-      importData(value){
-        if(!!value)
-        {
-          this.$refs.kfd.handleSetData(JSON.parse(value));
-        }
-      },
-      getDesignData(){
-        const kfd = this.$refs.kfd
-        const fieldData= kfd.getFieldSchema()
-        const fields = []
-        const fieldsParse = []
-        fieldData.forEach(item=>{
-          const tempData={}
-          tempData.id=item.key
-          if(!!item.model)
-          {
-            tempData.id=item.model
-          }
-          tempData.name=item.label
-          fieldsParse.push(tempData)
-          fields.push( tempData.id)
-        })
-        this.content = fields.length>0  JSON.stringify(kfd.getValue()) : null;
-        this.contentData = fields.length>0  fields.join(",") : null
-        this.contentParse = fieldsParse.length>0  JSON.stringify(fieldsParse) : null
-        this.fields = fieldData.length
-        this.form.setFieldsValue(
-        {
-          content: this.content,
-          contentData: this.contentData,
-          contentParse: this.contentParse,
-          fields:this.fields,
-        })
-      },
-      handleSubmit () {
-        this.confirmLoading = true
-        this.getDesignData();
-        const { form: { validateFields } } = this
-        validateFields((errors, values) => {
-          if (!errors) {
-            flcFormEdit(values).then((res) => {
-              if (res.success) {
-                this.$message.success('设计成功')
-                this.visible = false
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.form.resetFields()
-              } else {
-                this.$message.error('设计失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel () {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
+
+<script setup>
+import { ref, reactive, getCurrentInstance } from 'vue'
+import 'k-form-design/styles/k-form-design.less'
+import { flcFormEdit } from '@/api/modular/flowCenter/formManage'
+import { message } from 'ant-design-vue'
+
+defineOptions({
+  name: 'DesignForm'
+})
+
+const emit = defineEmits(['ok'])
+const { proxy } = getCurrentInstance()
+
+const labelCol = reactive({
+  xs: { span: 24 },
+  sm: { span: 5 }
+})
+
+const wrapperCol = reactive({
+  xs: { span: 24 },
+  sm: { span: 15 }
+})
+
+const visible = ref(false)
+const confirmLoading = ref(false)
+const formLoading = ref(true)
+const name = ref(null)
+const formRef = ref(null)
+const content = ref(null)
+const contentData = ref(null)
+const contentParse = ref(null)
+const fields = ref(null)
+
+const formData = reactive({
+  id: null,
+  name: '',
+  content: '',
+  contentParse: '',
+  contentData: '',
+  frmType: 0,
+  webId: '',
+  orgId: null,
+  sort: 100,
+  active: 1,
+  remark: '',
+  fields: 0
+})
+
+const edit = (record) => {
+  visible.value = true
+  formLoading.value = false
+  name.value = record.name
+  
+  setTimeout(() => {
+    formData.id = record.id
+    formData.name = record.name
+    formData.content = record.content
+    formData.contentParse = record.contentParse
+    formData.contentData = record.contentData
+    formData.frmType = record.frmType
+    formData.webId = record.webId
+    formData.orgId = (!!record.orgId && record.orgId != 0) ? record.orgId : null
+    formData.sort = record.sort
+    formData.active = record.active
+    formData.remark = record.remark
+    
+    importData(record.content)
+  }, 100)
+}
+
+const importData = (value) => {
+  if (!!value) {
+    proxy.$refs.kfd.handleSetData(JSON.parse(value))
   }
+}
+
+const getDesignData = () => {
+  const kfd = proxy.$refs.kfd
+  const fieldData = kfd.getFieldSchema()
+  const fieldsArray = []
+  const fieldsParse = []
+  
+  fieldData.forEach(item => {
+    const tempData = {}
+    tempData.id = item.key
+    if (!!item.model) {
+      tempData.id = item.model
+    }
+    tempData.name = item.label
+    fieldsParse.push(tempData)
+    fieldsArray.push(tempData.id)
+  })
+  
+  content.value = fieldsArray.length > 0 ? JSON.stringify(kfd.getValue()) : null
+  contentData.value = fieldsArray.length > 0 ? fieldsArray.join(",") : null
+  contentParse.value = fieldsParse.length > 0 ? JSON.stringify(fieldsParse) : null
+  fields.value = fieldData.length
+  
+  formData.content = content.value
+  formData.contentData = contentData.value
+  formData.contentParse = contentParse.value
+  formData.fields = fields.value
+}
+
+const handleSubmit = async () => {
+  try {
+    confirmLoading.value = true
+    getDesignData()
+    
+    const res = await flcFormEdit(formData)
+    if (res.success) {
+      message.success('设计成功')
+      visible.value = false
+      emit('ok', formData)
+      if (formRef.value) {
+        formRef.value.resetFields()
+      }
+    } else {
+      message.error('设计失败::' + res.message)
+    }
+  } catch (error) {
+    console.error('Form submission failed:', error)
+  } finally {
+    confirmLoading.value = false
+  }
+}
+
+const handleCancel = () => {
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+  visible.value = false
+}
+
+defineExpose({
+  edit
+})
 </script>

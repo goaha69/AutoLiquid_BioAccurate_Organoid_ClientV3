@@ -6,134 +6,103 @@
     :confirmLoading="confirmLoading"
     @ok="handleSubmit"
     @cancel="handleCancel"
-    :destroyOnClose="true">
+    :destroyOnClose="true"
+  >
     <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
-        <a-form-item label="父级文件:" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback="">
+      <a-form ref="formRef" :model="formState" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item label="父级文件夹" name="pId" :rules="[{ required: true, message: '请选择父级文件夹!' }]">
           <a-tree-select
-            v-decorator="['pId', {rules: [{ required: true, message: '请选择父级文件夹!' }]}]"
+            v-model:value="formState.pId"
             style="width: 100%"
-            :dropdownStyle="{ maxHeight: '300px', overflow: 'auto' }"
-            :treeData="docTree"
-            placeholder="请选择父级文件'
-            treeDefaultExpandAll" :replaceFields="replaceFields">
-            <template #title="{ { id } }"><span>{{ id }}
-            </span></template>
-          </a-tree-select>
+            :dropdown-style="{ maxHeight: '300px', overflow: 'auto' }"
+            :tree-data="docTree"
+            placeholder="请选择父级文件夹"
+            tree-default-expand-all
+            :replace-fields="replaceFields"
+          />
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import {
-    Empty
-  } from 'ant-design-vue'
-  import {
-    DocumentTree,
-    DocumentMove
-  } from '@/api/modular/system/fileManage/documentManage'
+<script setup>
+import { ref, reactive } from 'vue';
+import { DocumentTree, DocumentMove } from '@/api/modular/system/fileManage/documentManage';
+import { message } from 'ant-design-vue';
 
-  export default {
-    data() {
-      return {
-        labelCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 6
-          }
-        },
-        wrapperCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 16
-          }
-        },
-        docTree: [],
-        replaceFields: {
-          key: 'id',
-          title: 'name',
-          value: 'id'
-        },
-        pId: 0,
-        data: [], // 批量编辑的数
-      visible: false,
-        confirmLoading: false,
-        form: this.$form.createForm(this),
-      }
-    },
-    methods: {
-      DocumentTree() {
-        DocumentTree().then(res => {
-          this.treeLoading = false
-          if (!res.success) {
-            return
-          }
-          // 添加根节
-        this.docTree = [{
-            id: 0,
-            name: '全部文件',
-            children: res.data
-          }]
-          this.queryParam.pId = this.docTree[0].id
-          this.pId = 0
-        })
-      },
-      /**
-       * 初始化方法
-       */
-      edit(data) {
-        this.DocumentTree()
-        this.visible = true
-        this.data = data
-      },
-      /**
-       * 移动文件
-       */
-      handleSubmit() {
-        const { form: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            for (const key in values) {
-              if (typeof (values[key]) === 'object') {
-                values[key] = JSON.stringify(values[key])
-              }
-            }
-            values.ids = this.data
-            DocumentMove(values).then((res) => {
-              if (res.success) {
-                this.$message.success('批量移动成功')
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('批量移动失败:' + JSON.stringify(res.message))// + res.message
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 6 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 16 },
+};
 
-            }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      /**
-       * 选中文件 * @param e 选中节点数组
-       */
-      handleClick(e) {
-        this.pId = e[0]
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-      }
+const visible = ref(false);
+const confirmLoading = ref(false);
+const formRef = ref();
+const formState = reactive({
+  pId: null,
+});
+const docTree = ref([]);
+const replaceFields = {
+  key: 'id',
+  title: 'name',
+  value: 'id',
+};
+const data = ref([]);
+
+const emit = defineEmits(['ok']);
+
+const loadTreeData = async () => {
+  confirmLoading.value = true;
+  try {
+    const res = await DocumentTree();
+    if (res.success) {
+      docTree.value = [{ id: 0, name: '全部文件', children: res.data }];
     }
+  } finally {
+    confirmLoading.value = false;
   }
+};
+
+const edit = (selectedIds) => {
+  data.value = selectedIds;
+  loadTreeData();
+  visible.value = true;
+};
+
+const handleSubmit = async () => {
+  try {
+    const values = await formRef.value.validateFields();
+    confirmLoading.value = true;
+    const params = {
+      ...values,
+      ids: data.value,
+    };
+    const res = await DocumentMove(params);
+    if (res.success) {
+      message.success('批量移动成功');
+      emit('ok', values);
+      handleCancel();
+    } else {
+      message.error('批量移动失败：' + res.message);
+    }
+  } catch (err) {
+    // validation error
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+const handleCancel = () => {
+  formRef.value.resetFields();
+  visible.value = false;
+};
+
+defineExpose({
+  edit,
+});
 </script>

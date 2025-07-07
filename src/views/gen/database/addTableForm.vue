@@ -1,445 +1,234 @@
 <template>
-  <a-modal title="新增数据:" :width="1200" :open="visible" :confirmLoading="confirmLoading" @ok="handleSubmit"
-    @cancel="handleCancel">
-
+  <a-modal title="新增数据源" :width="1200" :open="visible" :confirm-loading="confirmLoading" @ok="handleSubmit" @cancel="handleCancel">
     <a-spin :spinning="confirmLoading">
-      <a-divider orientation="left">数据表信</a-divider>
-      <a-form :form="form">
-        <a-form-item label="表名" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-          <a-input placeholder="请输入表:" v-decorator="['name',{rules: [{required: true, message: '请输入表名!'}]}]" ></a>
+      <a-divider orientation="left">数据表信息</a-divider>
+      <a-form ref="formRef" :model="formState" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item label="表名" name="name">
+          <a-input v-model:value="formState.name" placeholder="请输入表名" />
         </a-form-item>
-        <a-form-item label="描述" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-          <a-input placeholder="请输入描:" style="width: 100%"
-            v-decorator="['description',{rules: [{required: true, message: '请输入描述!'}]}]" ></a>
+        <a-form-item label="描述" name="description">
+          <a-input v-model:value="formState.description" placeholder="请输入描述" />
         </a-form-item>
       </a-form>
-    </a-spin>
-    <a-spin :spinning="confirmLoading">
-      <a-divider orientation="left">数据列信</a-divider>
-      <a-row :gutter="24">
-        <a-col  md="24" : sm="24">
-          <a-table size="middle" :columns="columnShowColumns" :dataSource="columnInfo" :pagination="false"
-            :loading="false">
-            <template #dbColumnName="{ text, record }">
-              <a-input style="width: 120px" v-model : value="record.dbColumnName" ></a>
+      <a-divider orientation="left">数据列信息</a-divider>
+      <a-table size="middle" :columns="columnShowColumns" :data-source="columnInfo" :pagination="false" row-key="key">
+         <template #bodyCell="{ column, record }">
+            <template v-if="column.dataIndex === 'dbColumnName'">
+              <a-input v-model:value="record.dbColumnName" style="width: 120px" />
             </template>
-            <template #columnDescription="{ text, record }">
-              <a-input style="width: 120px" v-model : value="record.columnDescription" ></a>
+            <template v-if="column.dataIndex === 'columnDescription'">
+              <a-input v-model:value="record.columnDescription" style="width: 120px" />
             </template>
-            <template #isPrimarykey="{ text, record }">
-              <a-select key="isPrimarykey" style="width: 120px" placeholder="请选择" has-feedback
-                @change="e => primarykeyHandleChange(e,record.key)" v-model="record.isPrimarykey">
-                <a-select-option v-for="(item,index) in selectData" :key="index" :value="item.value">{{ item.text }}
-                </a-select-option>
+            <template v-if="column.dataIndex === 'isPrimarykey'">
+               <a-select v-model:value="record.isPrimarykey" style="width: 80px" @change="e => primarykeyHandleChange(e, record.key)">
+                <a-select-option :value="true">是</a-select-option>
+                <a-select-option :value="false">否</a-select-option>
               </a-select>
             </template>
-            <template #isIdentity="{ text, record }">
-              <a-select key="isIdentity" style="width: 120px" placeholder="请选择" has-feedback v-model  value="record.isIdentity" : disabled="record.isPrimarykey==0">
-                <a-select-option v-for="(item,index) in selectData" :key="index" :value="item.value">{{ item.text }}
-                </a-select-option>
+            <template v-if="column.dataIndex === 'isIdentity'">
+               <a-select v-model:value="record.isIdentity" style="width: 80px" :disabled="!record.isPrimarykey">
+                <a-select-option :value="true">是</a-select-option>
+                <a-select-option :value="false">否</a-select-option>
               </a-select>
             </template>
-            <template #isNullable="{ text, record }">
-              <a-select key="isNullable" style="width: 120px" placeholder="请选择" has-feedback  disabled="record.isPrimarykey==1" v-model : value="record.isNullable">
-                <a-select-option v-for="(item,index) in selectData" :key="index" :value="item.value">{{ item.text }}
-                </a-select-option>
+            <template v-if="column.dataIndex === 'isNullable'">
+              <a-select v-model:value="record.isNullable" style="width: 80px" :disabled="record.isPrimarykey">
+                <a-select-option :value="true">是</a-select-option>
+                <a-select-option :value="false">否</a-select-option>
               </a-select>
             </template>
-            <template #dataType="{ text, record }">
-              <a-select key="dataType" style="width: 120px" placeholder="请选择"
-                @change="e => dataTypeHandleChange(e,record.key)" has-feedback v-model="record.dataType">
-                <a-select-option v-for="(item,index) in dataTypeSelectData" :key="index" :value="item.value">
+            <template v-if="column.dataIndex === 'dataType'">
+              <a-select v-model:value="record.dataType" style="width: 120px" placeholder="请选择" @change="e => dataTypeHandleChange(e, record.key)">
+                <a-select-option v-for="item in dataTypeSelectData" :key="item.value" :value="item.value">
                   {{ item.value }}
                 </a-select-option>
               </a-select>
             </template>
-            <template #length="{ text, record }">
-              <a-input-number  disabled="!record.hasLength" v-model : value="record.length" ></a>
+            <template v-if="column.dataIndex === 'length'">
+              <a-input-number v-model:value="record.length" :disabled="!record.hasLength" />
             </template>
-            <template #decimalDigits="{ text, record }">
-              <a-input-number  disabled="!record.hasDecimalDigits" v-model : value="record.decimalDigits" ></a>
+            <template v-if="column.dataIndex === 'decimalDigits'">
+              <a-input-number v-model:value="record.decimalDigits" :disabled="!record.hasDecimalDigits" />
             </template>
-            <template #operation="{ text, record }">
+            <template v-if="column.dataIndex === 'operation'">
               <a @click="remove(record.key)">删除</a>
             </template>
-
-          </a-table>
-          </a-form-item>
-        </a-col>
-      </a-row>
-      <a-row type="flex">
+          </template>
+      </a-table>
+      <a-row type="flex" :gutter="16">
         <a-col :span="6">
-          <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" ><template #icon><plus-outlined ></plus-outlined></template
-            @click="addPrimaryColumn">新增主键字段</a-button>
+          <a-button style="width: 100%; margin-top: 16px;" type="dashed" @click="addPrimaryColumn"><plus-outlined /> 新增主键字段</a-button>
         </a-col>
         <a-col :span="6">
-          <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" ><template #icon><plus-outlined ></plus-outlined></template
-            @click="addColumn">新增普通字</a-button>
+          <a-button style="width: 100%; margin-top: 16px;" type="dashed" @click="addColumn"><plus-outlined /> 新增普通字段</a-button>
         </a-col>
         <a-col :span="6">
-          <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" ><template #icon><plus-outlined ></plus-outlined></template
-            @click="addTenantColumn">新增租户字段</a-button>
+          <a-button style="width: 100%; margin-top: 16px;" type="dashed" @click="addTenantColumn"><plus-outlined /> 新增租户字段</a-button>
         </a-col>
         <a-col :span="6">
-          <a-button style="width: 100%; margin-top: 16px; margin-bottom : 8px" type="dashed" ><template #icon><plus-outlined ></plus-outlined></template
-            @click="addBaseColumn">新增基础字段</a-button>
+          <a-button style="width: 100%; margin-top: 16px;" type="dashed" @click="addBaseColumn"><plus-outlined /> 新增基础字段</a-button>
         </a-col>
       </a-row>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import {
-    tableAdd
-  } from '@/api/modular/gen/databaseManage'
+<script setup>
+import { ref, reactive } from 'vue';
+import { message } from 'ant-design-vue';
+import { tableAdd } from '@/api/modular/gen/databaseManage';
+import { PlusOutlined } from '@ant-design/icons-vue';
 
-  export default {
-    data() {
-      return {
-        labelCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 5
-          }
-        },
-        wrapperCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 15
-          }
-        },
-        visible: false,
-        confirmLoading: false,
-        form: this.$form.createForm(this),
-        selectData: [{
-          text: '',
-          value: 1
-        }, {
-          text: '',
-          value: 0
-        }],
-        dataTypeSelectData: [{
-            value: 'text',
-            hasLength: false,
-            hasDecimalDigits: false
-          },
-          {
-            value: 'varchar',
-            hasLength: true,
-            hasDecimalDigits: false
-          }, {
-            value: 'nvarchar',
-            hasLength: true,
-            hasDecimalDigits: false
-          },
-          {
-            value: 'char',
-            hasLength: true,
-            hasDecimalDigits: false
-          }, {
-            value: 'nchar',
-            hasLength: true,
-            hasDecimalDigits: false
-          }, {
-            value: 'timestamp',
-            hasLength: false,
-            hasDecimalDigits: false
-          }, {
-            value: 'int',
-            hasLength: false,
-            hasDecimalDigits: false
-          }, {
-            value: 'smallint',
-            hasLength: false,
-            hasDecimalDigits: false
-          }, {
-            value: 'tinyint',
-            hasLength: false,
-            hasDecimalDigits: false
-          }, {
-            value: 'bigint',
-            hasLength: false,
-            hasDecimalDigits: false
-          }, {
-            value: 'bit',
-            hasLength: false,
-            hasDecimalDigits: false
-          }, {
-            value: 'decimal',
-            hasLength: true,
-            hasDecimalDigits: true
-          }, {
-            value: 'datetime',
-            hasLength: false,
-            hasDecimalDigits: false
-          },
-        ],
-        columnInfo: [],
-        columnShowColumns: [{
-            title: '字段',
-            dataIndex: 'dbColumnName',
-            slots: {
-              customRender: 'dbColumnName'
-            }
-          }, {
-            title: '描述',
-            dataIndex: 'columnDescription',
-            slots: {
-              customRender: 'columnDescription'
-            }
-          }, {
-            title: '主键',
-            dataIndex: 'isPrimarykey',
-            slots: {
-              customRender: 'isPrimarykey'
-            }
-          }, {
-            title: '自增',
-            dataIndex: 'isIdentity',
-            slots: {
-              customRender: 'isIdentity'
-            }
-          }, {
-            title: '类型',
-            dataIndex: 'dataType',
-            slots: {
-              customRender: 'dataType'
-            }
-          },
-          {
-            title: '可空',
-            dataIndex: 'isNullable',
-            slots: {
-              customRender: 'isNullable'
-            }
-          },
-          {
-            title: '长度',
-            dataIndex: 'length',
-            slots: {
-              customRender: 'length'
-            }
-          },
-          {
-            title: '保留几位小数',
-            dataIndex: 'decimalDigits',
-            slots: {
-              customRender: 'decimalDigits'
-            }
-          },
-          {
-            title: '操作',
-            key: 'action',
-            slots: {
-              customRender: 'operation'
-            }
-          }
-        ],
-      }
-    },
-    methods: {
-      /**
-       * 选择子表单单项触
-       */
-      dataTypeHandleChange(value, key) {
-        const newData = [...this.columnInfo]
-        const target = newData.find(item => key === item.key)
-        if (target) {
-          let type = this.dataTypeSelectData.find(item => item.value == value);
-          if (type) {
-            target["hasLength"] = type.hasLength
-            target["hasDecimalDigits"] = type.hasDecimalDigits
-            if (!target["hasLength"]) {
-              target["length"] = 0
-            }
-            if (!target["hasDecimalDigits"]) {
-              target["decimalDigits"] = 0
-            }
-            this.columnInfo = newData
-          }
-        }
-      },
-      primarykeyHandleChange(value, key) {
-        const newData = [...this.columnInfo]
-        const target = newData.find(item => key === item.key)
-        if (target) {
-          if (value == 1) {
-            target["isNullable"] = 0;
-          } else {
-            target["isIdentity"] = 0;
-          }
-          this.columnInfo = newData
-        }
-      },
-      /**
-       * 删除
-       */
-      remove(key) {
-        const newData = this.columnInfo.filter(item => item.key !== key)
-        this.columnInfo = newData
-      },
-      addColumn() {
-        const length = this.columnInfo.length
-        this.columnInfo.push({
-          key: length === 0  1 : parseInt(this.columnInfo[length - 1].key)' + 1,
-          columnDescription: "",
-          dataType: "",
-          dbColumnName: "",
-          decimalDigits: 0,
-          isIdentity: 0,
-          isNullable: 1,
-          isPrimarykey: 0,
-          length: 0
-        })
-      },
-      addTenantColumn() {
-        const length = this.columnInfo.length
-        this.columnInfo.push({
-          key: length === 0  1 : parseInt(this.columnInfo[length - 1].key) + 1,
-          columnDescription: "租户Id",
-          dataType: "bigint",
-          dbColumnName: "TenantId",
-          decimalDigits: 0,
-          isIdentity: 0,
-          isNullable: 1,
-          isPrimarykey: 0,
-          length: 0
-        })
-      },
-      addPrimaryColumn() {
-        const length = this.columnInfo.length
-        this.columnInfo.push({
-          key: length === 0  1 : parseInt(this.columnInfo[length - 1].key) + 1,
-          columnDescription: "主键Id",
-          dataType: "bigint",
-          dbColumnName: "Id",
-          decimalDigits: 0,
-          isIdentity: 0,
-          isNullable: 0,
-          isPrimarykey: 1,
-          length: 0
-        })
-      },
-      addBaseColumn() {
-        const fileds = [{
-            dataType: 'datetime',
-            name: 'CreatedTime',
-            desc: '创建时间'
-          },
-          {
-            dataType: 'datetime',
-            name: 'UpdatedTime',
-            desc: '更新时间'
-          },
-          {
-            dataType: 'bigint',
-            name: 'CreatedUserId',
-            desc: '创建者Id'
-          },
-          {
-            dataType: 'nvarchar',
-            name: 'CreatedUserName',
-            desc: '创建者名',
-            length: 20
-          },
-          {
-            dataType: 'bigint',
-            name: 'UpdatedUserId',
-            desc: '修改者Id'
-          },
-          {
-            dataType: 'nvarchar',
-            name: 'UpdatedUserName',
-            desc: '修改者名',
-            length: 20
-          },
-          {
-            dataType: 'bit',
-            name: 'IsDeleted',
-            desc: '软删',
-            isNullable:0
-          }
-        ]
+const emit = defineEmits(['ok']);
 
-        fileds.forEach(m => {
-          let length = this.columnInfo.length
-          let key = length === 0  1 : parseInt(this.columnInfo[length - 1].key)' + 1
-          this.columnInfo.push({
-            key: key,
-            columnDescription: m.desc,
-            dataType: m.dataType,
-            dbColumnName: m.name,
-            decimalDigits: 0,
-            isIdentity: 0,
-            isNullable: m.isNullable===0  0 : 1,
-            isPrimarykey: 0,
-            length: m.length || 0
-          })
-        })
+const labelCol = { xs: { span: 24 }, sm: { span: 5 } };
+const wrapperCol = { xs: { span: 24 }, sm: { span: 15 } };
 
-      },
+const visible = ref(false);
+const confirmLoading = ref(false);
+const formRef = ref();
 
-      /**
-       * 初始化方法
-       */
-      add(record) {
-        this.visible = true;
-      },
-      /**
-       * 提交表单
-       */
-      handleSubmit() {
-        let errMsg="";
-        for(let i=0;i<this.columnInfo.length;i++){
-          let m=this.columnInfo[i];
-          if((m.dataType=="varchar" || m.dataType=="nvarchar") && m.length<=0){
-            errMsg="字段类型为varchar或者nvarchar时,长度不能小于0"
-            break;
-          }
-        }
-        if(errMsg){
-          this.$message.warning(errMsg);
-          return false;
-        }
+const formState = reactive({
+  name: '',
+  description: '',
+});
 
+const rules = {
+  name: [{ required: true, message: '请输入表名!' }],
+  description: [{ required: true, message: '请输入描述!' }],
+};
 
-        const {
-          form: {
-            validateFields
-          }
-        } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            values["dbColumnInfoList"] = this.columnInfo;
-            tableAdd(values).then((res) => {
-              if (res.success) {
-                this.$message.success('新增成功')
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.handleCancel()
-              } else {
-                this.$message.error('新增失败') // ' + res.message
+const dataTypeSelectData = [
+  { value: 'text', hasLength: false, hasDecimalDigits: false },
+  { value: 'varchar', hasLength: true, hasDecimalDigits: false },
+  { value: 'nvarchar', hasLength: true, hasDecimalDigits: false },
+  { value: 'char', hasLength: true, hasDecimalDigits: false },
+  { value: 'nchar', hasLength: true, hasDecimalDigits: false },
+  { value: 'timestamp', hasLength: false, hasDecimalDigits: false },
+  { value: 'int', hasLength: false, hasDecimalDigits: false },
+  { value: 'smallint', hasLength: false, hasDecimalDigits: false },
+  { value: 'tinyint', hasLength: false, hasDecimalDigits: false },
+  { value: 'bigint', hasLength: false, hasDecimalDigits: false },
+  { value: 'bit', hasLength: false, hasDecimalDigits: false },
+  { value: 'decimal', hasLength: true, hasDecimalDigits: true },
+  { value: 'datetime', hasLength: false, hasDecimalDigits: false },
+];
 
-            }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.columnInfo=[];
-        this.visible = false
-      }
+const columnInfo = ref([]);
+let nextKey = 0;
+
+const columnShowColumns = [
+  { title: '字段', dataIndex: 'dbColumnName' },
+  { title: '描述', dataIndex: 'columnDescription' },
+  { title: '主键', dataIndex: 'isPrimarykey' },
+  { title: '自增', dataIndex: 'isIdentity' },
+  { title: '可空', dataIndex: 'isNullable' },
+  { title: '类型', dataIndex: 'dataType' },
+  { title: '长度', dataIndex: 'length' },
+  { title: '小数位', dataIndex: 'decimalDigits' },
+  { title: '操作', dataIndex: 'operation' },
+];
+
+const createColumn = (options = {}) => {
+  return reactive({
+    key: nextKey++,
+    dbColumnName: '',
+    columnDescription: '',
+    isPrimarykey: false,
+    isIdentity: false,
+    isNullable: true,
+    dataType: 'varchar',
+    length: 255,
+    decimalDigits: 0,
+    hasLength: true,
+    hasDecimalDigits: false,
+    ...options,
+  });
+};
+
+const primarykeyHandleChange = (value, key) => {
+  const record = columnInfo.value.find(item => item.key === key);
+  if (record) {
+    if (value) { // is primary key
+      record.isNullable = false;
+      record.isIdentity = false;
     }
   }
+};
+
+const dataTypeHandleChange = (value, key) => {
+  const record = columnInfo.value.find(item => item.key === key);
+  const dataType = dataTypeSelectData.find(item => item.value === value);
+  if (record && dataType) {
+    record.hasLength = dataType.hasLength;
+    record.hasDecimalDigits = dataType.hasDecimalDigits;
+  }
+};
+
+const remove = (key) => {
+  columnInfo.value = columnInfo.value.filter(item => item.key !== key);
+};
+
+const addPrimaryColumn = () => {
+    columnInfo.value.push(createColumn({ dbColumnName: 'Id', columnDescription: 'Id', isPrimarykey: true, isNullable: false, dataType: 'bigint' }));
+};
+
+const addColumn = () => {
+  columnInfo.value.push(createColumn());
+};
+
+const addTenantColumn = () => {
+    columnInfo.value.push(createColumn({ dbColumnName: 'TenantId', columnDescription: '租户Id', isNullable: false, dataType: 'bigint' }));
+}
+
+const addBaseColumn = () => {
+    columnInfo.value.push(...[
+        createColumn({ dbColumnName: 'CreateUserId', columnDescription: '创建者Id', isNullable: true, dataType: 'bigint' }),
+        createColumn({ dbColumnName: 'CreateTime', columnDescription: '创建时间', isNullable: true, dataType: 'datetime' }),
+        createColumn({ dbColumnName: 'CreateUserName', columnDescription: '创建者名称', isNullable: true, dataType: 'varchar', length: 255 }),
+        createColumn({ dbColumnName: 'UpdateUserId', columnDescription: '修改者Id', isNullable: true, dataType: 'bigint' }),
+        createColumn({ dbColumnName: 'UpdateTime', columnDescription: '修改时间', isNullable: true, dataType: 'datetime' }),
+        createColumn({ dbColumnName: 'UpdateUserName', columnDescription: '修改者名称', isNullable: true, dataType: 'varchar', length: 255 }),
+        createColumn({ dbColumnName: 'IsDeleted', columnDescription: '软删除标记', isNullable: true, dataType: 'bit' })
+    ]);
+};
+
+
+const add = () => {
+  visible.value = true;
+  formRef.value?.resetFields();
+  columnInfo.value = [];
+  nextKey = 0;
+};
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate();
+    if(columnInfo.value.length === 0){
+        message.warning('至少需要添加一列');
+        return;
+    }
+    const params = {
+      ...formState,
+      databaseColumnInfo: columnInfo.value,
+    };
+    confirmLoading.value = true;
+    await tableAdd(params);
+    message.success('新增成功');
+    visible.value = false;
+    emit('ok');
+  } catch (error) {
+    // validation error
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+const handleCancel = () => {
+  visible.value = false;
+};
+
+defineExpose({
+  add,
+});
 </script>

@@ -1,270 +1,161 @@
 <template>
-  <a-card :bordered="false" v-show="indexConfigShow">
+  <a-card :bordered="false">
     <div class="table-operator">
-      <a-button class="but_item" type="dashed" @click="handleCancel" icon="rollback">返回</a-button>
-      <a-button type="primary" ><template #icon><plus-outlined ></plus-outlined></template @click="handleSubmit">保存</a-button>
+      <a-button class="but_item" type="dashed" @click="handleCancel">
+        <template #icon><rollback-outlined /></template>
+        返回
+      </a-button>
+      <a-button type="primary" @click="handleSubmit">
+        <template #icon><save-outlined /></template>
+        保存
+      </a-button>
     </div>
-    <a-table ref="table" size="middle" :columns="columns" :dataSource="loadData" :pagination="false" :alert="true"
-      :loading="tableLoading" :rowKey="(record) => record.id">
-      <template #columnComment="{ text, record }">
-        <a-input v-model="record.columnComment" ></a>
-      </template>
-      <!--      <template #javaType="{ text, record }">
-        <a-select style="width: 120px" v-model  value="record.javaType" : disabled="judgeColumns(record)">
-          <a-select-option v-for="(item,index) in javaTypeData" :key="index" :value="item.code">{{ item.name }}</a-select-option>
-        </a-select>
-      </template> -->
-      <template #effectType="{ text, record }">
-        <a-select style="width: 120px" v-model  value="record.effectType" : disabled="judgeColumns(record)"
-          @change="effectTypeChange(record, $event)">
-          <a-select-option v-for="(item, index) in effectTypeData" :key="index" :value="item.code">{{
-            item.name
-          }}</a-select-option>
-        </a-select>
-      </template>
-      <template #dictTypeCode="{ text, record }">
-        <a-select style="width: 120px" v-model  value="record.dictTypeCode" : disabled="record.effectType !== 'radio' && record.effectType !== 'select' && record.effectType !== 'checkbox'
-          ">
-          <a-select-option v-for="(item, index) in dictDataAll" :key="index" :value="item.code">{{
-            item.name
-          }}</a-select-option>
-        </a-select>
-      </template>
-      <template #whetherTable="{ text, record }">
-        <a-checkbox v-model="record.whetherTable" ></a>
-      </template>
-      <template #whetherRetract="{ text, record }">
-        <a-checkbox v-model="record.whetherRetract" ></a>
-      </template>
-      <template #whetherAddUpdate="{ text, record }">
-        <a-checkbox v-model  value="record.whetherAddUpdate" : disabled="judgeColumns(record)" ></a>
-      </template>
-      <template #whetherRequired="{ text, record }">
-        <a-checkbox v-model  value="record.whetherRequired" : disabled="judgeColumns(record)" ></a>
-      </template>
-      <template #queryWhether="{ text, record }">
-        <a-switch v-model="record.queryWhether">
-          <a-icon #checkedChildren type="check" ></a>
-          <a-icon #unCheckedChildren type="close" ></a>
-        </a-switch>
-      </template>
-      <template #queryType="{ text, record }">
-        <a-select style="width: 100px" v-model  value="record.queryType" : disabled="!record.queryWhether">
-          <a-select-option v-for="(item, index) in codeGenQueryTypeData" :key="index" :value="item.code">{{
-            item.name
-          }}</a-select-option>
-        </a-select>
+    <a-table
+      ref="table"
+      size="middle"
+      :columns="columns"
+      :data-source="loadData"
+      :pagination="false"
+      :loading="tableLoading"
+      row-key="id"
+    >
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.dataIndex === 'columnComment'">
+          <a-input v-model:value="record.columnComment" />
+        </template>
+        <template v-if="column.dataIndex === 'effectType'">
+          <a-select v-model:value="record.effectType" style="width: 120px" :disabled="judgeColumns(record)">
+            <a-select-option v-for="item in effectTypeData" :key="item.code" :value="item.code">{{ item.name }}</a-select-option>
+          </a-select>
+        </template>
+        <template v-if="column.dataIndex === 'dictTypeCode'">
+          <a-select
+            v-model:value="record.dictTypeCode"
+            style="width: 120px"
+            :disabled="!['radio', 'select', 'checkbox'].includes(record.effectType)"
+          >
+            <a-select-option v-for="item in dictDataAll" :key="item.code" :value="item.code">{{ item.name }}</a-select-option>
+          </a-select>
+        </template>
+        <template v-if="column.dataIndex === 'whetherTable'">
+          <a-checkbox v-model:checked="record.whetherTable" />
+        </template>
+        <template v-if="column.dataIndex === 'whetherAddUpdate'">
+          <a-checkbox v-model:checked="record.whetherAddUpdate" :disabled="judgeColumns(record)" />
+        </template>
+        <template v-if="column.dataIndex === 'whetherRequired'">
+          <a-checkbox v-model:checked="record.whetherRequired" :disabled="judgeColumns(record)" />
+        </template>
+        <template v-if="column.dataIndex === 'queryWhether'">
+          <a-switch v-model:checked="record.queryWhether" />
+        </template>
+        <template v-if="column.dataIndex === 'queryType'">
+          <a-select v-model:value="record.queryType" style="width: 100px" :disabled="!record.queryWhether">
+            <a-select-option v-for="item in codeGenQueryTypeData" :key="item.code" :value="item.code">{{ item.name }}</a-select-option>
+          </a-select>
+        </template>
       </template>
     </a-table>
-    <fk-modal ref="fkModal" ></fk>
   </a-card>
 </template>
-<script>
-import {
-  sysCodeGenerateConfigList,
-  sysCodeGenerateConfigEdit
-} from '@/api/modular/gen/sysCodeGenerateConfigManage'
-import fkModal from './fkModal'
-export default {
-  components: {
-    fkModal
-  },
-  data() {
-    return {
-      // 表头
 
-    columns: [{
-        title: '字段',
-        dataIndex: 'columnName'
-      },
-      {
-        title: '描述',
-        dataIndex: 'columnComment',
-        slots: {
-          customRender: 'columnComment'
-        }
-      },
-      {
-        title: '类型',
-        dataIndex: 'netType'
-      },
-      // {
-      //   title: 'java类型',
-      //   dataIndex: 'javaType',
-      //   slots: { customRender: 'javaType' }
-      // },
+<script setup>
+import { ref, reactive } from 'vue';
+import { message } from 'ant-design-vue';
+import { sysCodeGenerateConfigList, sysCodeGenerateConfigEdit } from '@/api/modular/gen/sysCodeGenerateConfigManage';
+import { RollbackOutlined, SaveOutlined } from '@ant-design/icons-vue';
+import { dictType, dictDataAll as getDictDataAll } from '@/utils/dict';
 
-    {
-        title: '作用类型',
-        dataIndex: 'effectType',
-        slots: {
-          customRender: 'effectType'
-        }
-      },
-      {
-        title: '字典',
-        dataIndex: 'dictTypeCode',
-        slots: {
-          customRender: 'dictTypeCode'
-        }
-      },
-      {
-        title: '列表显示',
-        align: 'center',
-        dataIndex: 'whetherTable',
-        slots: {
-          customRender: 'whetherTable'
-        }
-      },
-      // {
-      //   title: '列字段省,
-      //   align: 'center',
-      //   dataIndex: 'whetherRetract',
-      //   slots: { customRender: 'whetherRetract' }
-      // },
+const emit = defineEmits(['ok']);
 
-    {
-        title: '增改',
-        align: 'center',
-        dataIndex: 'whetherAddUpdate',
-        slots: {
-          customRender: 'whetherAddUpdate'
-        }
-      },
-      {
-        title: '必填',
-        align: 'center',
-        dataIndex: 'whetherRequired',
-        slots: {
-          customRender: 'whetherRequired'
-        }
-      },
-      {
-        title: '是否是查',
-        align: 'center',
-        dataIndex: 'queryWhether',
-        slots: {
-          customRender: 'queryWhether'
-        }
-      },
-      {
-        title: '查询方式',
-        dataIndex: 'queryType',
-        slots: {
-          customRender: 'queryType'
-        }
-      }
-      ],
-      indexConfigShow: false,
-      tableLoading: false,
-      visible: false,
-      loadData: [],
-      javaTypeData: [],
-      effectTypeData: [],
-      dictDataAll: [],
-      codeGenQueryTypeData: [],
-      yesOrNoData: []
-    }
-  },
-  methods: {
-    /**
-     * 打开界面
-       */
-    open(data) {
-      this.indexConfigShow = true
-      this.tableLoading = true
-      const dictOption = this.$options
-      this.javaTypeData = dictOption.filters['dictData']('code_gen_net_type')
-      this.effectTypeData = dictOption.filters['dictData']('code_gen_effect_type')
-      this.dictDataAll = dictOption.filters['dictDataAll']()
-      this.yesOrNoData = dictOption.filters['dictData']('yes_or_no')
-      this.codeGenQueryTypeData = dictOption.filters['dictData']('code_gen_query_type')
-      const params = {
-        codeGenId: data.id
-      }
-      sysCodeGenerateConfigList(params).then((res) => {
-        this.loadData = res.data
-        this.loadData.forEach(item => {
-          for (const key in item) {
-            if (item[key] === 'Y') {
-              item[key] = true
-            }
-            if (item[key] === 'N') {
-              item[key] = false
-            }
-          }
-        })
-        this.tableLoading = false
-      })
-    },
-    /**
-     * 提交表单
-       */
-    handleSubmit() {
-      this.tableLoading = true
-      // 做数组属性转 咱先来一个切断双向绑定,学习的童鞋下回记下啊
-      // eslint-disable-next-line prefer-const
+const tableLoading = ref(false);
+const loadData = ref([]);
+const effectTypeData = ref([]);
+const dictDataAll = ref([]);
+const codeGenQueryTypeData = ref([]);
 
-    let loadDatas = JSON.parse(JSON.stringify(this.loadData))
-      loadDatas.forEach(item => {
-        /**
-       * 必填那一项转
-       */
+const columns = [
+  { title: '字段', dataIndex: 'columnName' },
+  { title: '描述', dataIndex: 'columnComment' },
+  { title: '类型', dataIndex: 'netType' },
+  { title: '作用类型', dataIndex: 'effectType' },
+  { title: '字典', dataIndex: 'dictTypeCode' },
+  { title: '列表显示', align: 'center', dataIndex: 'whetherTable' },
+  { title: '增改', align: 'center', dataIndex: 'whetherAddUpdate' },
+  { title: '必填', align: 'center', dataIndex: 'whetherRequired' },
+  { title: '是否查询', align: 'center', dataIndex: 'queryWhether' },
+  { title: '查询方式', dataIndex: 'queryType' },
+];
+
+const open = async (data) => {
+  tableLoading.value = true;
+  
+  effectTypeData.value = dictType('code_gen_effect_type');
+  dictDataAll.value = getDictDataAll();
+  codeGenQueryTypeData.value = dictType('code_gen_query_type');
+
+  try {
+    const res = await sysCodeGenerateConfigList({ codeGenId: data.id });
+    loadData.value = res.data.map(item => {
+      const newItem = {};
       for (const key in item) {
-          if (key != "isEnum") {
-            if (item[key] === true) {
-              item[key] = 'Y'
-            }
-            if (item[key] === false) {
-              item[key] = 'N'
-            }
-          }
-
-        }
-      })
-      // const param = {
-      //   sysCodeGenerateConfigParamList: loadDatas
-      // }
-
-    sysCodeGenerateConfigEdit(loadDatas).then((res) => {
-        this.tableLoading = false
-        if (res.success) {
-          this.$message.success('编辑成功')
-          this.handleCancel()
+        if (item[key] === 'Y') {
+          newItem[key] = true;
+        } else if (item[key] === 'N') {
+          newItem[key] = false;
         } else {
-          this.$message.error('编辑失败::' + res.message)
+          newItem[key] = item[key];
         }
-      })
-    },
-    /**
-     * 判断是否(用于是否能选择或输入等
-       */
-    judgeColumns(data) {
-      if (
-        data.columnName.indexOf('createdUserName') > -1 ||
-        data.columnName.indexOf('createdTime') > -1 ||
-        data.columnName.indexOf('updatedUserName') > -1 ||
-        data.columnName.indexOf('updatedTime') > -1 ||
-        data.columnKey === 'True'
-      ) {
-        return true
       }
-      return false
-    },
-    /**
-     * 作用类型改变
-       */
-    effectTypeChange(data, value) {
-      if (value === 'fk') {
-        console.log(11)
-        this.$refs.fkModal.show(data)
-      }
-    },
-    handleCancel() {
-      this.$emit('ok')
-      this.loadData = []
-      this.indexConfigShow = false
-    }
+      return reactive(newItem);
+    });
+  } finally {
+    tableLoading.value = false;
   }
-}
+};
+
+const handleSubmit = async () => {
+  tableLoading.value = true;
+  const params = JSON.parse(JSON.stringify(loadData.value));
+  params.forEach(item => {
+    for (const key in item) {
+      if (item[key] === true) {
+        item[key] = 'Y';
+      } else if (item[key] === false) {
+        item[key] = 'N';
+      }
+    }
+  });
+  
+  try {
+    const res = await sysCodeGenerateConfigEdit(params);
+    if (res.success) {
+      message.success('编辑成功');
+      handleCancel();
+    } else {
+      message.error('编辑失败: ' + res.message);
+    }
+  } finally {
+    tableLoading.value = false;
+  }
+};
+
+const judgeColumns = (data) => {
+  return (
+    data.columnName.includes('createdUserName') ||
+    data.columnName.includes('createdTime') ||
+    data.columnName.includes('updatedUserName') ||
+    data.columnName.includes('updatedTime') ||
+    data.columnKey === 'True'
+  );
+};
+
+const handleCancel = () => {
+  loadData.value = [];
+  emit('ok');
+};
+
+defineExpose({
+  open,
+});
 </script>

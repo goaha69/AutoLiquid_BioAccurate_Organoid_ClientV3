@@ -1,12 +1,5 @@
 <template>
-  <div class="home">
-    <div class="banner">
-      <img alt="Vue logo" style="width: 64px; height : 64px" src="../assets/logo.png">
-      <h3 style="margin-top: 1rem">Welcome to Your Vue.js App</h3>
-    </div>
-
-    <br/>
-
+  <div>
     <h2># Trend 组件 </h2>
 
     <a-divider> 正常 </a-divider>
@@ -14,15 +7,15 @@
     <a-card>
 
       <trend flag="up" style="margin-right: 16px;">
-        <span #term>工资</span>
+        <template v-slot:term>工资</template>
         5%
       </trend>
       <trend flag="up" style="margin-right: 16px;">
-        <span #term>工作</span>
+        <template v-slot:term>工作</template>
         50%
       </trend>
       <trend flag="down">
-        <span #term>身体状</span>
+        <template v-slot:term>身体状况</template>
         50%
       </trend>
 
@@ -33,11 +26,11 @@
     <a-card style="margin-bottom: 3rem">
 
       <trend flag="up" :reverse-color="true" style="margin-right: 16px;">
-        <span #term>工资</span>
+        <template v-slot:term>工资</template>
         5%
       </trend>
       <trend flag="down" :reverse-color="true" style="margin-right: 16px;">
-        <span #term>工作</span>
+        <template v-slot:term>工作</template>
         50%
       </trend>
 
@@ -48,22 +41,21 @@
     <a-divider> AvatarList </a-divider>
     <a-card style="margin-bottom: 3rem">
       <avatar-list :max-length="3">
-        <avatar-list-item tips="Jake" src="https:// gw.alipayobjects.com/zos/rmsportal/zOsKZmFRdUtvpqCImOVY.png" ></avatar>
-        <avatar-list-item tips="Andy" src="https:// gw.alipayobjects.com/zos/rmsportal/sfjbOqnsXXJgNCjCzDBL.png" ></avatar>
-        <avatar-list-item tips="Niko" src="https:// gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" ></avatar>
-        <avatar-list-item tips="Niko" src="https:// gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" ></avatar>
-        <avatar-list-item tips="Niko" src="https:// gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" ></avatar>
-        <avatar-list-item tips="Niko" src="https:// gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" ></avatar>
-        <avatar-list-item tips="Niko" src="https:// gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" ></avatar>
-
+        <avatar-list-item tips="Jake" src="https://gw.alipayobjects.com/zos/rmsportal/zOsKZmFRdUtvpqCImOVY.png" />
+        <avatar-list-item tips="Andy" src="https://gw.alipayobjects.com/zos/rmsportal/sfjbOqnsXXJgNCjCzDBL.png" />
+        <avatar-list-item tips="Niko" src="https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" />
+        <avatar-list-item tips="Niko" src="https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" />
+        <avatar-list-item tips="Niko" src="https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" />
+        <avatar-list-item tips="Niko" src="https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" />
+        <avatar-list-item tips="Niko" src="https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" />
       </avatar-list>
 
-      <a-divider type="vertical" style="margin: 0 16px" ></a>
+      <a-divider type="vertical" style="margin: 0 16px" />
 
       <avatar-list size="mini">
-        <avatar-list-item tips="Jake" src="https:// gw.alipayobjects.com/zos/rmsportal/zOsKZmFRdUtvpqCImOVY.png" ></avatar>
-        <avatar-list-item tips="Andy" src="https:// gw.alipayobjects.com/zos/rmsportal/sfjbOqnsXXJgNCjCzDBL.png" ></avatar>
-        <avatar-list-item tips="Niko" src="https:// gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" ></avatar>
+        <avatar-list-item tips="Jake" src="https://gw.alipayobjects.com/zos/rmsportal/zOsKZmFRdUtvpqCImOVY.png" />
+        <avatar-list-item tips="Andy" src="https://gw.alipayobjects.com/zos/rmsportal/sfjbOqnsXXJgNCjCzDBL.png" />
+        <avatar-list-item tips="Niko" src="https://gw.alipayobjects.com/zos/rmsportal/kZzEzemZyKLKFsojXItE.png" />
       </avatar-list>
     </a-card>
 
@@ -72,14 +64,16 @@
     <a-divider> CountDown </a-divider>
     <a-card style="margin-bottom: 3rem">
       <count-down
-        style="font-size: 2rem" : target="new Date().getTime() + 3000000"
+        style="font-size: 2rem" 
+        :target="new Date().getTime() + 3000000"
         :on-end="onEndHandle">
       </count-down>
 
-      <a-divider type="vertical" style="margin: 0 16px" ></a>
+      <a-divider type="vertical" style="margin: 0 16px" />
 
       <count-down
-        style="font-size: 2rem" : target="new Date().getTime() + 10000"
+        style="font-size: 2rem" 
+        :target="new Date().getTime() + 10000"
         :on-end="onEndHandle2">
       </count-down>
     </a-card>
@@ -98,9 +92,12 @@
 
     <a-divider> NumberInfo </a-divider>
     <a-card style="margin-bottom: 3rem">
-      <number-info  sub-title="() => { return 'Visits this week' }" : total="12321"
+      <number-info  
+        sub-title="() => { return 'Visits this week' }" 
+        :total="12321"
         status="up"
-        :sub-total="17.1"></number-info>
+        :sub-total="17.1">
+      </number-info>
     </a-card>
 
     <h2># TagSelect 组件 </h2>
@@ -123,9 +120,9 @@
     <a-divider> DescriptionList </a-divider>
     <a-card style="margin-bottom: 3rem">
       <description-list title="组名" size="small">
-        <description-list-item term="负责">林东</description-list-item>
+        <description-list-item term="负责人">林东</description-list-item>
         <description-list-item term="角色">1234567</description-list-item>
-        <description-list-item term="所属部">XX公司-YY</description-list-item>
+        <description-list-item term="所属部门">XX公司-YY部门</description-list-item>
         <description-list-item term="过期时间">2018-08-08</description-list-item>
         <description-list-item term="描述">这段描述很长很长很长很长很长很长很长很长很长很长很长很长很长很长...</description-list-item>
       </description-list>
@@ -138,9 +135,9 @@
   </div>
 </template>
 
-<script>
-// @ is an alias to /src
-
+<script setup>
+import { ref, onMounted } from 'vue'
+import { message, notification } from 'ant-design-vue'
 import Trend from '@/components/Trend'
 import AvatarList from '@/components/AvatarList'
 import CountDown from '@/components/CountDown/CountDown'
@@ -151,61 +148,49 @@ import { DescriptionList, TagCloud } from '@/components/'
 
 const AvatarListItem = AvatarList.AvatarItem
 const TagSelectOption = TagSelect.Option
-
 const DescriptionListItem = DescriptionList.Item
 
-export default {
-  name: 'Home',
-  components: {
-    NumberInfo,
-    Ellipsis,
-    CountDown,
-    Trend,
-    AvatarList,
-    AvatarListItem,
-    TagSelect,
-    TagSelectOption,
-    TagCloud,
-    DescriptionList,
-    DescriptionListItem
-  },
-  data () {
-    return {
-      targetTime: new Date().getTime()' + 3900000,
-      tagCloudData: []
-    }
-  },
-  created () {
-    this.getTagCloudData()
-  },
-  methods: {
-    onEndHandle () {
-      this.$message.success('CountDown callback!!!')
-    },
-    onEndHandle2 () {
-      this.$notification.open({
-        message: 'Notification Title',
-        description: 'This is the content of the notification. This is the content of the notification. This is the content of the notification.'
-      })
-    },
-    getTagCloudData () {
-      this.$http.get('/data/antv/tag-cloud').then(res => {
-        this.tagCloudData = res.result
-      })
-    }
+defineOptions({
+  name: 'Home'
+})
+
+const targetTime = ref(new Date().getTime() + 3900000)
+const tagCloudData = ref([])
+
+const onEndHandle = () => {
+  message.success('CountDown callback!!!')
+}
+
+const onEndHandle2 = () => {
+  notification.open({
+    message: 'Notification Title',
+    description: 'This is the content of the notification. This is the content of the notification. This is the content of the notification.'
+  })
+}
+
+const getTagCloudData = async () => {
+  try {
+    // Note: This API call needs to be updated to use the new HTTP client
+    // const res = await $http.get('/data/antv/tag-cloud')
+    // tagCloudData.value = res.result
+    
+    // Placeholder data for now
+    tagCloudData.value = [
+      { name: 'Vue', value: 100 },
+      { name: 'React', value: 80 },
+      { name: 'Angular', value: 60 },
+      { name: 'JavaScript', value: 120 },
+      { name: 'TypeScript', value: 90 }
+    ]
+  } catch (error) {
+    console.error('获取标签云数据失败:', error)
   }
 }
+
+onMounted(() => {
+  getTagCloudData()
+})
 </script>
 
 <style scoped>
-  .home {
-    width: 900px;
-    margin: 0 auto;
-    padding: 25px 0;
-  }
-  .home > .banner {
-    text-align: center;
-    padding: 25px 0;
-    margin: 25px 0;
-  }
 </style>

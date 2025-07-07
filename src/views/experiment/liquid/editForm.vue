@@ -17,14 +17,14 @@
               :required="true"
               :isError="errors.code"
               v-model="attributeData.code"
-            ></sp>
+            />
             <sp-input
               label="Ĳ"
               :required="true"
               :isError="errors.name"
               :inputWidth="300"
               v-model="attributeData.name"
-            ></sp>
+            />
 
             <span
               class="span-label"
@@ -48,7 +48,7 @@
               label="κţŨȣ"
               :labelWidth="150"
               v-model="attributeData.barcode"
-            ></sp>
+            />
           </div>
         </a-row>
 
@@ -63,23 +63,23 @@
                 :labelWidth="120"
                 unit="mm"
                 v-model="attributeData.absorbOffset"
-              ></sp>
+              />
               <sp-input
                 label="Һٶ"
                 :labelWidth="130"
                 v-model="attributeData.absorbSpeed"
-              ></sp>
+              />
               <sp-input-number
                 label="Һȴ"
                 :labelWidth="110"
                 unit="s"
                 v-model="attributeData.absorbDelay"
-              ></sp>
+              />
               <sp-input
                 label="Һٶ"
                 :labelWidth="120"
                 v-model="attributeData.absorbHeight2NormalHeightSpeed"
-              ></sp>
+              />
             </div>
 
             <div style="margin-top:10px;">
@@ -88,18 +88,18 @@
                 :labelWidth="120"
                 unit="mm"
                 v-model="attributeData.absorbHeight2LiftingHeight"
-              ></sp>
+              />
               <sp-input-number
                 label="Һȴ"
                 :labelWidth="130"
                 unit="s"
                 v-model="attributeData.absorbDelayAfterLift"
-              ></sp>
+              />
               <sp-input
                 label="ǰٶ"
                 :labelWidth="170"
                 v-model="attributeData.absorbMixingSpeed"
-              ></sp>
+              />
             </div>
 
             
@@ -117,23 +117,23 @@
                 :labelWidth="120"
                 unit="mm"
                 v-model="attributeData.jetOffset"
-              ></sp>
+              />
               <sp-input
                 label="Һٶ"
                 :labelWidth="120"
                 v-model="attributeData.jetSpeed"
-              ></sp>
+              />
               <sp-input-number
                 label="Һȴ"
                 :labelWidth="120"
                 unit="s"
                 v-model="attributeData.jetDelay"
-              ></sp>
+              />
               <sp-input
                 label="Һٶ"
                 :labelWidth="120"
                 v-model="attributeData.jetHeight2NormalHeightSpeed"
-              ></sp>
+              />
             </div>
 
             <div style="margin-top:10px;">
@@ -142,19 +142,19 @@
                 :labelWidth="120"
                 unit="mm"
                 v-model="attributeData.jetWallHeight"
-              ></sp>
+              />
               <sp-input-number
                 label="ƫ"
                 :labelWidth="120"
                 unit="mm"
                 v-model="attributeData.jetWallOffset"
-              ></sp>
+              />
               <sp-input-number
                 label="ڴ"
                 :labelWidth="180"
                 unit="mm"
                 v-model="attributeData.jetWallOffset"
-              ></sp>
+              />
 
               <span
                 class="span-label"
@@ -174,7 +174,7 @@
                 label="ٶ"
                 :labelWidth="120"
                 v-model="attributeData.jetMixingSpeed"
-              ></sp>
+              />
             </div>
           </a-card>
         </a-row>
@@ -190,28 +190,28 @@
                 :labelWidth="110"
                 unit="%"
                 v-model="attributeData.absorbAirBeforePercent"
-              ></sp>
+              />
               <sp-input-number
                 label="Һ"
                 :labelWidth="110"
                 unit="%"
                 v-model="attributeData.absorbAirAfterPercent"
-              ></sp>
+              />
               <sp-input-number
                 label="һҺ"
                 :labelWidth="175"
                 unit="%"
                 v-model="attributeData.absorbLiquidMoreOne2MorePercent"
-              ></sp>
+              />
               <sp-input-number
                 label="һҺ"
                 :labelWidth="205"
                 unit="%"
                 v-model="attributeData.jetLiquidMoreOne2MoreScale"
-              ></sp>
+              />
               <div style="margin-top:10px;">
                     <span class="span-label" style="width:100px;">Ƿ</span>
-                    <a-checkbox v-model="attributeData.isAmountAir" ></a>
+                    <a-checkbox v-model="attributeData.isAmountAir" />
                   </div> 
               </div>
           </a-card>
@@ -264,7 +264,7 @@ export default {
       sysDictTypeDropDown({ code: 'yes_true_false' }).then((res) => {
         this.jetWalls = res.data
         this.jetWalls.forEach((item) => {
-          item.code = item.code === 'true' : true : false
+          item.code = item.code === 'true' ? true : false
         })
       })
 
@@ -307,7 +307,7 @@ export default {
 
       // this.attributeData.remark=this.form.getFieldsValue().remark
 
-    this.attributeData.jetWall = this.attributeData.jetWall === true  1 : 0
+    this.attributeData.jetWall = this.attributeData.jetWall === true ? 1 : 0
       this.formLoading = true
 
       exp_liquid_edit(this.attributeData).then((res) => {

@@ -18,7 +18,7 @@
 										v-for="(tool, index) in field.tools"
 										:key="index"
 										:icon="tool.icon"
-										:type="currentTool.type == tool.type  'primary' : 'default'"
+										:type="currentTool.type == tool.type ? 'primary' : 'default'"
 										@click="selectTool(tool.type)">
 									</a-button>
 								</a-button-group>
@@ -34,7 +34,7 @@
 							v-if="tag.commonNodeShow">
 							<a-list-item v-for="(commonNode, index) in field.commonNodes" :key="index">
 								<div class="node-item" :type="commonNode.type" belongto="commonNodes">
-									<a-icon :type="commonNode.icon" ></a> {{ commonNode.name }}
+									<a-icon :type="commonNode.icon" /> {{ commonNode.name }}
 								</div>
 							</a-list-item>
 						</a-list>
@@ -48,7 +48,7 @@
 							v-if="tag.laneNodeShow">
 							<a-list-item v-for="(laneNode, index) in field.laneNodes" :key="index">
 								<div class="node-item" :type="laneNode.type" belongto="laneNodes">
-									<a-icon :type="laneNode.icon" ></a> {{ laneNode.name }}
+									<a-icon :type="laneNode.icon" /> {{ laneNode.name }}
 								</div>
 							</a-list-item>
 						</a-list>
@@ -74,7 +74,7 @@
 						<a-button @click="setting" class="header-option-button" size="small" icon="setting"></a-button>
 					</a-tooltip>
           				<a-tooltip title="JSON" placement="bottom">
-						<a-button @click="openTest" class="header-option-button" size="small" ><template #icon><save-outlined ></save></template></a-button>
+						<a-button @click="openTest" class="header-option-button" size="small" ><template #icon><save-outlined /></template></a-button>
 					</a-tooltip>
 					<a-popconfirm 
 						title="请选择帮助项::" 
@@ -84,9 +84,10 @@
 						cancelText="使用文档" 
 						@confirm="shortcutHelper"
 						@cancel="usingDoc">
-						<a-icon #icon type="question-circle-o" style="color: red" ></a>
 						<a-tooltip title="帮助" placement="bottom">
-							<a-button class="header-option-button" size="small" icon="book"></a-button>
+							<a-button class="header-option-button" size="small" icon="book">
+								<template #icon><QuestionCircleOutlined style="color: red" /></template>
+							</a-button>
 						</a-tooltip>
 					</a-popconfirm>
 				</a-layout-header>
@@ -118,7 +119,7 @@
 				theme="light"
 				class="attr-area"
 				@mousedown.stop="loseShortcut">
-				<flow-attr ref="flowAttrForm" :plumb="plumb" :flowData="flowData" :needShow="needShow" :fieldNames="fieldNames" :select="currentSelect" @update  fieldNames="fieldNames = $event" @update : select="currentSelect = $event" @openUser="openUser()" @openRole="openRole()"></flow-attr>
+				<flow-attr ref="flowAttrForm" :plumb="plumb" :flowData="flowData" :needShow="needShow" :fieldNames="fieldNames" :select="currentSelect" @update:fieldNames="fieldNames = $event" @update:select="currentSelect = $event" @openUser="openUser()" @openRole="openRole()"></flow-attr>
 			</a-layout-sider>
 		</a-layout>
 		<setting-modal ref="settingModal"></setting-modal>

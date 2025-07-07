@@ -3,157 +3,124 @@
     title="新增租户"
     :width="900"
     :open="visible"
-    :confirmLoading="confirmLoading"
+    :confirm-loading="confirmLoading"
     @ok="handleSubmit"
-    @cancel="handleCancel">
-    <a-spin :spinning="formLoading">
-      <a-form :form="form">
+    @cancel="handleCancel"
+  >
+    <a-spin :spinning="confirmLoading">
+      <a-form ref="formRef" :model="form" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item label="公司名称" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input placeholder="请输入公司名称" v-decorator="['name', {rules: [{required: true, message: '请输入公司名称!'}]}]" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="公司名称" name="name">
+              <a-input v-model:value="form.name" placeholder="请输入公司名称" />
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item label="管理员姓名" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input placeholder="请输入管理员姓名" v-decorator="['adminName', {rules: [{required: true, message: '请输入管理员姓名'}]}]" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="管理员姓名" name="adminName">
+              <a-input v-model:value="form.adminName" placeholder="请输入管理员姓名" />
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item label="邮箱(账号)" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input placeholder="请输入电子邮箱" v-decorator="['email', {rules: [{required: true, message: '请输入电子邮'}]}]" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="邮箱(账号)" name="email">
+              <a-input v-model:value="form.email" placeholder="请输入电子邮箱" />
             </a-form-item>
           </a-col>
-          <a-col  md="12" : sm="24">
-            <a-form-item label="电话号码" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input placeholder="请输入电话号码" v-decorator="['phone']" ></a>
+          <a-col :md="12" :sm="24">
+            <a-form-item label="电话号码" name="phone">
+              <a-input v-model:value="form.phone" placeholder="请输入电话号码" />
             </a-form-item>
           </a-col>
         </a-row>
-
-       <!-- <a-row :gutter="24">
-          <a-col  md="12" : sm="24">
-            <a-form-item label="架构" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-              <a-input placeholder="请输入架构名称" v-decorator="['schema']" ></a>
-            </a-form-item>
-          </a-col>
-        </a-row> -->
-
-      <!--  <a-row :gutter="24">
-          <a-col  md="24" : sm="24">
-            <a-form-item label="数据库连接" :labelCol="labelCol_JG" :wrapperCol="wrapperCol_JG" has-feedback>
-              <a-textarea
-                :rows="4"
-                placeholder="请输入数据库连接"
-                v-decorator="['connection', {rules: [{required: false, message: '请输入数据库连接字符串!'}]}]"></a-textarea>
-            </a-form-item>
-          </a-col>
-        </a-row> -->
 
         <a-row :gutter="24">
-          <a-col  md="24" : sm="24">
-            <a-form :form="form">
-              <a-form-item label="备注" :labelCol="labelCol_JG" :wrapperCol="wrapperCol_JG" has-feedback>
-                <a-textarea :rows="2" placeholder="请输入备注" v-decorator="['remark']"></a-textarea>
-              </a-form-item>
-            </a-form>
+          <a-col :md="24" :sm="24">
+            <a-form-item label="备注" name="remark" :label-col="labelCol_JG" :wrapper-col="wrapperCol_JG">
+              <a-textarea v-model:value="form.remark" :rows="2" placeholder="请输入备注" />
+            </a-form-item>
           </a-col>
         </a-row>
-
       </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import {
-    sysTenantAdd
-  } from '@/api/modular/system/tenantManage'
+<script setup>
+import { ref, reactive, defineEmits, defineExpose } from 'vue';
+import { message } from 'ant-design-vue';
+import { sysTenantAdd } from '@/api/modular/system/tenantManage';
 
-  export default {
-    data() {
-      return {
-        labelCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 6
-          }
-        },
-        wrapperCol: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 16
-          }
-        },
-        labelCol_JG: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 3
-          }
-        },
-        wrapperCol_JG: {
-          xs: {
-            span: 24
-          },
-          sm: {
-            span: 20
-          }
-        },
-        visible: false,
-        confirmLoading: false,
-        formLoading: false,
-        form: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      /**
-       * 初始化方法
-       */
-      add(record) {
-        this.visible = true
-        this.formLoading = false
-      },
+const emit = defineEmits(['ok']);
 
-      handleSubmit() {
-        const {
-          form: {
-            validateFields
-          }
-        } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            sysTenantAdd(values).then((res) => {
-              if (res.success) {
-                this.$message.success('新增成功')
-                this.visible = false
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.form.resetFields()
-              } else {
-                this.$message.error('新增失败::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-      }
-    }
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 6 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 16 },
+};
+const labelCol_JG = {
+  xs: { span: 24 },
+  sm: { span: 3 },
+};
+const wrapperCol_JG = {
+  xs: { span: 24 },
+  sm: { span: 20 },
+};
+
+const formRef = ref();
+const visible = ref(false);
+const confirmLoading = ref(false);
+
+const form = reactive({
+  name: '',
+  adminName: '',
+  email: '',
+  phone: '',
+  remark: '',
+});
+
+const rules = {
+  name: [{ required: true, message: '请输入公司名称!' }],
+  adminName: [{ required: true, message: '请输入管理员姓名' }],
+  email: [{ required: true, message: '请输入电子邮箱' }],
+};
+
+const add = () => {
+  visible.value = true;
+  if (formRef.value) {
+    formRef.value.resetFields();
   }
+};
+
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate();
+    confirmLoading.value = true;
+    const res = await sysTenantAdd(form);
+    if (res.success) {
+      message.success('新增成功');
+      visible.value = false;
+      emit('ok');
+    } else {
+      message.error(`新增失败：${res.message}`);
+    }
+  } catch (error) {
+    // validation failed
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+const handleCancel = () => {
+  visible.value = false;
+  formRef.value.resetFields();
+};
+
+defineExpose({
+  add,
+});
 </script>

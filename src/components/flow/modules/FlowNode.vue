@@ -4,13 +4,13 @@
     class="common-circle-node"
     :class="{ active: isActive() }"
     :style="{ top: node.y + 'px', left: node.x + 'px',
-    	cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out' : 'zoom-out' : 'default'))),
-      background:verificationStyle[!!activityId:'1':'4'] }"
+    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+    																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+    																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+    background: verificationStyle[!!activityId ? '1' : '4'] }"
     @click.stop="selectNode"
     @contextmenu.stop="showNodeContextMenu">
-    <a-icon type="play-circle"></a>
+    <a-icon type="play-circle" />
     {{ node.name }}
   </div>
 
@@ -19,88 +19,88 @@
     class="common-circle-node"
     :class="{ active: isActive() }"
     :style="{ top: node.y + 'px', left: node.x + 'px',
-    	cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-      background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
+    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+    																								(currentTool.type == 'zoom-in' ? 'zoom-in' :
+    																								(currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+    background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
     @click.stop="selectNode"
     @contextmenu.stop="showNodeContextMenu">
-    <a-icon type="close-circle"></a>
+    <a-icon type="close-circle" />
     {{ node.name }}
   </div>
 
   <div v-else-if="node.type == 'node'"
-      :id="node.id"
-      class="common-rectangle-node"
-      :class="{ active: isActive() }"
-      :style="{ top: node.y + 'px', left: node.x + 'px',
-    		cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-      background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
-      @click.stop="selectNode"
-      @contextmenu.stop="showNodeContextMenu">
-    	<a-icon type="setting"></a>
-    	{{ node.name }}
-  </div>
+        :id="node.id"
+        class="common-rectangle-node"
+        :class="{ active: isActive() }"
+        :style="{ top: node.y + 'px', left: node.x + 'px',
+                    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+                                                                                    (currentTool.type == 'zoom-in' ? 'zoom-in' :
+                                                                                    (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+        background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
+        @click.stop="selectNode"
+        @contextmenu.stop="showNodeContextMenu">
+            <a-icon type="setting" />
+            {{ node.name }}
+    </div>
 
-  <div v-else-if="node.type == 'fork'"
-      :id="node.id"
-      class="common-rectangle-node"
-      :class="{ active: isActive() }"
-      :style="{ top: node.y + 'px', left: node.x + 'px',
-    		cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-      background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
-      @click.stop="selectNode"
-      @contextmenu.stop="showNodeContextMenu">
-			<a-icon type="fullscreen"></a>
-			{{ node.name }}
-  </div>
+    <div v-else-if="node.type == 'fork'"
+        :id="node.id"
+        class="common-rectangle-node"
+        :class="{ active: isActive() }"
+        :style="{ top: node.y + 'px', left: node.x + 'px',
+                    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+                                                                                    (currentTool.type == 'zoom-in' ? 'zoom-in' :
+                                                                                    (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+        background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
+        @click.stop="selectNode"
+        @contextmenu.stop="showNodeContextMenu">
+                    <a-icon type="fullscreen" />
+                    {{ node.name }}
+    </div>
 
-  <div v-else-if="node.type == 'join'"
-      :id="node.id"
-      class="common-rectangle-node"
-      :class="{ active: isActive() }"
-      :style="{ top: node.y + 'px', left: node.x + 'px',
-    		cursor: currentTool.type == 'drag'  'move' : (currentTool.type == 'connection'  'crosshair' :
-    																								(currentTool.type == 'zoom-in'  'zoom-in' :
-    																								(currentTool.type == 'zoom-out'  'zoom-out' : 'default'))),
-      background:verificationStyle[!!activityId&&activityId==node.id:'0':(!!node.setInfo&&!!node.setInfo.Taged: node.setInfo.Taged.toString() : '4')] }"
-      @click.stop="selectNode"
-      @contextmenu.stop="showNodeContextMenu">
-      <a-icon type="fullscreen-exit"></a>
-    {{ node.name }}
-  </div>
+    <div v-else-if="node.type == 'join'"
+        :id="node.id"
+        class="common-rectangle-node"
+        :class="{ active: isActive() }"
+        :style="{ top: node.y + 'px', left: node.x + 'px',
+                    cursor: currentTool.type == 'drag' ? 'move' : (currentTool.type == 'connection' ? 'crosshair' :
+                                                                                    (currentTool.type == 'zoom-in' ? 'zoom-in' :
+                                                                                    (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default'))),
+        background: verificationStyle[!!activityId && activityId == node.id ? '0' : (!!node.setInfo && !!node.setInfo.Taged ? node.setInfo.Taged.toString() : '4')] }"
+        @click.stop="selectNode"
+        @contextmenu.stop="showNodeContextMenu">
+        <a-icon type="fullscreen-exit" />
+      {{ node.name }}
+    </div>
 
-  <div v-else-if="node.type == 'x-lane'"
-      :id="node.id"
-      class="common-x-lane-node"
-      :class="{ active: isActive() }"
-      :style="{ top: node.y + 'px', left: node.x + 'px', height: node.height + 'px', width: node.width + 'px',
-    		cursor: currentTool.type == 'zoom-in' : 'zoom-in' : (currentTool.type == 'zoom-out' : 'zoom-out' : 'default') }">
-    	<div class="lane-text-div"
-    		:style="{ cursor: currentTool.type == 'drag' : 'move' : 'default' }"
-    		@click.stop="selectNode"
-    		@contextmenu.stop="showNodeContextMenu">
-    		<span class="lane-text">{{ node.name }}</span>
-    	</div>
-  </div>
+    <div v-else-if="node.type == 'x-lane'"
+        :id="node.id"
+        class="common-x-lane-node"
+        :class="{ active: isActive() }"
+        :style="{ top: node.y + 'px', left: node.x + 'px', height: node.height + 'px', width: node.width + 'px',
+                    cursor: currentTool.type == 'zoom-in' ? 'zoom-in' : (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default') }">
+            <div class="lane-text-div"
+                    :style="{ cursor: currentTool.type == 'drag' ? 'move' : 'default' }"
+                    @click.stop="selectNode"
+                    @contextmenu.stop="showNodeContextMenu">
+                    <span class="lane-text">{{ node.name }}</span>
+            </div>
+    </div>
 
-  <div v-else-if="node.type == 'y-lane'"
-      :id="node.id"
-      class="common-y-lane-node"
-      :class="{ active: isActive() }"
-      :style="{ top: node.y + 'px', left: node.x + 'px', height: node.height + 'px', width: node.width + 'px',
-    		cursor: currentTool.type == 'zoom-in' : 'zoom-in' : (currentTool.type == 'zoom-out' : 'zoom-out' : 'default') }">
-    	<div class="lane-text-div"
-    		:style="{ cursor: currentTool.type == 'drag' : 'move' : 'default' }"
-    		@click.stop="selectNode"
-    		@contextmenu.stop="showNodeContextMenu">
-    		<span class="lane-text">{{ node.name }}</span>
-    	</div>
-  </div>
+    <div v-else-if="node.type == 'y-lane'"
+        :id="node.id"
+        class="common-y-lane-node"
+        :class="{ active: isActive() }"
+        :style="{ top: node.y + 'px', left: node.x + 'px', height: node.height + 'px', width: node.width + 'px',
+                    cursor: currentTool.type == 'zoom-in' ? 'zoom-in' : (currentTool.type == 'zoom-out' ? 'zoom-out' : 'default') }">
+            <div class="lane-text-div"
+                    :style="{ cursor: currentTool.type == 'drag' ? 'move' : 'default' }"
+                    @click.stop="selectNode"
+                    @contextmenu.stop="showNodeContextMenu">
+                    <span class="lane-text">{{ node.name }}</span>
+            </div>
+    </div>
 
   <div v-else></div>
 </template>

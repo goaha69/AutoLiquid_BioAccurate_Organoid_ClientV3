@@ -1,21 +1,20 @@
 <template>
-  <a-modal
-    :title="'ʵ : '+schemeName" :width="'100%'" :open="visible" :maskClosable="false" :confirmLoading="confirmLoading" :destroyOnClose="true"  @ok="handleSubmit"  @cancel="handleCancel">
+  <a-modal title="流程设计" :width="1000" :open="visible" :maskClosable="false" @ok="handleSubmit" @cancel="handleCancel">
     <a-spin :spinning="formLoading">
       <a-form :form="form">
         <a-form-item v-show="false">
-          <a-input v-decorator="['id']" ></a>
+          <a-input v-decorator="['id']" />
         </a-form-item>
         <a-form-item v-show="false">
-          <a-input v-decorator="['content',{rules: [{ required: true}]}]" ></a>
+          <a-input v-decorator="['content',{rules: [{ required: true}]}]" />
         </a-form-item>
         <a-form-item>
-          <expvfd ref="expvfd" style="background-color: white;" :needShow="true" :fieldNames="fieldNames" @openUser="openUser()" @openRole="openRole()"></expvfd>
+          <k-form-design ref="kFormDesign" @save="handleSave" />
         </a-form-item>
       </a-form>
     </a-spin>
-    <user-list-form ref="userListForm" @ok="handleOkUser"></user>
-    <role-list-form ref="roleListForm" @ok="handleOkRole"></role>
+    <user-list-form ref="userListForm" @ok="handleOkUser" />
+    <role-list-form ref="roleListForm" @ok="handleOkRole" />
   </a-modal>
 </template>
 

@@ -5,16 +5,16 @@
         <a-tab-pane key="1" tab="表单信息" :force-Render="true">
           <a-form :form="form" :style="{ width: '900px' }">
             <a-form-item v-show="false">
-              <a-input v-decorator="['id']" ></a>
+              <a-input v-decorator="['id']" />
             </a-form-item>
             <a-form-item v-show="false">
-              <a-input v-decorator="['name']" ></a>
+              <a-input v-decorator="['name']" />
             </a-form-item>
             <a-form-item v-show="false">
-              <a-input v-decorator="['content']" ></a>
+              <a-input v-decorator="['content']" />
             </a-form-item>
             <a-form-item v-show="webId == 'kfp'" v-if="frmType == 0">
-              <k-form-build :value="jsonData" ref="kfp"></k>
+              <k-form-build :value="jsonData" ref="kfp" />
             </a-form-item>
             <a-form-item v-else >
               <component :value="jsonData" :is="webId" ref="cfp"></component>
@@ -26,8 +26,8 @@
         </a-tab-pane>
       </a-tabs>
     </a-spin>
-    <user-list-form ref="userListForm" @ok="handleOk"></user>
-    <role-list-form ref="roleListForm" @ok="handleOk"></role>
+    <user-list-form ref="userListForm" @ok="handleOk"></user-list-form>
+    <role-list-form ref="roleListForm" @ok="handleOk"></role-list-form>
   </a-modal>
 </template>
 
@@ -69,7 +69,7 @@
         console.log(record)
         this.schemeName = record.name
         this.schemeContent = record.content
-        this.jsonData =!!record.content  JSON.parse(record.content) : {};
+        this.jsonData = !!record.content ? JSON.parse(record.content) : {};
         this.webId = 'kfp'
         setTimeout(() => {
           this.form.setFieldsValue(

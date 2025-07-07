@@ -7,42 +7,39 @@
       </span>
     </span>
     <span :class="[flag]">
-      <caret-up-outlined v-if="flag === 'up'" ></caret>
-      <caret-down-outlined v-else-if="flag === 'down'" ></caret>
+      <caret-up-outlined v-if="flag === 'up'" />
+      <caret-down-outlined v-else-if="flag === 'down'" />
     </span>
   </div>
 </template>
 
-<script>
+<script setup>
 import { CaretUpOutlined, CaretDownOutlined } from '@ant-design/icons-vue'
 
-export default {
-  name: 'Trend',
-  components: {
-    CaretUpOutlined,
-    CaretDownOutlined
+defineOptions({
+  name: 'Trend'
+})
+
+const props = defineProps({
+  prefixCls: {
+    type: String,
+    default: 'ant-pro-trend'
   },
-  props: {
-    prefixCls: {
-      type: String,
-      default: 'ant-pro-trend'
-    },
-    /**
-       * 上升下降标识:up|down
-       */
-    flag: {
-      type: String,
-      required: true
-    },
-    /**
-       * 颜色反转
-       */
-    reverseColor: {
-      type: Boolean,
-      default: false
-    }
+  /**
+     * 上升下降标识:up|down
+     */
+  flag: {
+    type: String,
+    required: true
+  },
+  /**
+     * 颜色反转
+     */
+  reverseColor: {
+    type: Boolean,
+    default: false
   }
-}
+})
 </script>
 
 <style lang="less" scoped>

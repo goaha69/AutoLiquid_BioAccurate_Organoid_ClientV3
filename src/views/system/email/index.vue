@@ -1,48 +1,50 @@
 <template>
   <a-card :bordered="false">
     <a-spin :spinning="confirmLoading">
-      <a-tabs default-active-key="1" >
-        <a-tab-pane key="1" tab="发送邮:" @change="tabsCallback" v-if="hasPerm('email:sendEmail')">
-          <a-form :form="form1">
-            <a-form-item
-              label="收件邮箱"
-            >
-              <a-input placeholder="请输入收件邮:" v-decorator="['to', {rules: [{type: 'email',message: '请输入正确的邮箱!'},{required: true, message: '请输入收件邮箱!'}]}]" ></a>
+      <a-tabs v-model:activeKey="activeKey" @change="tabsCallback">
+        <a-tab-pane key="1" tab="发送邮件" v-if="hasPerm('email:sendEmail')">
+          <a-form ref="form1Ref" :model="form1" :rules="rules1" :label-col="{ flex: '80px' }">
+            <a-form-item label="收件邮箱" name="to">
+              <a-input v-model:value="form1.to" placeholder="请输入收件邮箱" />
             </a-form-item>
-            <a-form-item
-              label="邮件标题"
-            >
-              <a-input placeholder="请输入邮件标:" v-decorator="['title', {rules: [{required: true, message: '请输入邮件标题!'}]}]" ></a>
+            <a-form-item label="邮件标题" name="title">
+              <a-input v-model:value="form1.title" placeholder="请输入邮件标题" />
             </a-form-item>
-            <a-form-item
-              label="邮件内容"
-            >
-              <a-textarea :rows="4" placeholder="请输入备注" v-decorator="['content', {rules: [{required: true, message: '请输入邮件内容!'}]}]"></a-textarea>
+            <a-form-item label="邮件内容" name="content">
+              <a-textarea v-model:value="form1.content" :rows="4" placeholder="请输入邮件内容" />
             </a-form-item>
-            <a-form-item class="subForm-item">
-              <a-button type="primary" @click="handleSubmit1" :loading="confirmLoading">发</a-button>
+            <a-form-item>
+              <a-button type="primary" @click="handleSubmit1" :loading="confirmLoading">发送</a-button>
             </a-form-item>
           </a-form>
         </a-tab-pane>
-        <a-tab-pane key="2" tab="发送Html邮件" @change="tabsCallback" v-if="hasPerm('email:sendEmailHtml')">
-          <a-form :form="form2">
-            <a-form-item
-              label="收件邮箱"
-            >
-              <a-input placeholder="请输入收件邮:" v-decorator="['to',{rules: [ {type: 'email',message: '请输入正确的邮箱!'},{required: true, message: '请输入收件邮箱!'}]}]" ></a>
+        <a-tab-pane key="2" tab="发送Html邮件" v-if="hasPerm('email:sendEmailHtml')">
+          <a-form ref="form2Ref" :model="form2" :rules="rules2" :label-col="{ flex: '80px' }">
+            <a-form-item label="收件邮箱" name="to">
+              <a-input v-model:value="form2.to" placeholder="请输入收件邮箱" />
             </a-form-item>
-            <a-form-item
-              label="邮件标题"
-            >
-              <a-input placeholder="请输入邮件标:" v-decorator="['title', {rules: [{required: true, message: '请输入邮件标题!'}]}]" ></a>
+            <a-form-item label="邮件标题" name="title">
+              <a-input v-model:value="form2.title" placeholder="请输入邮件标题" />
             </a-form-item>
-            <a-form-item
-              label="邮件内容"
-            >
-              <antd-editor  uploadConfig="editorUploadConfig" v-model : value="editorContent" @onchange="changeEditor" @oninit="getEditor" ></antd>
+            <a-form-item label="邮件内容" name="content">
+              <div style="border: 1px solid #ccc">
+                <Toolbar
+                  style="border-bottom: 1px solid #ccc"
+                  :editor="editorRef"
+                  :defaultConfig="toolbarConfig"
+                  mode="default"
+                />
+                <Editor
+                  style="height: 500px; overflow-y: hidden"
+                  v-model="form2.content"
+                  :defaultConfig="editorConfig"
+                  mode="default"
+                  @onCreated="handleCreated"
+                />
+              </div>
             </a-form-item>
-            <a-form-item class="subForm-item">
-              <a-button type="primary" @click="handleSubmit2" :loading="confirmLoading">发</a-button>
+            <a-form-item>
+              <a-button type="primary" @click="handleSubmit2" :loading="confirmLoading">发送</a-button>
             </a-form-item>
           </a-form>
         </a-tab-pane>
@@ -50,135 +52,134 @@
     </a-spin>
   </a-card>
 </template>
-<script>
-  import { emailSendEmail, emailSendEmailHtml } from '@/api/modular/system/emailManage'
-  import { AntdEditor } from '@/components'
-  // eslint-disable-next-line no-unused-vars
 
-import { sysFileInfoUpload, sysFileInfoDownload } from '@/api/modular/system/fileManage'
-  export default {
-    name:"sys_email_mgr",
-    components: {
-      AntdEditor
-    },
-    data () {
-      return {
-        editorContentText: '',
-        editorUploadConfig: {
-          method: 'http',
-          callback: this.editorUploadImage
-        },
-        confirmLoading: false,
-        editorContent: '',
-        form1: this.$form.createForm(this),
-        form2: this.$form.createForm(this)
-      }
-    },
-    methods: {
-      tabsCallback (key) {
-        if (key === '1') {
-          // eslint-disable-next-line no-labels
+<script setup>
+import { ref, reactive, onBeforeUnmount, shallowRef } from 'vue';
+import { emailSendEmail, emailSendEmailHtml } from '@/api/modular/system/emailManage';
+import { sysFileInfoUpload } from '@/api/modular/system/fileManage';
+import { message } from 'ant-design-vue';
+import { hasPerm } from '@/utils/permission/index';
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
+import '@wangeditor/editor/dist/css/style.css';
 
-        form1: this.$form.createForm(this)
-          this.form2.resetFields()
-          this.editor.txt.clear()
+const activeKey = ref('1');
+const confirmLoading = ref(false);
+
+// Form 1
+const form1Ref = ref();
+const form1 = reactive({
+  to: '',
+  title: '',
+  content: '',
+});
+const rules1 = {
+  to: [{ required: true, type: 'email', message: '请输入正确的邮箱!' }],
+  title: [{ required: true, message: '请输入邮件标题!' }],
+  content: [{ required: true, message: '请输入邮件内容!' }],
+};
+
+const handleSubmit1 = () => {
+  form1Ref.value.validate().then(() => {
+    confirmLoading.value = true;
+    emailSendEmail(form1)
+      .then((res) => {
+        if (res.success) {
+          message.success('发送成功');
+          form1Ref.value.resetFields();
+        } else {
+          message.error('发送失败：' + res.message);
         }
-        if (key === '2') {
-          // eslint-disable-next-line no-labels
+      })
+      .finally(() => {
+        confirmLoading.value = false;
+      });
+  });
+};
 
-        form2: this.$form.createForm(this)
-          this.form1.resetFields()
-        }
-      },
-      /**
-       * 编辑器回调上传及回传图片url
-       */
-      editorUploadImage (files, insert) {
-        const formData = new FormData()
-        files.forEach(file => {
-          formData.append('file', file)
-        })
+// Form 2
+const form2Ref = ref();
+const form2 = reactive({
+  to: '',
+  title: '',
+  content: '',
+});
+const rules2 = {
+  to: [{ required: true, type: 'email', message: '请输入正确的邮箱!' }],
+  title: [{ required: true, message: '请输入邮件标题!' }],
+  content: [{ required: true, message: '请输入邮件内容!' }],
+};
+
+const editorRef = shallowRef();
+const toolbarConfig = {};
+const editorConfig = {
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      async customUpload(file, insertFn) {
+        const formData = new FormData();
+        formData.append('file', file);
         sysFileInfoUpload(formData).then((res) => {
           if (res.success) {
-            insert(process.env.VUE_APP_API_BASE_URL + '/sysFileInfo/preview:id=' + res.data)
+            insertFn(process.env.VUE_APP_API_BASE_URL + '/sysFileInfo/preview?id=' + res.data, '', '');
           } else {
-            this.$message.error('编辑器上传图片失败::' + res.message)
+            message.error('上传失败：' + res.message);
           }
-        })
+        });
       },
-      getEditor (editor) {
-        this.editor = editor
-      },
-      changeEditor (html, ele) {
-        this.editorContent = html
-        this.editorContentText = ele.text()
-      },
-      /**
-       * 发送邮
-       */
-      handleSubmit1 () {
-        const { form1: { validateFields } } = this
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            emailSendEmail(values).then((res) => {
-              if (res.success) {
-                this.$message.success('发送成:')
-                this.confirmLoading = false
-                this.form1.resetFields()
-              } else {
-                this.$message.error('发送失败:::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      },
-      /**
-       * 发送Html邮件
-       */
-      handleSubmit2 () {
-        const { form2: { validateFields } } = this
-        /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.editorContent == '') {
-          this.$message.error('请填写邮件内:')
-          return
-        }
-        this.confirmLoading = true
-        validateFields((errors, values) => {
-          if (!errors) {
-            values.content = this.editorContent
-            emailSendEmailHtml(values).then((res) => {
-              if (res.success) {
-                this.$message.success('发送成:')
-                this.confirmLoading = false
-                this.editor.txt.clear()
-                this.form2.resetFields()
-              } else {
-                this.$message.error('发送失败:::' + res.message)
-              }
-            }).finally((res) => {
-              this.confirmLoading = false
-            })
-          } else {
-            this.confirmLoading = false
-          }
-        })
-      }
+    },
+  },
+};
 
+const handleCreated = (editor) => {
+  editorRef.value = editor;
+};
+
+const handleSubmit2 = () => {
+  form2Ref.value.validate().then(() => {
+    if (!form2.content || form2.content === '<p><br></p>') {
+      message.error('请填写邮件内容');
+      return;
     }
+    confirmLoading.value = true;
+    emailSendEmailHtml(form2)
+      .then((res) => {
+        if (res.success) {
+          message.success('发送成功');
+          form2Ref.value.resetFields();
+          editorRef.value.clear();
+        } else {
+          message.error('发送失败：' + res.message);
+        }
+      })
+      .finally(() => {
+        confirmLoading.value = false;
+      });
+  });
+};
+
+const tabsCallback = (key) => {
+  if (key === '1') {
+    form2Ref.value.resetFields();
+    if (editorRef.value) {
+      editorRef.value.clear();
+    }
+  } else if (key === '2') {
+    form1Ref.value.resetFields();
   }
+};
+
+onBeforeUnmount(() => {
+  const editor = editorRef.value;
+  if (editor == null) return;
+  editor.destroy();
+});
 </script>
-<style lang="less">
-  .table-operator {
-    margin-bottom: 18px;
-  }
-  button {
-    margin-right: 8px;
-  }
+
+<style lang="less" scoped>
+.table-operator {
+  margin-bottom: 18px;
+}
+button {
+  margin-right: 8px;
+}
 </style>

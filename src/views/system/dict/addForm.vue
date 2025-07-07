@@ -8,142 +8,134 @@
     @cancel="handleCancel"
   >
     <a-spin :spinning="confirmLoading">
-      <a-form :form="form">
-        <a-form-item label="从枚举生:" :labelCol="labelCol" :wrapperCol="wrapperCol">
-          <a-select style="width: 100%" placeholder="请选择枚举" v-decorator="['enumType']">
+      <a-form ref="formRef" :model="form" :rules="rules" :label-col="labelCol" :wrapper-col="wrapperCol">
+        <a-form-item label="从枚举生成" name="enumType">
+          <a-select style="width: 100%" placeholder="请选择枚举" v-model:value="form.enumType" @change="getEnumDataList">
             <a-select-option
-              v-for="(item, index) in enumTypeList"
-              :key="index"
+              v-for="item in enumTypeList"
+              :key="item.code"
               :value="item.code"
-              @click="getEnumDataList(item)"
-              >{{ item.name }}({{ item.code }})</a-select-option
             >
+              {{ item.name }}({{ item.code }})
+            </a-select-option>
           </a-select>
         </a-form-item>
-
-        <a-form-item label="类型名称" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-          <a-input
-            placeholder="请输入类型名'" v-decorator="['name', { rules: [{ required: true, message: '请输入类型名称!' }] }]"
-          ></a>
+        <a-form-item label="类型名称" name="name">
+          <a-input v-model:value="form.name" placeholder="请输入类型名称" />
         </a-form-item>
-
-        <a-form-item label="唯一编码" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-          <a-input
-            placeholder="请输入唯一编码"
-            v-decorator="['code', { rules: [{ required: true, message: '请输入唯一编码'}] }]"
-          ></a>
+        <a-form-item label="唯一编码" name="code">
+          <a-input v-model:value="form.code" placeholder="请输入唯一编码" />
         </a-form-item>
-
-        <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="排序">
-          <a-input-number
-            placeholder="请输入排'
-            style="width: 100%"
-            v-decorator="['sort', { initialValue: 100 }]"
-            :min="1"
-            :max="1000"
-          ></a>
+        <a-form-item label="排序" name="sort">
+          <a-input-number v-model:value="form.sort" placeholder="请输入排序" style="width: 100%" :min="1" :max="1000" />
         </a-form-item>
-
-        <a-form-item label="备注" :labelCol="labelCol" :wrapperCol="wrapperCol" has-feedback>
-          <a-textarea :rows="4" placeholder="请输入备注" v-decorator="['remark']"></a-textarea>
+        <a-form-item label="备注" name="remark">
+          <a-textarea v-model:value="form.remark" :rows="4" placeholder="请输入备注" />
         </a-form-item>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-import { sysDictTypeAdd } from '@/api/modular/system/dictManage'
-import { getEnumTypeList, sysEnumDataList } from '@/api/modular/system/enumManage'
-export default {
-  data() {
-    return {
-      labelCol: {
-        xs: { span: 24 },
-        sm: { span: 5 },
-      },
-      wrapperCol: {
-        xs: { span: 24 },
-        sm: { span: 15 },
-      },
-      visible: false,
-      confirmLoading: false,
-      form: this.$form.createForm(this),
-      enumTypeList: [],
-      dictDataList:[]
-    }
-  },
-  methods: {
-    // 初始化方法
-  add(record) {
-      this.visible = true
-      this.getEnumTypeList()
-    },
+<script setup>
+import { ref, reactive, defineExpose, defineEmits } from 'vue';
+import { sysDictTypeAdd } from '@/api/modular/system/dictManage';
+import { getEnumTypeList, sysEnumDataList } from '@/api/modular/system/enumManage';
+import { message } from 'ant-design-vue';
 
-    handleSubmit() {
-      const {
-        form: { validateFields },
-      } = this
-      this.confirmLoading = true
-      validateFields((errors, values) => {
-        if (!errors) {
-          values["dictDataList"]=this.dictDataList;
-          sysDictTypeAdd(values)
-            .then((res) => {
-              if (res.success) {
-                this.$message.success('新增成功')
-                this.visible = false
-                this.confirmLoading = false
-                this.$emit('ok', values)
-                this.form.resetFields()
-              } else {
-                this.$message.error('新增失败::' + res.message)
-              }
-            })
-            .finally((res) => {
-              this.confirmLoading = false
-            })
-        } else {
-          this.confirmLoading = false
-        }
-      })
-    },
-    handleCancel() {
-      this.form.resetFields()
-      this.visible = false
-    },
-    getEnumTypeList() {
-      getEnumTypeList().then((res) => {
+const labelCol = {
+  xs: { span: 24 },
+  sm: { span: 5 },
+};
+const wrapperCol = {
+  xs: { span: 24 },
+  sm: { span: 15 },
+};
+
+const visible = ref(false);
+const confirmLoading = ref(false);
+const formRef = ref();
+const form = reactive({
+  name: '',
+  code: '',
+  sort: 100,
+  remark: '',
+  enumType: undefined,
+});
+const enumTypeList = ref([]);
+let dictDataList = [];
+
+const rules = {
+  name: [{ required: true, message: '请输入类型名称!' }],
+  code: [{ required: true, message: '请输入唯一编码' }],
+};
+
+const emit = defineEmits(['ok']);
+
+const add = () => {
+  visible.value = true;
+  loadEnumTypeList();
+};
+
+const handleSubmit = () => {
+  formRef.value.validate().then(() => {
+    confirmLoading.value = true;
+    const params = { ...form, dictDataList };
+    sysDictTypeAdd(params)
+      .then((res) => {
         if (res.success) {
-          this.enumTypeList = res.data
+          message.success('新增成功');
+          visible.value = false;
+          emit('ok');
+          formRef.value.resetFields();
         } else {
-          this.$message.error('获取系统枚举失败::' + res.message)
+          message.error('新增失败：' + res.message);
         }
       })
-    },
-    getEnumDataList(enumType) {
-      this.dictDataList=[];
-       this.form.setFieldsValue({
-        name: enumType.name,
-        code:enumType.code,
-        remark:enumType.remark
-      })
-      sysEnumDataList({enumName:enumType.code}).then((res) => {
-        if (res.success) {
-          console.log(res.data)
-          let sort=0
-          res.data.forEach(item => {
-            item.code=item.code+'';
-            item.remark=item.value;
-            item.sort=sort' + +;
-          });
-           this.dictDataList=res.data;
-           console.log(this.dictDataList)
-        } else {
-          this.$message.error('获取枚举数据失败::' + res.message)
-        }
-      })
-    },
-  },
-}
+      .finally(() => {
+        confirmLoading.value = false;
+      });
+  });
+};
+
+const handleCancel = () => {
+  formRef.value.resetFields();
+  visible.value = false;
+};
+
+const loadEnumTypeList = () => {
+  getEnumTypeList().then((res) => {
+    if (res.success) {
+      enumTypeList.value = res.data;
+    } else {
+      message.error('获取系统枚举失败：' + res.message);
+    }
+  });
+};
+
+const getEnumDataList = (value) => {
+  const selectedEnum = enumTypeList.value.find(item => item.code === value);
+  if (selectedEnum) {
+    form.name = selectedEnum.name;
+    form.code = selectedEnum.code;
+    form.remark = selectedEnum.remark;
+
+    sysEnumDataList({ enumName: selectedEnum.code }).then((res) => {
+      if (res.success) {
+        dictDataList = res.data.map((item, index) => ({
+          ...item,
+          code: String(item.code),
+          remark: item.value,
+          sort: index + 1,
+        }));
+      } else {
+        message.error('获取枚举数据失败：' + res.message);
+      }
+    });
+  }
+};
+
+defineExpose({
+  add,
+});
 </script>
