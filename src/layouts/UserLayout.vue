@@ -2,7 +2,7 @@
   <div id="userLayout" :class="['user-layout-wrapper', device]">
     <div class="container">
       <div class="top">
-        <div class="header">
+        <div class="header" style="text-align: center; display: flex; justify-content: center; align-items: center;">
           <a href="/">
             <img src="~@/assets/logo.png" class="logo" alt="logo">
             <span class="title">创芯国际</span>
@@ -13,7 +13,9 @@
         </div>
       </div>
 
-      <route-view></route-view>
+      <div class="main">
+        <route-view></route-view>
+      </div>
 
       <div class="footer">
         <div class="links">
@@ -79,10 +81,13 @@ export default {
 
       .top {
         text-align: center;
+        /* keep original spacing as in Vue2 layout */
 
         .header {
           height: 44px;
           line-height: 44px;
+          background-color: transparent;
+          
 
           .badge {
             position: absolute;
@@ -110,6 +115,7 @@ export default {
             top: 2px;
           }
         }
+        
         .desc {
           font-size: 14px;
           color: rgba(0, 0, 0, 0.45);
@@ -122,6 +128,11 @@ export default {
         min-width: 260px;
         width: 368px;
         margin: 0 auto;
+        
+        // Hide any stray anchor links like "向上还原"
+        > a {
+          display: none !important;
+        }
       }
 
       .footer {

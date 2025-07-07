@@ -1,17 +1,17 @@
 <template>
   <div style="position: relative;">
-    <div  style="{height : (parseInt(setSize.imgHeight) + vSpace) + 'px'}"
+    <div :style="{height : (parseInt(setSize.imgHeight) + vSpace) + 'px'}"
       class="verify-img-out"
       v-if="type === '2'"
     >
-      <div  style="{width : setSize.imgWidth,
+      <div :style="{width : setSize.imgWidth,
                  height: setSize.imgHeight,}"
         class="verify-img-panel">
-        <img  src="'data : image/png;base64,'+backImgBase" alt="" style="width: 100%;height: 100%;display : block">
+        <img :src="'data:image/png;base64,'+backImgBase" alt="" style="width: 100%;height: 100%;display: block">
         <div @click="refresh" class="verify-refresh" v-show="showRefresh"><i class="iconfont icon-refresh"></i>
         </div>
         <transition name="tips">
-          <span :class="passFlag  'suc-bg' : 'err-bg'" class="verify-tips" v-if="tipWords">{{ tipWords }}</span>
+          <span :class="passFlag ? 'suc-bg' : 'err-bg'" class="verify-tips" v-if="tipWords">{{ tipWords }}</span>
         </transition>
       </div>
     </div>
@@ -22,7 +22,7 @@
                'line-height':barSize.height}"
       class="verify-bar-area">
       <span class="verify-msg" v-text="text"></span>
-      <div  style="{width : (leftBarWidth!==undefined):leftBarWidth: barSize.height, height: barSize.height, 'border-color': leftBarBorderColor, transaction: transitionWidth}"
+      <div :style="{width: (leftBarWidth !== undefined) ? leftBarWidth : barSize.height, height: barSize.height, 'border-color': leftBarBorderColor, transition: transitionWidth}"
         class="verify-left-bar">
         <span class="verify-msg" v-text="finishText"></span>
         <div
@@ -41,14 +41,15 @@
             }"
             class="verify-sub-block"
             v-if="type === '2'">
-            <img  src="'data : image/png;base64,'+blockBackImgBase" alt="" style="width: 100%;height: 100%;display : block">
+            <img :src="'data:image/png;base64,'+blockBackImgBase" alt="" style="width: 100%;height: 100%;display: block">
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
-<script type="text/babel">
+
+<script>
     /**
      * VerifySlide
      * @description 滑块
@@ -113,8 +114,13 @@
         data() {
             return {
                 secretKey: '', // 后端返回的加密秘字段
-                passFlag: '', // 是否通过的标                backImgBase: '', // 验证码背景图                blockBackImgBase: '', // 验证滑块的背景图                backToken: '', // 后端返回的唯一token                startMoveTime: '', // 移动开始的时间
-                endMovetime: '', // 移动结束的时                tipsBackColor: '', // 提示词的背景颜色
+                passFlag: '', // 是否通过的标识
+                backImgBase: '', // 验证码背景图
+                blockBackImgBase: '', // 验证滑块的背景图
+                backToken: '', // 后端返回的唯一token
+                startMoveTime: '', // 移动开始的时间
+                endMovetime: '', // 移动结束的时间
+                tipsBackColor: '', // 提示词的背景颜色
                 tipWords: '',
                 text: '',
                 finishText: '',
@@ -128,11 +134,13 @@
                 left: 0,
                 moveBlockLeft: undefined,
                 leftBarWidth: undefined,
-                // 移动中样                moveBlockBackgroundColor: undefined,
+                // 移动中样式
+                moveBlockBackgroundColor: undefined,
                 leftBarBorderColor: '#ddd',
                 iconColor: undefined,
                 iconClass: 'icon-right',
-                status: false, // 鼠标状                isEnd: false,		// 是够验证完成
+                status: false, // 鼠标状态
+                isEnd: false,		// 是否验证完成
                 showRefresh: true,
                 transitionLeft: '',
                 transitionWidth: ''
@@ -151,10 +159,11 @@
                 this.text = this.explain
                 this.getPictrue()
                 this.$nextTick(() => {
-                    const setSize = this.resetSize(this)	/**
-       * 重新设置宽度高度
-       */
-      for (const key in setSize) {
+                    const setSize = this.resetSize(this)
+                    /**
+                     * 重新设置宽度高度
+                     */
+                    for (const key in setSize) {
                         this.$set(this.setSize, key, setSize[key])
                     }
                     this.$parent.$emit('ready', this)
@@ -196,16 +205,18 @@
             // 鼠标按下
             start: function (e) {
                 e = e || window.event
-                if (!e.touches) { // 兼容PC                    var x = e.clientX
-                } else { // 兼容移动                    // eslint-disable-next-line no-redeclare
-                    var x = e.touches[0].pageX
+                var x
+                if (!e.touches) { // 兼容PC
+                    x = e.clientX
+                } else { // 兼容移动
+                    x = e.touches[0].pageX
                 }
                 this.startLeft = Math.floor(x - this.barArea.getBoundingClientRect().left)
                 this.startMoveTime = +new Date() // 开始滑动的时间
                 /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.isEnd == false) {
+                 * eslint-disable-next-line eqeqeq
+                 */
+                if (this.isEnd == false) {
                     this.text = ''
                     this.moveBlockBackgroundColor = '#337ab7'
                     this.leftBarBorderColor = '#337AB7'
@@ -218,29 +229,33 @@
             move: function (e) {
                 e = e || window.event
                 /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.status && this.isEnd == false) {
-                    if (!e.touches) { // 兼容PC                        var x = e.clientX
-                    } else { // 兼容移动                        // eslint-disable-next-line no-redeclare
-                        var x = e.touches[0].pageX
+                 * eslint-disable-next-line eqeqeq
+                 */
+                if (this.status && this.isEnd == false) {
+                    var x
+                    if (!e.touches) { // 兼容PC
+                        x = e.clientX
+                    } else { // 兼容移动
+                        x = e.touches[0].pageX
                     }
                     // eslint-disable-next-line camelcase
                     var bar_area_left = this.barArea.getBoundingClientRect().left
                     // eslint-disable-next-line camelcase
-                    var move_block_left = x - bar_area_left // 小方块相对于父元素的left                    // eslint-disable-next-line camelcase
+                    var move_block_left = x - bar_area_left // 小方块相对于父元素的left
+                    // eslint-disable-next-line camelcase
                     if (move_block_left >= this.barArea.offsetWidth - parseInt(parseInt(this.blockSize.width) / 2) - 2) {
                         // eslint-disable-next-line camelcase
                         move_block_left = this.barArea.offsetWidth - parseInt(parseInt(this.blockSize.width) / 2) - 2
                     }
                     /**
-       * eslint-disable-next-line camelcase
-       */
-      if (move_block_left <= 0) {
+                     * eslint-disable-next-line camelcase
+                     */
+                    if (move_block_left <= 0) {
                         // eslint-disable-next-line camelcase
                         move_block_left = parseInt(parseInt(this.blockSize.width) / 2)
                     }
-                    // 拖动后小方块的left                    // eslint-disable-next-line camelcase
+                    // 拖动后小方块的left
+                    // eslint-disable-next-line camelcase
                     this.moveBlockLeft = (move_block_left - this.startLeft) + 'px'
                     // eslint-disable-next-line camelcase
                     this.leftBarWidth = (move_block_left - this.startLeft) + 'px'
@@ -253,21 +268,21 @@
                 var _this = this
                 // 判断是否重合
                 /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.status && this.isEnd == false) {
+                 * eslint-disable-next-line eqeqeq
+                 */
+                if (this.status && this.isEnd == false) {
                     var moveLeftDistance = parseInt((this.moveBlockLeft || '').replace('px', ''))
                     moveLeftDistance = moveLeftDistance * 310 / parseInt(this.setSize.imgWidth)
                     const data = {
                         captchaType: this.captchaType,
-                        'pointJson': this.secretKey : aesEncrypt(JSON.stringify({ x: moveLeftDistance, y: 5.0 }), this.secretKey) : JSON.stringify({ x: moveLeftDistance, y: 5.0 }),
+                        'pointJson': this.secretKey ? aesEncrypt(JSON.stringify({ x: moveLeftDistance, y: 5.0 }), this.secretKey) : JSON.stringify({ x: moveLeftDistance, y: 5.0 }),
                         'token': this.backToken
                     }
                     reqCheck(data).then(res => {
                         /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (res.repCode == '0000') {
+                         * eslint-disable-next-line eqeqeq
+                         */
+                        if (res.repCode == '0000') {
                             this.moveBlockBackgroundColor = '#5cb85c'
                             this.leftBarBorderColor = '#5cb85c'
                             this.iconColor = '#fff'
@@ -275,9 +290,9 @@
                             this.showRefresh = false
                             this.isEnd = true
                             /**
-       * eslint-disable-next-line eqeqeq
-       */
-      if (this.mode == 'pop') {
+                             * eslint-disable-next-line eqeqeq
+                             */
+                            if (this.mode == 'pop') {
                                 setTimeout(() => {
                                     this.$parent.clickShow = false
                                     this.refresh()
@@ -285,7 +300,7 @@
                             }
                             this.passFlag = true
                             this.tipWords = `${((this.endMovetime - this.startMoveTime) / 1000).toFixed(2)}s验证成功`
-                            var captchaVerification = this.secretKey : aesEncrypt(this.backToken + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 }), this.secretKey) : this.backToken + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 })
+                            var captchaVerification = this.secretKey ? aesEncrypt(this.backToken + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 }), this.secretKey) : this.backToken + '---' + JSON.stringify({ x: moveLeftDistance, y: 5.0 })
                             setTimeout(() => {
                                 this.tipWords = ''
                                 this.$parent.closeBox()
@@ -303,7 +318,7 @@
                             this.$parent.$emit('error', this)
                             this.tipWords = '验证失败'
                             setTimeout(() => {
-                                    this.tipWords = ''
+                                this.tipWords = ''
                             }, 1000)
                         }
                     })
@@ -336,8 +351,9 @@
             },
 
             /**
-       * 请求背景图片和验证图 */
-      getPictrue() {
+             * 请求背景图片和验证图
+             */
+            getPictrue() {
                 // const data = {
                 //     captchaType: this.captchaType
                 // }
@@ -355,7 +371,8 @@
             }
         },
         watch: {
-            // type变化则全面刷            type: {
+            // type变化则全面刷新
+            type: {
                 immediate: true,
                 handler() {
                     this.init()
@@ -370,3 +387,103 @@
         }
     }
 </script>
+
+<style scoped>
+.verify-img-out {
+    position: relative;
+    overflow: hidden;
+}
+
+.verify-img-panel {
+    position: relative;
+    border: 1px solid #e4e7eb;
+    border-radius: 2px;
+}
+
+.verify-refresh {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verify-tips {
+    position: absolute;
+    bottom: 0;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    width: 100%;
+    font-size: 12px;
+    color: #fff;
+}
+
+.suc-bg {
+    background: rgba(92, 184, 92, 0.8);
+}
+
+.err-bg {
+    background: rgba(217, 83, 79, 0.8);
+}
+
+.verify-bar-area {
+    position: relative;
+    background: #f7f9fa;
+    text-align: center;
+    border: 1px solid #e4e7eb;
+    border-radius: 2px;
+}
+
+.verify-left-bar {
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    background: rgba(106, 160, 255, 0.12);
+    border: 1px solid #1991FA;
+    border-radius: 2px;
+}
+
+.verify-move-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #fff;
+    border: 1px solid #e4e7eb;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verify-icon {
+    font-size: 16px;
+}
+
+.verify-sub-block {
+    position: absolute;
+    border: 1px solid #fff;
+    border-radius: 2px;
+}
+
+.verify-msg {
+    font-size: 14px;
+    color: #45494c;
+}
+
+.tips-enter-active, .tips-leave-active {
+    transition: opacity 0.3s;
+}
+
+.tips-enter, .tips-leave-to {
+    opacity: 0;
+}
+</style>

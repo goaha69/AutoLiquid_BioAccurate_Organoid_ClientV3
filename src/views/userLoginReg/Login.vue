@@ -1,176 +1,326 @@
 <template>
-  <div class="main">
-    <div class="user-layout-login">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <span style="color: #1890ff; font-size: 16px;">账号密码登录</span>
-      </div>
-
-      <div v-if="isLoginError" style="margin-bottom: 24px; padding: 15px; background: #fff2f0; border: 1px solid #ffccc7; border-radius: 6px; color: #ff4d4f;">
-        {{ accountLoginErrMsg }}
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <input
-          v-model="loginForm.account"
-          size="large"
-          type="text"
-          placeholder="账号"
-          style="width: 100%; height: 40px; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px;"
+  <a-form 
+    id="formLogin" 
+    class="user-layout-login" 
+    ref="formLogin" 
+    :model="formData"
+    @finish="handleSubmit"
+  >
+    <a-tabs 
+      v-model:activeKey="customActiveKey" 
+      :tab-bar-style="{ textAlign: 'center', borderBottom: 'unset' }" 
+      @change="handleTabClick"
+    >
+      <a-tab-pane key="tab1" tab="账号密码登录">
+        <a-alert 
+          v-if="isLoginError" 
+          type="error" 
+          show-icon 
+          style="margin-bottom: 24px;" 
+          :message="accountLoginErrMsg" 
         />
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <input
-          v-model="loginForm.password"
-          size="large"
-          type="password"
-          placeholder="密码"
-          style="width: 100%; height: 40px; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px;"
-          @keyup.enter="handleLogin"
-        />
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <label>
-          <input type="checkbox" v-model="loginForm.rememberMe" />
-          <span style="margin-left: 8px;">自动登录</span>
-        </label>
-      </div>
-
-      <div style="margin-bottom: 24px;">
-        <button 
-          @click="handleLogin"
-          :disabled="state.loginBtn"
-          style="width: 100%; height: 40px; background: #1890ff; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;"
+        
+        <a-form-item 
+          name="account"
+          :rules="[
+            { required: true, message: '请输入帐户名' },
+            { validator: handleUsernameOrEmail, trigger: 'change' }
+          ]"
         >
-          {{ state.loginBtn ? '登录中...' : '确定' }}
-        </button>
-      </div>
+          <a-input
+            v-model:value="formData.account"
+            size="large"
+            type="text"
+            placeholder="账号"
+          >
+            <template #prefix>
+              <UserOutlined :style="{ color: 'rgba(0,0,0,.25)' }" />
+            </template>
+          </a-input>
+        </a-form-item>
+
+        <a-form-item 
+          name="password"
+          :rules="[{ required: true, message: '请输入密码' }]"
+        >
+          <a-input-password
+            v-model:value="formData.password"
+            size="large"
+            autocomplete="false"
+            placeholder="密码"
+          >
+            <template #prefix>
+              <LockOutlined :style="{ color: 'rgba(0,0,0,.25)' }" />
+            </template>
+          </a-input-password>
+        </a-form-item>
+      </a-tab-pane>
+    </a-tabs>
+
+    <a-form-item>
+      <a-checkbox v-model:checked="formData.rememberMe">自动登录</a-checkbox>
+    </a-form-item>
+
+    <a-form-item>
+      <Verify 
+        @success="verifySuccess" 
+        :mode="'pop'" 
+        :captchaType="'clickWord'" 
+        :imgSize="{ width: '330px', height: '155px' }" 
+        ref="verify"
+      />
+    </a-form-item>
+
+    <a-form-item style="margin-top:24px">
+      <a-button 
+        size="large" 
+        type="primary" 
+        html-type="submit" 
+        class="login-button" 
+        :loading="state.loginBtn" 
+        :disabled="state.loginBtn"
+      >
+        确定
+      </a-button>
+    </a-form-item>
+
+    <div class="user-login-other">
+      <!-- 其他登录方式预留 -->
     </div>
-  </div>
+  </a-form>
+
+  <TwoStepCaptcha 
+    v-if="requiredTwoStepCaptcha" 
+    :visible="stepCaptchaVisible" 
+    @success="stepCaptchaSuccess" 
+    @cancel="stepCaptchaCancel"
+  />
 </template>
 
 <script>
-import { getCaptchaOpen } from '@/api/modular/system/loginManage'
-import { mapActions } from 'vuex'
+import { reactive, ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStore } from 'vuex'
+import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+import { message, notification } from 'ant-design-vue'
+import TwoStepCaptcha from '@/components/tools/TwoStepCaptcha'
+import Verify from '@/components/verifition/Verify'
+import { getSmsCaptcha, getCaptchaOpen } from '@/api/modular/system/loginManage'
+import { exp_deviceversion_getLastVersion } from '@/api/modular/experiment/expDeviceVersionManage'
 
 export default {
-  data () {
-    return {
-      loginForm: {
-        account: 'superAdmin',
-        password: '123456',
-        rememberMe: false
-      },
-      isLoginError: false,
-      state: {
-        loginBtn: false
-      },
-      accountLoginErrMsg: '',
-      captchaOpen: false
-    }
+  name: 'Login',
+  components: {
+    TwoStepCaptcha,
+    Verify,
+    UserOutlined,
+    LockOutlined
   },
-  created () {
-    this.getCaptchaOpen()
-  },
-  methods: {
-    ...mapActions(['Login']),
+  setup() {
+    const router = useRouter()
+    const store = useStore()
+    const verify = ref(null)
     
-    getCaptchaOpen () {
-      getCaptchaOpen().then((res) => {
-        if (res && res.success) {
-          this.captchaOpen = res.data
-        }
-      }).catch(() => {
-        // 忽略验证码配置获取失败
-        this.captchaOpen = false
-      })
-    },
+    const customActiveKey = ref('tab1')
+    const isLoginError = ref(false)
+    const requiredTwoStepCaptcha = ref(false)
+    const stepCaptchaVisible = ref(false)
+    const accountLoginErrMsg = ref('')
+    const captchaOpen = ref(false)
+    const loginParams = ref({})
+    
+    const formData = reactive({
+      account: '',
+      password: '',
+      rememberMe: false
+    })
+    
+    const state = reactive({
+      time: 60,
+      loginBtn: false,
+      loginType: 0,
+      smsSendBtn: false
+    })
 
-    handleLogin () {
-      if (!this.loginForm.account || !this.loginForm.password) {
-        this.requestFailed('请输入用户名和密码')
+    const getCaptchaOpen = () => {
+      getCaptchaOpen().then((res) => {
+        if (res.success) {
+          captchaOpen.value = res.data
+        }
+      })
+    }
+
+    const handleUsernameOrEmail = (rule, value) => {
+      const regex = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+((\.[a-zA-Z0-9_-]{2,3}){1,2})$/
+      if (regex.test(value)) {
+        state.loginType = 0
+      } else {
+        state.loginType = 1
+      }
+      return Promise.resolve()
+    }
+
+    const handleTabClick = (key) => {
+      isLoginError.value = false
+      customActiveKey.value = key
+    }
+
+    const handleSubmit = (values) => {
+      state.loginBtn = true
+      loginParams.value = values
+      
+      // 是否开启验证码
+      if (captchaOpen.value) {
+        verify.value.show()
+        state.loginBtn = false
         return
       }
-
-      this.state.loginBtn = true
-      this.isLoginError = false
-
-      const loginParams = {
-        account: this.loginForm.account,
-        password: this.loginForm.password
-      }
-
-      console.log('🔐 尝试登录:', loginParams.account)
-
-      // 使用 Vuex store 的 Login action
-      this.Login(loginParams)
-        .then(() => {
-          console.log('🎉 登录成功')
-          this.loginSuccess()
-        })
-        .catch(err => {
-          console.error('❌ 登录失败:', err)
-          const errorMsg = typeof err === 'string' ? err : (err.message || '登录失败')
-          this.requestFailed(errorMsg)
-        })
+      
+      const loginData = { ...values }
+      delete loginData.account
+      loginData[!state.loginType ? 'account' : 'account'] = values.account
+      loginData.password = values.password
+      
+      store.dispatch('Login', loginData)
+        .then((res) => loginSuccess(res))
+        .catch(err => requestFailed(err))
         .finally(() => {
-          this.state.loginBtn = false
+          state.loginBtn = false
         })
-    },
+    }
 
-    loginSuccess () {
-      console.log('🎉 登录成功')
-      this.isLoginError = false
-      
-      // 参考旧项目,加载字典数据
-      this.$store.dispatch('dictTypeData').catch(err => {
-        console.warn('加载字典数据失败:', err)
+    const verifySuccess = (params) => {
+      loginParams.value.code = params.captchaVerification
+      store.dispatch('Login', loginParams.value)
+        .then((res) => loginSuccess(res))
+        .catch(err => requestFailed(err))
+        .finally(() => {
+          state.loginBtn = false
+        })
+    }
+
+    const stepCaptchaSuccess = () => {
+      loginSuccess()
+    }
+
+    const stepCaptchaCancel = () => {
+      store.dispatch('Logout').then(() => {
+        state.loginBtn = false
+        stepCaptchaVisible.value = false
+      })
+    }
+
+    const loginSuccess = (res) => {
+      exp_deviceversion_getLastVersion().then((rr) => { 
+        if(rr.success) {
+          console.log('==========######$$$$$$==========')
+          console.log(rr.data)
+          store.dispatch('ToggleVersionCode', rr.data.currentVersion)
+        }
       })
       
-      // 加载通知列表
-      this.$store.dispatch('getNoticReceiveList').catch(err => {
-        console.warn('加载通知列表失败:', err)
-      })
-      
-      // 参考旧项目,直接跳转到welcome页面,而不是dashboard/workplace
-      this.$router.push({ path: '/welcome' })
-    },
+      console.log('==========123456789==========')
+      console.log(store.getters.versionCode)
+      router.push({ path: '/welcome' })
+      isLoginError.value = false
+      // 加载字典所有字典到缓存中
+      store.dispatch('dictTypeData').then((res) => { })
+    }
 
-    requestFailed (err) {
-      this.accountLoginErrMsg = err || '登录失败'
-      this.isLoginError = true
-      console.error('❌ 登录错误:', err)
+    const requestFailed = (err) => {
+      accountLoginErrMsg.value = err
+      isLoginError.value = true
+    }
+
+    onMounted(() => {
+      getCaptchaOpen()
+    })
+
+    return {
+      customActiveKey,
+      isLoginError,
+      requiredTwoStepCaptcha,
+      stepCaptchaVisible,
+      accountLoginErrMsg,
+      captchaOpen,
+      loginParams,
+      formData,
+      state,
+      verify,
+      handleUsernameOrEmail,
+      handleTabClick,
+      handleSubmit,
+      verifySuccess,
+      stepCaptchaSuccess,
+      stepCaptchaCancel,
+      loginSuccess,
+      requestFailed
     }
   }
 }
 </script>
 
 <style lang="less" scoped>
-.main {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
 .user-layout-login {
-  width: 368px;
-  padding: 40px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
+  max-width: 368px;
+  width: 100%;
+  
+  // 去掉tab的蓝色条
+  :deep(.ant-tabs-tab-active) {
+    border-bottom: none !important;
+  }
+  
+  :deep(.ant-tabs-ink-bar) {
+    display: none !important;
+  }
+  
+  :deep(.ant-tabs-nav::before) {
+    border-bottom: none !important;
+  }
+  
+  label {
+    font-size: 14px;
+  }
 
-button:hover:not(:disabled) {
-  background: #40a9ff !important;
-}
+  .getCaptcha {
+    display: block;
+    width: 100%;
+    height: 40px;
+  }
 
-button:disabled {
-  background: #f5f5f5 !important;
-  color: rgba(0, 0, 0, 0.25) !important;
-  cursor: not-allowed !important;
+  .forge-password {
+    font-size: 14px;
+  }
+
+  button.login-button {
+    padding: 0 15px;
+    font-size: 16px;
+    height: 40px;
+    width: 100%;
+  }
+
+  .user-login-other {
+    text-align: left;
+    margin-top: 24px;
+    line-height: 22px;
+
+    .item-icon {
+      font-size: 24px;
+      color: rgba(0, 0, 0, 0.2);
+      margin-left: 16px;
+      vertical-align: middle;
+      cursor: pointer;
+      transition: color 0.3s;
+
+      &:hover {
+        color: #1890ff;
+      }
+    }
+
+    .register {
+      float: right;
+    }
+  }
 }
 </style>
 
