@@ -196,6 +196,7 @@ export default {
     // 监听权限模块的菜单变化
     permissionMenus: {
       handler(val) {
+        console.log('🔍 [BasicLayout] permissionMenus 变化:', val)
         if (val && val.length > 0) {
           // 使用最新的 addRouters 信息重新生成侧栏层级，
           // 确保切换应用后路径和层级正确
@@ -302,11 +303,40 @@ export default {
     
     // 设置菜单 - 从动态路由或permission路由生成菜单
     setMenus() {
+      console.log('🔧 [BasicLayout] setMenus 被调用')
+      console.log('🔧 [BasicLayout] permissionMenus:', this.permissionMenus)
+      console.log('🔧 [BasicLayout] mainMenu:', this.mainMenu)
+      
+      // 优先使用permissionMenus（排序后的菜单数据）
+      if (this.permissionMenus && this.permissionMenus.length > 0) {
+        console.log('✅ [BasicLayout] 使用permissionMenus作为菜单数据')
+        console.log('🔧 [BasicLayout] 原始permissionMenus:', this.permissionMenus)
+        
+        // 检查数据是否是扁平化的
+        const hasChildren = this.permissionMenus.some(menu => menu.children && menu.children.length > 0)
+        console.log('🔧 [BasicLayout] 数据是否已经是树形结构:', hasChildren)
+        
+        if (!hasChildren) {
+          console.log('🔧 [BasicLayout] 数据是扁平化的，需要手动构建树形结构')
+          // 如果数据是扁平化的，手动构建树形结构
+          this.menus = this.buildTreeFromFlat(this.permissionMenus)
+        } else {
+          console.log('🔧 [BasicLayout] 数据已经是树形结构，直接使用')
+          this.menus = this.permissionMenus
+        }
+        
+        console.log('🔧 [BasicLayout] 最终菜单数据:', this.menus)
+        return
+      }
+      
+      // 如果没有permissionMenus，使用mainMenu
       if (!this.mainMenu || this.mainMenu.length === 0) {
+        console.log('⚠️ [BasicLayout] 没有菜单数据，设置为空数组')
         this.menus = []
         return
       }
 
+      console.log('🔧 [BasicLayout] 使用mainMenu生成菜单')
       // 找到根路由（path 为 '' 或 '/'）
       const rootRoute = this.mainMenu.find(item => item.path === '' || item.path === '/')
 
@@ -319,6 +349,8 @@ export default {
         const menuRoutes = this.mainMenu.filter(item => !item.hidden && item.path !== '*')
         this.menus = convertRoutes(menuRoutes)
       }
+      
+      console.log('🔧 [BasicLayout] 最终菜单数据:', this.menus)
     },
     
     // 更新侧边菜单 - 从permission模块获取
@@ -326,6 +358,36 @@ export default {
       if (this.permissionMenus && this.permissionMenus.length > 0) {
         this.menus = this.permissionMenus
       }
+    },
+    
+    // 从扁平化数据构建树形结构
+    buildTreeFromFlat(flatData) {
+      console.log('🔧 [BasicLayout] 开始构建树形结构，输入数据:', flatData)
+      
+      const tree = []
+      const map = {}
+      
+      // 先创建所有节点的映射
+      flatData.forEach(item => {
+        map[item.id] = { ...item, children: [] }
+      })
+      
+      // 构建树形结构
+      flatData.forEach(item => {
+        if (item.pid === 0) {
+          // 根节点
+          tree.push(map[item.id])
+        } else {
+          // 子节点
+          const parent = map[item.pid]
+          if (parent) {
+            parent.children.push(map[item.id])
+          }
+        }
+      })
+      
+      console.log('🔧 [BasicLayout] 构建完成的树形结构:', tree)
+      return tree
     },
     
     onAppChanging(activeApp) {

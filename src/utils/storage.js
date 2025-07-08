@@ -87,4 +87,7 @@ const Storage = {
   }
 };
 
+// 添加命名导出以解决导入警告
+export const ls = Storage;
+
 export default Storage;

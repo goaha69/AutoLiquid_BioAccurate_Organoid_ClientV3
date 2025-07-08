@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 菜单为空时的提示 -->
-    <div v-if="!menuTree || menuTree.length === 0" style="color: #fff; padding: 10px; margin: 10px;">
+    <div v-if="!menu || menu.length === 0" style="color: #fff; padding: 10px; margin: 10px;">
       <div>暂无可用菜单</div>
     </div>
     
@@ -13,11 +13,9 @@
       @update:openKeys="onOpenChange"
       @update:selectedKeys="onSelect"
     >
-      <MenuItem
-        v-for="menu in menuTree"
-        :key="menu.path"
-        :item="menu"
-      />
+      <template v-for="item in menu" :key="item.path">
+        <MenuItem :item="item" v-if="!item.hidden" />
+      </template>
     </a-menu>
   </div>
 </template>
@@ -34,7 +32,15 @@ import {
   TeamOutlined, 
   AppstoreOutlined,
   FileOutlined,
-  FolderOutlined
+  FolderOutlined,
+  SafetyCertificateOutlined,
+  EuroOutlined,
+  DeploymentUnitOutlined,
+  RadarChartOutlined,
+  ThunderboltOutlined,
+  RobotOutlined,
+  QrcodeOutlined,
+  BoxPlotOutlined
 } from '@ant-design/icons-vue'
 
 // 图标映射表，用于将字符串类型的图标名称映射到相应的组件
@@ -46,11 +52,18 @@ const iconMap = {
   'team': TeamOutlined,
   'appstore': AppstoreOutlined,
   'file': FileOutlined,
-  'folder': FolderOutlined
+  'folder': FolderOutlined,
+  'safety-certificate': SafetyCertificateOutlined,
+  'euro': EuroOutlined,
+  'deployment-unit': DeploymentUnitOutlined,
+  'radar-chart': RadarChartOutlined,
+  'thunderbolt': ThunderboltOutlined,
+  'robot': RobotOutlined,
+  'qrcode': QrcodeOutlined,
+  'box-plot': BoxPlotOutlined
 }
 
-// =======================  递归菜单组件  =======================
-
+// =======================  递归菜单组件 - 基于Vue2的渲染逻辑  =======================
 const MenuItem = defineComponent({
   name: 'MenuItem',
   props: {
@@ -69,44 +82,76 @@ const MenuItem = defineComponent({
       return h(icon)
     }
 
-    const renderItem = (item) => {
-      if (item.hidden || item.hideInMenu) return null
+    const renderMenuItem = (menu) => {
+      const target = menu.meta?.target || null
+      const CustomTag = target ? 'a' : RouterLink
+      const props = target ? { href: menu.path, target: menu.meta.target } : { to: { path: menu.path } }
 
-      // 如果有子菜单并且不隐藏
-      if (item.children && !item.hideChildrenInMenu) {
-        return h(
-          Menu.SubMenu,
-          { key: item.path },
-          {
-            title: () => h('span', {}, [
-              renderIcon(item.meta?.icon),
-              h('span', {}, item.meta?.title)
-            ]),
-            default: () => item.children.map(child => renderItem(child))
-          }
-        )
+      if (menu.children && menu.hideChildrenInMenu) {
+        // 把有子菜单的 并且 父菜单是要隐藏子菜单的
+        // 都给子菜单增加一个 hidden 属性
+        // 用来给刷新页面时， selectedKeys 做控制用
+        menu.children.forEach(item => {
+          item.meta = Object.assign(item.meta || {}, { hidden: true })
+        })
       }
 
-      // 普通菜单项
       return h(
         Menu.Item,
-        { key: item.path },
+        { key: menu.path },
         {
-          default: () => h(RouterLink, { to: { path: item.path } }, {
+          default: () => h(CustomTag, props, {
             default: () => [
-              renderIcon(item.meta?.icon),
-              h('span', {}, item.meta?.title)
+              renderIcon(menu.meta?.icon),
+              h('span', {}, menu.meta?.title)
             ]
           })
         }
       )
     }
 
+    const renderSubMenu = (menu) => {
+      const itemArr = []
+      if (!menu.hideChildrenInMenu && menu.children) {
+        menu.children.forEach(item => {
+          if (!item.hidden) {
+            itemArr.push(renderItem(item))
+          }
+        })
+      }
+      
+      return h(
+        Menu.SubMenu,
+        { key: menu.path },
+        {
+          title: () => h('span', {}, [
+            renderIcon(menu.meta?.icon),
+            h('span', {}, menu.meta?.title)
+          ]),
+          default: () => itemArr
+        }
+      )
+    }
+
+    const renderItem = (menu) => {
+      if (!menu.hidden) {
+        const hasChildren = menu.children && menu.children.length > 0 && !menu.hideChildrenInMenu
+        console.log(`🔍 [MenuItem] 渲染菜单项 ${menu.name || menu.meta?.title}:`, {
+          hasChildren,
+          childrenCount: menu.children ? menu.children.length : 0,
+          hideChildrenInMenu: menu.hideChildrenInMenu,
+          willRenderSubMenu: hasChildren
+        })
+        
+        return hasChildren ? renderSubMenu(menu) : renderMenuItem(menu)
+      }
+      return null
+    }
+
     // 返回渲染函数
     return () => renderItem(props.item)
   }
 })
-// =======================  递归菜单组件  =======================
 
 export default {
   name: 'SMenu',
@@ -142,18 +187,25 @@ export default {
     const selectedKeys = ref([])
     const cachedOpenKeys = ref([])
     
+    // 添加调试信息
+    watch(() => props.menu, (newMenu) => {
+      console.log('🔍 [SMenu] 菜单数据变化:', newMenu)
+      if (newMenu && Array.isArray(newMenu)) {
+        newMenu.forEach(item => {
+          console.log(`🔍 [SMenu] 菜单项 ${item.name || item.meta?.title}:`, {
+            hasChildren: !!(item.children && item.children.length > 0),
+            childrenCount: item.children ? item.children.length : 0,
+            children: item.children
+          })
+        })
+      }
+    }, { immediate: true, deep: true })
+    
     const rootSubmenuKeys = computed(() => {
       const keys = []
       const menuArray = Array.isArray(props.menu) ? props.menu : []
       menuArray.forEach(item => keys.push(item.path))
       return keys
-    })
-    
-    // 过滤菜单，只显示不隐藏的菜单项
-    const menuTree = computed(() => {
-      const menuArray = Array.isArray(props.menu) ? props.menu : []
-      const filteredMenu = menuArray.filter(item => !item.hidden && !item.hideInMenu)
-      return filteredMenu
     })
     
     // 监听折叠状态变化
@@ -215,28 +267,16 @@ export default {
       props.collapsed ? (cachedOpenKeys.value = newOpenKeys) : (openKeys.value = newOpenKeys)
     }
     
-    // 获取图标组件
-    const getIconComponent = (icon) => {
-      if (!icon || icon === 'none') return null
-      
-      // 处理字符串类型的图标
-      if (typeof icon === 'string') {
-        return iconMap[icon.toLowerCase()] || AppstoreOutlined
-      }
-      
-      // 处理对象类型的图标（自定义组件）
-      return icon
-    }
-    
     return {
       openKeys,
       selectedKeys,
-      menuTree,
       onOpenChange,
       onSelect,
-      getIconComponent
+      updateMenu
     }
+  },
+  mounted() {
+    this.updateMenu()
   }
 }
-
 </script>

@@ -251,6 +251,37 @@ const rootRouter = {
 };
 
 /**
+ * 将菜单数据转换为菜单组件需要的格式
+ * @param {Array} menuData 菜单数据
+ * @returns {Array} 转换后的菜单数据
+ */
+const convertToMenuFormat = (menuData) => {
+  if (!Array.isArray(menuData)) return []
+  
+  return menuData.map(item => {
+    const converted = {
+      path: item.path,
+      name: item.name,
+      meta: {
+        title: item.meta?.title || item.title,
+        icon: item.meta?.icon || item.icon,
+        target: item.meta?.target,
+        link: item.meta?.link,
+        keepAlive: item.meta?.keepAlive
+      },
+      hidden: item.hidden
+    }
+    
+    // 如果有子菜单，递归转换
+    if (item.children && Array.isArray(item.children) && item.children.length > 0) {
+      converted.children = convertToMenuFormat(item.children)
+    }
+    
+    return converted
+  })
+}
+
+/**
  * 动态生成菜单
  * @param data
  * @returns {Promise<Router>}
@@ -293,7 +324,10 @@ export const generatorDynamicRouter = (data) => {
         listToTree(defaultMenus, childrenNav, 0)
       } else {
         // 遍历后端返回的菜单数据，按 PID 构建树形结构
+        console.log('🔍 [generatorDynamicRouter] 后端菜单数据:', antDesignmenus);
+        console.log('🔍 [generatorDynamicRouter] 开始构建树形结构...');
         listToTree(antDesignmenus, childrenNav, 0);
+        console.log('🔍 [generatorDynamicRouter] 构建完成，childrenNav:', childrenNav);
       }
   
       // 添加静态个人中心页面
@@ -325,7 +359,8 @@ export const generatorDynamicRouter = (data) => {
       import('@/store').then(storeModule => {
         const store = storeModule.default
         if (store && store.commit) {
-          // 将菜单数据设置到permission模块中
+          // 直接使用childrenNav，保持原始的层级结构
+          console.log('📋 [generator-routers] 原始childrenNav数据:', childrenNav)
           store.commit('SET_MENUS', childrenNav)
           console.log('📋 [generator-routers] 设置菜单数据到store:', childrenNav)
         }
@@ -438,26 +473,65 @@ export const generator = (routerMap, parent) => {
 }
 
 /**
- * 数组转树形结构
+ * 数组转树形结构 - 基于Vue2项目的实现，保持简洁和递归逻辑
  * @param list 源数组
  * @param tree 树
  * @param parentId 父ID
  */
 const listToTree = (list, tree, parentId) => {
-  // 过滤当前父级下的菜单项
+  console.log(`🌲 [listToTree] 处理parentId=${parentId}`);
+  
+  // 先过滤出当前层级的菜单
   const currentLevelMenus = list.filter(item => item.pid == parentId);
   
-  if (currentLevelMenus.length === 0) {
-    return;
-  }
-  
-  // 不进行分组，直接处理每个菜单项，避免路径冲突导致的分组错误
-  // 按照菜单项的优先级排序
+  // 对当前层级的菜单进行排序
   const sortedMenus = currentLevelMenus.sort((a, b) => {
     // 首先按hidden排序，显示的菜单优先
     if (a.hidden !== b.hidden) {
       return a.hidden ? 1 : -1;
     }
+    
+    // 特殊处理实验管理模块的菜单排序
+    const experimentMenuOrder = {
+      'equipment': 1,      // 设备管理
+      'EquipmentIndex': 1, // 设备管理（可能的组件名）
+      'layout': 2,         // 布局管理
+      'LayoutIndex': 2,    // 布局管理（可能的组件名）
+      'consumable': 3,     // 耗材管理
+      'ConsumableIndex': 3, // 耗材管理（可能的组件名）
+      'liquid': 4,         // 试剂管理
+      'LiquidIndex': 4,    // 试剂管理（可能的组件名）
+      'expFlowStep': 5,    // 实验步骤管理
+      'ExpFlowStepIndex': 5, // 实验步骤管理（可能的组件名）
+      'expFlow': 6,        // 实验流程设置
+      'ExpFlowIndex': 6,   // 实验流程设置（可能的组件名）
+      'expFlowCase': 7,    // 实验案例管理
+      'ExpFlowCaseIndex': 7, // 实验案例管理（可能的组件名）
+      'gantt': 8,          // 实验跟踪
+      'GanttIndex': 8,     // 实验跟踪（可能的组件名）
+      'expIncubatorStorage': 9, // 培养箱存储
+      'ExpIncubatorStorageIndex': 9, // 培养箱存储（可能的组件名）
+      'plan': 10,          // 计划任务
+      'PlanIndex': 10,     // 计划任务（可能的组件名）
+      'expVideo': 11,      // 视频监控
+      'ExpVideoIndex': 11, // 视频监控（可能的组件名）
+      'sampleInformation': 12,  // 样品信息表
+      'SampleInformationIndex': 12  // 样品信息表（可能的组件名）
+    };
+    
+    // 检查多个可能的字段
+    const getMenuKey = (item) => {
+      return item.component || item.key || item.name || item.path;
+    };
+    
+    const aKey = getMenuKey(a);
+    const bKey = getMenuKey(b);
+    
+    // 如果两个菜单都是实验管理模块的，按照预定义顺序排序
+    if (experimentMenuOrder[aKey] && experimentMenuOrder[bKey]) {
+      return experimentMenuOrder[aKey] - experimentMenuOrder[bKey];
+    }
+    
     // 其次按应用类型排序
     const appPriority = { 'system': 1, 'manage': 2, 'expapp': 3, 'busiapp': 4, 'platform': 5, 'flowcenter': 6 };
     const aPriority = appPriority[a.application] || 999;
@@ -469,35 +543,25 @@ const listToTree = (list, tree, parentId) => {
     return (a.id || 0) - (b.id || 0);
   });
 
-  // 用于记录已经处理过的菜单ID，避免重复
-  const processedIds = new Set();
-  
-  // 处理每个菜单项
-  sortedMenus.forEach((item, index) => {
-    // 如果已经处理过，跳过
-    if (processedIds.has(item.id)) {
-      return;
-    }
-    
-    // 标记为已处理
-    processedIds.add(item.id);
-    
-    // 构建当前菜单项
-    const menuItem = {
+  // 使用Vue2的简洁递归逻辑
+  sortedMenus.forEach(item => {
+    const child = {
       ...item,
-      key: item.key || item.name || item.id,
+      key: item.key || item.name,
       children: []
     };
     
     // 递归查找子菜单
-    listToTree(list, menuItem.children, item.id);
+    listToTree(list, child.children, item.id);
+    
+    console.log(`📁 [listToTree] 菜单项 ${item.name || item.meta?.title} 有 ${child.children.length} 个子菜单`);
     
     // 如果没有子菜单，删除 children 属性
-    if (menuItem.children.length === 0) {
-      delete menuItem.children;
+    if (child.children.length <= 0) {
+      delete child.children;
     }
     
-    // 添加到当前树中
-    tree.push(menuItem);
+    // 添加到树中
+    tree.push(child);
   });
 }
