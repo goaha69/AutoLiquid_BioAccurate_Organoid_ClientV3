@@ -33,6 +33,7 @@
     <a-layout :class="[layoutMode, `content-width-${contentWidth}`]" :style="{ minHeight: '100vh' }">
       <!-- layout header -->
       <global-header
+        ref="globalHeader"
         mode="sidemenu"
         :menus="menus"
         :theme="navTheme"
@@ -96,6 +97,9 @@ export default {
       production: process.env.NODE_ENV === 'production' && process.env.VUE_APP_PREVIEW !== 'true',
       collapsed: false,
       menus: [],
+      platformReloaded: false,
+      platformClickedOnce: false,
+      platformMenuInitialized: false,
       // 应用设置的默认值
       settings: {
         layout: 'sidemenu',
@@ -262,6 +266,24 @@ export default {
     // this.updateTheme()
 
     this.autoHideHeader && this.triggerResizeEvent()
+
+    // 最终保险：所有组件加载完后 300ms，若顶部默认已是平台管理则手动触发一次 switchApp
+    setTimeout(() => {
+      const gh = this.$refs.globalHeader
+      const raw = localStorage.getItem('pro__ALL_APPS_MENU')
+      if (!raw || !gh) return
+      try {
+        const parsed = JSON.parse(raw)
+        const arr = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.value) ? parsed.value : [])
+        const activeApp = arr.find(a => a && a.active)
+        if (activeApp && gh.defApp && Array.isArray(gh.defApp) && gh.defApp[0] === activeApp.code) {
+          this.platformClickedOnce = true
+          if (typeof gh.switchApp === 'function') {
+            gh.switchApp(activeApp.code)
+          }
+        }
+      } catch {}
+    }, 2000)
   },
   methods: {
     ...mapActions(['setSidebar']),
@@ -330,8 +352,31 @@ export default {
       return left
     },
     menuSelect () {
+      // 当在移动端点击菜单时折叠侧边栏
       if (!this.isDesktop()) {
         this.collapsed = false
+      }
+
+      // 获取当前选中的键（菜单路径）
+      // SideMenu 通过 $emit('menuSelect', { selectedKeys }) 传递参数
+      const args = arguments[0]
+      if (args && args.selectedKeys && Array.isArray(args.selectedKeys) && args.selectedKeys.length > 0) {
+        const selectedPath = args.selectedKeys[0]
+
+        const defaultApp = { code: 'platform', name: '平台管理' }
+
+        // 若平台菜单尚未初始化，先触发一次 MenuChange，再跳转
+        if (!this.platformMenuInitialized) {
+          this.platformMenuInitialized = true
+          this.$store.dispatch('MenuChange', defaultApp).then(() => {
+            // 如果当前点击的不是根节点，再次跳转
+            if (selectedPath && selectedPath !== '/platform' && selectedPath !== 'platform') {
+              this.$nextTick(() => {
+                this.$router.push({ path: selectedPath }).catch(()=>{})
+              })
+            }
+          }).catch(() => {})
+        }
       }
     },
     drawerClose () {

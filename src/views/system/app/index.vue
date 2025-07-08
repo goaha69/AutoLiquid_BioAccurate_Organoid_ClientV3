@@ -1,29 +1,31 @@
 <template>
   <div>
-    <a-card v-if="hasPerm('sysApp:page')">
-      <div class="table-page-search-wrapper">
-        <a-form layout="inline">
-          <a-row :gutter="48">
-            <a-col :md="8" :sm="24">
-              <a-form-item label="应用名称">
-                <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入应用名称" />
-              </a-form-item>
-            </a-col>
-            <a-col :md="8" :sm="24">
-              <a-form-item label="唯一编码">
-                <a-input v-model:value="queryParam.code" allow-clear placeholder="请输入唯一编码" />
-              </a-form-item>
-            </a-col>
-            <a-col :md="8" :sm="24">
-              <span class="table-page-search-submitButtons">
-                <a-button type="primary" @click="handleQuery">查询</a-button>
-                <a-button style="margin-left: 8px" @click="resetQuery">重置</a-button>
-              </span>
-            </a-col>
-          </a-row>
-        </a-form>
-      </div>
-    </a-card>
+    <x-card v-if="hasPerm('sysApp:page')">
+      <template #content>
+        <div class="table-page-search-wrapper">
+          <a-form layout="inline">
+            <a-row :gutter="48">
+              <a-col :md="8" :sm="24">
+                <a-form-item label="应用名称">
+                  <a-input v-model:value="queryParam.name" allow-clear placeholder="请输入应用名称" />
+                </a-form-item>
+              </a-col>
+              <a-col :md="8" :sm="24">
+                <a-form-item label="唯一编码">
+                  <a-input v-model:value="queryParam.code" allow-clear placeholder="请输入唯一编码" />
+                </a-form-item>
+              </a-col>
+              <a-col :md="8" :sm="24">
+                <span class="table-page-search-submitButtons">
+                  <a-button type="primary" @click="handleQuery">查询</a-button>
+                  <a-button style="margin-left: 8px" @click="resetQuery">重置</a-button>
+                </span>
+              </a-col>
+            </a-row>
+          </a-form>
+        </div>
+      </template>
+    </x-card>
 
     <a-card :bordered="false">
       <template #title v-if="hasPerm('sysApp:add')">
@@ -40,6 +42,7 @@
         :loading="loading"
         :row-key="record => record.id"
         @change="handleTableChange"
+        :row-selection="rowSelection"
       >
         <template #bodyCell="{ column, text, record }">
           <template v-if="column.dataIndex === 'active'">
@@ -92,6 +95,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import { message } from 'ant-design-vue';
 import { PlusOutlined } from '@ant-design/icons-vue';
 import { hasPerm } from '@/utils/permissions';
+import { XCard } from '@/components';
 import {
   getAppPage,
   sysAppDelete,
@@ -132,6 +136,18 @@ const columns = computed(() => {
 const activeDict = ref([]);
 const statusDict = ref([]);
 
+const selectedRowKeys = ref([]);
+const selectedRows = ref([]);
+
+// Row selection config matching Vue2 version
+const rowSelection = computed(() => ({
+  selectedRowKeys: selectedRowKeys.value,
+  onChange: (keys, rows) => {
+    selectedRowKeys.value = keys;
+    selectedRows.value = rows;
+  }
+}));
+
 const addFormRef = ref();
 const editFormRef = ref();
 
@@ -149,9 +165,11 @@ const fetchData = () => {
   };
   getAppPage(params).then(res => {
     loading.value = false;
-    if (res.success) {
-      dataSource.value = res.data.records;
-      pagination.total = res.data.total;
+    if (res && res.success) {
+      const result = res.data || {};
+      // 兼容后端返回 rows 或 records 两种字段
+      dataSource.value = result.records || result.rows || [];
+      pagination.total = result.total || result.totalRows || 0;
     }
   });
 };

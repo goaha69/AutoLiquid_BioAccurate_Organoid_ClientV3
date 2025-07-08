@@ -210,7 +210,7 @@ export default {
       })
     }
 
-    const loginSuccess = (res) => {
+    const loginSuccess = async (res) => {
       exp_deviceversion_getLastVersion().then((rr) => { 
         if(rr.success) {
           console.log('==========######$$$$$$==========')
@@ -218,13 +218,39 @@ export default {
           store.dispatch('ToggleVersionCode', rr.data.currentVersion)
         }
       })
-      
-      console.log('==========123456789==========')
-      console.log(store.getters.versionCode)
-      router.push({ path: '/welcome' })
+
+      try {
+        // 1. 获取用户信息
+        const userInfo = await store.dispatch('GetInfo')
+        
+        // 2. 计算默认应用（优先平台管理）
+        let defaultApp = { code: 'platform', name: '平台管理' }
+        if (userInfo && userInfo.apps && userInfo.apps.length > 0) {
+          const platformApp = userInfo.apps.find(app => app.code === 'platform' || app.name === '平台管理')
+          defaultApp = platformApp || userInfo.apps[0]
+        }
+
+        // 3. 切换应用菜单
+        await store.dispatch('MenuChange', defaultApp)
+
+        // 4. 加载未读通知（可异步，不阻塞）
+        store.dispatch('getNoticReceiveList').catch(() => {})
+
+        // 5. 等待路由完全就绪后再跳转首页，确保侧栏菜单渲染完成
+        await router.isReady()
+        await router.replace({ path: '/welcome' })
+
+        // 确保 BasicLayout 已挂载后，再次触发菜单切换，模拟“平台管理”点击
+        setTimeout(() => {
+          store.dispatch('MenuChange', defaultApp).catch(() => {})
+        }, 300)
+      } catch (err) {
+        console.error('获取用户信息或切换应用失败', err)
+      }
+
       isLoginError.value = false
       // 加载字典所有字典到缓存中
-      store.dispatch('dictTypeData').then((res) => { })
+      store.dispatch('dictTypeData').then(() => { })
     }
 
     const requestFailed = (err) => {

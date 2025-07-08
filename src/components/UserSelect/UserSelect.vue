@@ -1,75 +1,90 @@
 <template>
   <a-select
-    :mode="model"
-    showSearch  value="selectValue" : filter-option="false"
+    :mode="selectMode"
+    show-search
+    v-model:value="selected"
+    :filter-option="false"
     :placeholder="placeholder"
-    :not-found-content="fetching  undefined : null"
-    @search="fetchUser"
-    @change="handleChange"
+    :not-found-content="loading ? undefined : null"
+    @search="onSearch"
+    @change="onChange"
+    :loading="loading"
+    allowClear
   >
-    <a-spin v-if="fetching" #notFoundContent size="small" ></a>
-    <a-select-option v-for="d in data" :key="d.value">
-      {{ d.text }}
+    <a-select-option
+      v-for="opt in options"
+      :key="opt.value"
+      :value="opt.value"
+    >
+      {{ opt.label }}
     </a-select-option>
   </a-select>
 </template>
-<script>
+
+<script setup>
+import { ref, computed, watch, defineProps, defineEmits } from 'vue'
 import debounce from 'lodash/debounce'
 import { getUserPage } from '@/api/modular/system/userManage'
 
-export default {
-  name: 'UserSelect',
-  props: {
-    placeholder: {
-      type: String
-    },
-    modelValue: {
-      type: String
-    },
-    multiple: {
-      type: Boolean,
-      default: false
-    }
+const props = defineProps({
+  placeholder: {
+    type: String,
+    default: '请选择用户'
   },
-  data() {
-    const multiple = this.multiple
-    this.fetchUser = debounce(this.fetchUser, 800)
-    return {
-      data: [],
-      fetching: false,
-      selectValue: multiple : [] : undefined,
-      model: multiple : 'multiple' : 'default'
-    }
+  modelValue: {
+    type: [String, Array]
   },
-  methods: {
-    fetchUser(key) {
-      console.log('fetching user', key)
-      this.data = []
-      this.fetching = true
+  multiple: {
+    type: Boolean,
+    default: false
+  }
+})
 
-      const params = {
-        pageNo: 1,
-        pageSize: 10,
-        searchValue: key
-      }
-      this.userFetching = true
+const emit = defineEmits(['update:modelValue', 'change'])
 
-      getUserPage(params).then((res) => {
-        this.data = res.data.rows.map(user => ({
-          text: `${user.name} ${user.account}`,
-          value: user.id
-        }))
-      }).finally(() => {
-        this.fetching = false
-      })
-    },
-    handleChange(value) {
-      Object.assign(this, {
-        selectValue: value,
-        fetching: false
-      })
-      this.$emit('change', value)
-    }
+const selected = ref(props.modelValue)
+watch(() => props.modelValue, (val) => (selected.value = val))
+
+function updateValue(val) {
+  emit('update:modelValue', val)
+  emit('change', val)
+}
+
+const selectMode = computed(() => (props.multiple ? 'multiple' : undefined))
+
+const loading = ref(false)
+const options = ref([])
+
+const fetchUsers = async (keyword = '') => {
+  loading.value = true
+  try {
+    const { data } = await getUserPage({ pageNo: 1, pageSize: 10, searchValue: keyword.trim() })
+    options.value = (data?.rows || []).map((u) => ({
+      label: `${u.name} ${u.account}`,
+      value: u.id
+    }))
+  } catch (e) {
+    options.value = []
+  } finally {
+    loading.value = false
   }
 }
+
+const debouncedFetch = debounce(fetchUsers, 500)
+
+function onSearch(val) {
+  // 每次搜索触发防抖
+  debouncedFetch(val)
+}
+
+function onChange(val) {
+  updateValue(val)
+}
+
+// 首次加载默认数据
+fetchUsers('')
 </script>
+
+<style scoped>
+/* 可根据需要自定义样式 */
+</style>

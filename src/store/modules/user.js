@@ -150,11 +150,11 @@ const user = {
     },
 
     // 获取用户信息
-    GetInfo({
+    async GetInfo({
       commit
     }) {
       return new Promise((resolve, reject) => {
-        getLoginUser().then(response => {
+        getLoginUser().then(async response => {
           if (response.success) {
             const data = response.data
             commit('SET_ADMINTYPE', data.adminType)
@@ -175,14 +175,37 @@ const user = {
               })
             }
             
-            // 设置默认应用列表
+            // 设置默认应用列表，并保证 data.apps 同步更新 active 状态
             if (data.apps && Array.isArray(data.apps) && data.apps.length > 0) {
-              // 确保第一个应用是激活状态
-              const appList = data.apps.map((app, index) => ({
+              // 遍历并修改 active，优先平台管理
+              data.apps = data.apps.map((app, index) => ({
                 ...app,
-                active: index === 0
+                active: app.code === 'platform' || app.name === '平台管理' || index === 0
               }))
-              ls.set(ALL_APPS_MENU, appList, 7 * 24 * 60 * 60 * 1000)
+
+              // 保存到 localStorage
+              ls.set(ALL_APPS_MENU, data.apps, 7 * 24 * 60 * 60 * 1000)
+
+              // 如果“平台管理”已激活，但当前返回的菜单并不是平台管理的菜单，则主动调用 sysMenuChange 获取
+              const platformApp = data.apps.find(app => app.active && (app.code === 'platform' || app.name === '平台管理'))
+              if (platformApp && (!data.menus || data.menus.length === 0 || !(platformApp.menu && platformApp.menu.length > 0))) {
+                try {
+                  const menuResp = await sysMenuChange({ application: platformApp.code })
+                  if (menuResp && menuResp.success && Array.isArray(menuResp.data)) {
+                    // 将菜单写入本地缓存并更新 Vuex permission
+                    platformApp.menu = menuResp.data
+                    // 更新 localStorage
+                    ls.set(ALL_APPS_MENU, data.apps, 7 * 24 * 60 * 60 * 1000)
+                    // 提交至 permission 模块，供 BasicLayout 立刻使用
+                    store.commit('SET_MENUS', menuResp.data)
+
+                    // 触发一次完整的 MenuChange 流程，确保动态路由与侧栏菜单全部更新完毕
+                    await store.dispatch('MenuChange', { code: platformApp.code, name: platformApp.name })
+                  }
+                } catch (e) {
+                  // 忽略错误，保持现状
+                }
+              }
             } else {
               // 使用默认应用列表
               const defaultApps = [
