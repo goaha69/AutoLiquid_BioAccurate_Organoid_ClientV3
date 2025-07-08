@@ -144,28 +144,30 @@
             <a-divider type="horizontal" />
 
             <table>
-              <tr>
-                <td class="table-col-label"><div>预退枪头位置</div></td>
-                <td colspan="3" class="table-col-value-3">
-                  <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosX" />
-                  <!-- <a-button type="primary" @click="btnGoPos('x0')" :loading="isLoading('x0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosY" />
-                  <!-- <a-button type="primary" @click="btnGoPos('y0')" :loading="isLoading('y0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosZ" />
-                  <!-- <a-button type="primary" @click="btnGoPos('z0')" :loading="isLoading('z0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                </td>
-              </tr>
-              <tr>
-                <td class="table-col-label"><div>退枪头位置</div></td>
-                <td colspan="3" class="table-col-value-3">
-                  <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosX" />
-                  <!-- <a-button type="primary" @click="btnGoPos('x1')" :loading="isLoading('x1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosY" />
-                  <!-- <a-button type="primary" @click="btnGoPos('y1')" :loading="isLoading('y1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                  <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosZ" />
-                  <!-- <a-button type="primary" @click="btnGoPos('z1')" :loading="isLoading('z1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
-                </td>
-              </tr>
+              <tbody>
+                <tr>
+                  <td class="table-col-label"><div>预退枪头位置</div></td>
+                  <td colspan="3" class="table-col-value-3">
+                    <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosX" />
+                    <!-- <a-button type="primary" @click="btnGoPos('x0')" :loading="isLoading('x0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
+                    <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosY" />
+                    <!-- <a-button type="primary" @click="btnGoPos('y0')" :loading="isLoading('y0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
+                    <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.prepareReleaseTipPosZ" />
+                    <!-- <a-button type="primary" @click="btnGoPos('z0')" :loading="isLoading('z0')"  :disabled="isAnyLoading()"  >执行</a-button> -->
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table-col-label"><div>退枪头位置</div></td>
+                  <td colspan="3" class="table-col-value-3">
+                    <sp-input-number label="X" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosX" />
+                    <!-- <a-button type="primary" @click="btnGoPos('x1')" :loading="isLoading('x1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
+                    <sp-input-number label="Y" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosY" />
+                    <!-- <a-button type="primary" @click="btnGoPos('y1')" :loading="isLoading('y1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
+                    <sp-input-number label="Z" :labelWidth="50" unit="mm" v-model="pipetteAttribute.releaseTipPosZ" />
+                    <!-- <a-button type="primary" @click="btnGoPos('z1')" :loading="isLoading('z1')"  :disabled="isAnyLoading()"  >执行</a-button> -->
+                  </td>
+                </tr>
+              </tbody>
             </table>
 
             <a-divider type="horizontal" />
