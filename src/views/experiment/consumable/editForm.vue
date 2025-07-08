@@ -1,68 +1,191 @@
 <template>
-  <a-modal title="编辑耗材" :width="1300" :open="visible" :maskClosable="false" @ok="handleSubmit"
-    @cancel="handleCancel">
+  <a-modal
+    title="编辑耗材"
+    :width="1300"
+    :open="visible"
+    :mask-closable="false"
+    @ok="handleSubmit"
+    @cancel="handleCancel"
+  >
     <a-spin :spinning="formLoading">
-      <a-form :form="form">
+      <!-- 表单开始 -->
+      <a-form :model="attributeData" layout="vertical" ref="formRef">
+        <!-- ========== 基本信息区 ========== -->
         <a-row :gutter="8">
-          <div>
-            <sp-input label="耗材编号" :required="true" :isError="errors.code" v-model="attributeData.code" />
-            <sp-input label="耗材名称" :labelWidth="80" :required="true" :isError="errors.name" :inputWidth="200"
-              v-model="attributeData.name" />
-          </div>
-          <div style="margin-top:10px;">
-            <sp-input-number :step="1" label="行数" :required="true" v-model="attributeData.rowCount" />
-            <sp-input-number :step="1" label="列数" :labelWidth="100" :required="true" v-model="attributeData.colCount" />
-            <sp-input-number label="行距" unit="mm" :labelWidth="100" :required="true" v-model="attributeData.rowSpace" />
-            <sp-input-number label="列距" unit="mm" :labelWidth="100" :required="true" v-model="attributeData.colSpace" />
-          </div>
-          <div style="margin-top:10px;">
-            <sp-input-number label="X尺寸" unit="mm" :required="true" v-model="attributeData.xSize" />
-            <sp-input-number label="Y尺寸" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.ySize" />
-            <sp-input-number label="X偏移" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.xOffset" />
-            <sp-input-number label="Y偏移" :labelWidth="100" unit="mm" :required="true" v-model="attributeData.yOffset" />
-          </div>
-          <div style="margin-top:10px;">
-            <span class="span-label" style="width:140px;">是否枪头盒::</span>
-            <a-checkbox v-model="attributeData.isTipBox" style="width:60px;" />
-
-            <span class="span-label" style="margin-left:60px;">量程::</span>
-            <a-select style="width: 100px" v-model:value="attributeData.liquidRange" :disabled="!attributeData.isTipBox">
-              <a-select-option v-for="(item, index) in liquidRanges" :key="index" :value="item.code">{{ item.value
-                }}</a-select-option>
-            </a-select>
-            <span class="span-unit">(μl)</span>
-
-            
-            <sp-input-number :step="0.001" label="耗材底面" :labelWidth="140"
-              v-model="attributeData.consumableBasalAreaCoefficient" />
-
-          </div>
-          <div style="margin-top:10px;">
-            <span class="span-label" style="width:140px;">使用夹抓::</span>
-            <a-checkbox v-model="attributeData.useArm" style="width:100px;" />
-            <span class="span-label" style="width: 140px; margin-left: 10px;">机械臂::</span>
-            <a-select style="width: 140px;" v-model:value="armAttribute.equipmentId" :disabled="!attributeData.useArm">
-              <a-select-option v-for="(item, index) in armEquipmentData" :key="index" :value="item.id">{{ item.name
-                }}</a-select-option>
-            </a-select>
-            <sp-input-number :step="100" label="最大体" :labelWidth="100" unit="μl" v-model="attributeData.maxVolume" />
-            <a-checkbox v-model="attributeData.isRemainingVolume"
-              style="margin-left: 20px;color: #000;">剩余体积</a-checkbox>
-            <sp-input-number :step="100" label="" :labelWidth="-10" unit="μl" v-model="attributeData.remainingVolume" />
-          </div>
-          <div style="margin-top:10px;">
-            <sp-input-number :step="0.5" label="底面积系" :labelWidth="140" :right-empty="true"
-              v-model="attributeData.basalAreaCoefficient" />
-            <sp-input-number :step="0.5" label="耗材高度" :labelWidth="90" unit="mm"
-              v-model="attributeData.consumableHeight" />
-            <sp-input-number :step="0.5" label="混胶修正系数" :labelWidth="100"
-              v-model="attributeData.mixBMEModifiedCoefficient" />
-            <sp-input-number :step="0.5" label="大容量高度修正系" :labelWidth="150"
-              v-model="attributeData.heightModifiedCoefficient" />
-          </div>
+          <sp-input
+            label="耗材编号"
+            required
+            :is-error="errors.code"
+            v-model="attributeData.code"
+            :disabled="true"
+          />
+          <sp-input
+            label="耗材名称"
+            :label-width="80"
+            required
+            :is-error="errors.name"
+            :input-width="200"
+            v-model="attributeData.name"
+          />
         </a-row>
 
-        <a-row :gutter="8">
+        <!-- 规格尺寸 -->
+        <a-row :gutter="8" style="margin-top: 10px">
+          <sp-input-number
+            label="行数"
+            :step="1"
+            required
+            v-model="attributeData.rowCount"
+          />
+          <sp-input-number
+            label="列数"
+            :label-width="100"
+            :step="1"
+            required
+            v-model="attributeData.colCount"
+          />
+          <sp-input-number
+            label="行距"
+            unit="mm"
+            :label-width="100"
+            required
+            v-model="attributeData.rowSpace"
+          />
+          <sp-input-number
+            label="列距"
+            unit="mm"
+            :label-width="100"
+            required
+            v-model="attributeData.colSpace"
+          />
+        </a-row>
+
+        <a-row :gutter="8" style="margin-top: 10px">
+          <sp-input-number label="X尺寸" unit="mm" required v-model="attributeData.xSize" />
+          <sp-input-number
+            label="Y尺寸"
+            :label-width="100"
+            unit="mm"
+            required
+            v-model="attributeData.ySize"
+          />
+          <sp-input-number
+            label="X偏移"
+            :label-width="100"
+            unit="mm"
+            required
+            v-model="attributeData.xOffset"
+          />
+          <sp-input-number
+            label="Y偏移"
+            :label-width="100"
+            unit="mm"
+            required
+            v-model="attributeData.yOffset"
+          />
+        </a-row>
+
+        <!-- 变距与量程 -->
+        <a-row :gutter="8" style="margin-top: 10px">
+          <sp-input-number
+            label="变距步数"
+            :step="1"
+            right-empty
+            v-model="attributeData.variableDistanceStep"
+          />
+
+          <span class="span-label">是否枪头盒：</span>
+          <a-checkbox v-model:checked="attributeData.isTipBox" style="width: 60px" />
+
+          <span class="span-label" style="margin-left: 40px">量程：</span>
+          <a-select
+            style="width: 100px"
+            v-model:value="attributeData.liquidRange"
+            :disabled="!attributeData.isTipBox"
+          >
+            <a-select-option
+              v-for="item in liquidRanges"
+              :key="item.code"
+              :value="item.code"
+              >{{ item.value }}</a-select-option
+            >
+          </a-select>
+          <span class="span-unit">(μl)</span>
+        </a-row>
+
+        <!-- 机械臂 / 最大体积 -->
+        <a-row :gutter="8" style="margin-top: 10px">
+          <span class="span-label" style="width: 140px">使用夹抓：</span>
+          <a-checkbox v-model:checked="attributeData.useArm" style="width: 100px" />
+
+          <span
+            class="span-label"
+            style="width: 140px; margin-left: 10px"
+            >机械臂：</span
+          >
+          <a-select
+            style="width: 140px"
+            v-model:value="armAttribute.equipmentId"
+            :disabled="!attributeData.useArm"
+            @change="armChange"
+          >
+            <a-select-option
+              v-for="item in armEquipmentData"
+              :key="item.id"
+              :value="item.id"
+              >{{ item.name }}</a-select-option
+            >
+          </a-select>
+
+          <sp-input-number
+            :step="100"
+            label="最大体积"
+            :label-width="100"
+            unit="μl"
+            v-model="attributeData.maxVolume"
+          />
+          <a-checkbox
+            v-model:checked="attributeData.isRemainingVolume"
+            style="margin-left: 10px; color: #000"
+            >剩余体积</a-checkbox
+          >
+          <sp-input-number
+            :step="100"
+            label=""
+            :label-width="-10"
+            unit="μl"
+            v-model="attributeData.remainingVolume"
+          />
+        </a-row>
+
+        <!-- 底面积系数 -->
+        <a-row :gutter="8" style="margin-top: 10px">
+          <sp-input-number
+            label="底面积系数"
+            :label-width="140"
+            right-empty
+            v-model="attributeData.basalAreaCoefficient"
+          />
+          <sp-input-number
+            label="耗材高度"
+            :label-width="90"
+            unit="mm"
+            v-model="attributeData.consumableHeight"
+          />
+          <sp-input-number
+            label="混胶修正系数"
+            :label-width="100"
+            v-model="attributeData.mixBMEModifiedCoefficient"
+          />
+          <sp-input-number
+            label="大容量高度修正系"
+            :label-width="150"
+            v-model="attributeData.heightModifiedCoefficient"
+          />
+        </a-row>
+
+        <!-- 吸液速度与P-Z吸液速度转换系数 -->
+        <a-row :gutter="8" style="margin-top: 10px">
           <a-tabs type="editable-card" hide-add style="margin-left: 0px; margin-top: 10px;">
             <a-tab-pane v-for="(item,index) in attributeData.pToZSpeedLiquidJson" :tab="index=='fifty'?'50ul':index=='oneThousand'?'1000ul':'200ul'" :key="index" :closable="false">
               <div>
@@ -74,7 +197,9 @@
             </a-tab-pane>
           </a-tabs>
         </a-row>
-        <a-row :gutter="8">
+
+        <!-- 参数 -->
+        <a-row :gutter="8" style="margin-top: 10px">
           <a-tabs type="editable-card" hide-add style="margin-left: 0px; margin-top: 10px;">
             <a-tab-pane v-for="item in params" :key="item.id" :tab="item.name" :closable="false">
               <div>
@@ -130,23 +255,74 @@
             </a-tab-pane>
           </a-tabs>
         </a-row>
+
+        <!-- 夹抓参数 -->
         <a-row :gutter="8" v-if="attributeData.useArm">
           <a-card title="夹抓参数" :bordered="false">
             <div>
-              <sp-input-number label="行走高度" :labelWidth="90" unit="mm" v-model="armAttribute.normalHeight" />
-              <sp-input-number label="X偏移" :labelWidth="90" unit="mm" v-model="armAttribute.xOffset" />
-              <sp-input-number label="Y偏移" :labelWidth="90" unit="mm" v-model="armAttribute.yOffset" />
-              <sp-input-number label="Z偏移" :labelWidth="90" unit="mm" v-model="armAttribute.zOffset" />
+              <sp-input-number
+                label="行走高度"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.normalHeight"
+              />
+              <sp-input-number
+                label="X偏移"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.xOffset"
+              />
+              <sp-input-number
+                label="Y偏移"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.yOffset"
+              />
+              <sp-input-number
+                label="Z偏移"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.zOffset"
+              />
             </div>
-            <div style="margin-top:10px;">
-              <sp-input-number label="松开高度" :labelWidth="90" unit="mm" v-model="armAttribute.clipReleaseHeight" />
-              <sp-input-number label="夹紧高度" :labelWidth="90" unit="mm" v-model="armAttribute.clipCloseHeight" />
-              <sp-input-number label="开盖高度" :labelWidth="90" unit="mm" v-model="armAttribute.clipOpenHeight" />
+
+            <div style="margin-top: 10px">
+              <sp-input-number
+                label="松开高度"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.clipReleaseHeight"
+              />
+              <sp-input-number
+                label="夹紧高度"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.clipCloseHeight"
+              />
+              <sp-input-number
+                label="开盖高度"
+                :labelWidth="90"
+                unit="mm"
+                v-model="armAttribute.clipOpenHeight"
+              />
             </div>
-            <div style="margin-top:10px;">
-              <sp-input-number label="夹子松开" :labelWidth="90" v-model="armAttribute.clipRelease" />
-              <sp-input-number label="夹子夹紧" :labelWidth="90" v-model="armAttribute.clipClose" />
-              <sp-input-number label="夹子开启" :labelWidth="90" v-model="armAttribute.clipOpen" />
+
+            <div style="margin-top: 10px">
+              <sp-input-number
+                label="夹子松开"
+                :labelWidth="90"
+                v-model="armAttribute.clipRelease"
+              />
+              <sp-input-number
+                label="夹子夹紧"
+                :labelWidth="90"
+                v-model="armAttribute.clipClose"
+              />
+              <sp-input-number
+                label="夹子开启"
+                :labelWidth="90"
+                v-model="armAttribute.clipOpen"
+              />
             </div>
           </a-card>
         </a-row>
@@ -158,7 +334,11 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { exp_consumable_edit, exp_consumable_getArmAttribute, exp_consumable_getParams } from '@/api/modular/experiment/consumableManage'
+import {
+  exp_consumable_edit,
+  exp_consumable_getArmAttribute,
+  exp_consumable_getParams
+} from '@/api/modular/experiment/consumableManage'
 import { exp_equipment_list } from '@/api/modular/experiment/equipmentManage'
 import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
 import SpInputNumber from '@/components/spInputNumber.vue'
@@ -171,22 +351,24 @@ defineOptions({
 
 const emit = defineEmits(['ok'])
 
-const statusData = ref([])
-const Data = ref([])
+/* ------- 数据定义 ------- */
 const visible = ref(false)
 const formLoading = ref(false)
+
 const liquidRanges = ref([])
 const attributeData = ref({})
+
 const params = ref([])
+
 const armEquipmentData = ref([])
 const equipmentData = ref([])
-const clipEquipmentData = ref([])
 
 const errors = reactive({
   code: false,
-  name: false,
+  name: false
 })
 
+/* 夹抓参数 */
 const armAttribute = reactive({
   consumableId: 0,
   xOffset: 0.0,
@@ -201,39 +383,43 @@ const armAttribute = reactive({
   clipCloseHeight: 0.0,
   clipOpenHeight: 0.0,
   normalHeight: 0.0,
-  clipCloseAfterWait: 0.0,
-  clipReleaseBeforeWait: 0.0,
-  variableDistanceStep: 0,
-  ConsumableBasalAreaCoefficient: 0.0
+  one2MoreNormalHeight: 0.0
 })
 
+/* 其他 UI 辅助状态 */
 const clipOpenVisible = ref(false)
-const loadingButton = ref('')
 
+/* ------- 生命周期 ------- */
 onMounted(() => {
-  sysDictTypeDropDownFunc()
+  fetchLiquidRanges()
 })
 
-const armChange = (value) => {
-  console.log('=========armChange=========')
-  console.log(value)
-  var arm = armEquipmentData.value.filter(item => item.id === armAttribute.equipmentId)[0]
-  if (arm != null && arm.clipEquipmentId != null)
-    clipOpenVisible.value = true
-  else
-    clipOpenVisible.value = false
+/* ------- API 调用 ------- */
+function fetchLiquidRanges() {
+  sysDictTypeDropDown({ code: 'liquid_range' }).then((res) => {
+    liquidRanges.value = res.data.map((i) => ({
+      ...i,
+      code: Number(i.code)
+    }))
+  })
 }
 
-const getEquipmentData = () => {
+function fetchEquipment() {
   exp_equipment_list({}).then((res) => {
     if (res.success) {
       equipmentData.value = res.data
-      armEquipmentData.value = equipmentData.value.filter(item => item.type === 1)
+      armEquipmentData.value = equipmentData.value.filter((i) => i.type === 1)
     }
   })
 }
 
-const resetAttribute = () => {
+/* ------- 业务函数 ------- */
+function armChange(value) {
+  const arm = armEquipmentData.value.find((i) => i.id === value)
+  clipOpenVisible.value = !!(arm && arm.clipEquipmentId)
+}
+
+function resetState() {
   Object.assign(armAttribute, {
     consumableId: 0,
     xOffset: 0.0,
@@ -248,106 +434,83 @@ const resetAttribute = () => {
     clipCloseHeight: 0.0,
     clipOpenHeight: 0.0,
     normalHeight: 0.0,
-    one2MoreNormalHeight: 0.0,
-  })
-  
-  Object.assign(errors, {
-    code: false,
-    name: false,
+    one2MoreNormalHeight: 0.0
   })
 
-  armEquipmentData.value = []
-  clipEquipmentData.value = []
+  Object.assign(errors, { code: false, name: false })
   params.value = []
   clipOpenVisible.value = false
 }
 
-const sysDictTypeDropDownFunc = (text) => {
-  sysDictTypeDropDown({ code: 'liquid_range' }).then((res) => {
-    liquidRanges.value = res.data
-    liquidRanges.value.forEach((item) => {
-      item.code = parseInt(item.code)
-    })
-  })
-}
-
-const edit = (record) => {
+/* 打开编辑弹窗并加载数据 */
+function edit(record) {
   visible.value = true
-  console.log(record)
-
-  getEquipmentData()
-  resetAttribute()
+  resetState()
+  fetchEquipment()
 
   attributeData.value = { ...record }
-  console.log('===================================')
-  console.log(attributeData.value)
 
+  /* 夹抓属性 */
   if (attributeData.value.useArm) {
-    var dd = { id: record.id }
-    exp_consumable_getArmAttribute(dd).then((res) => {
+    exp_consumable_getArmAttribute({ id: record.id }).then((res) => {
       Object.assign(armAttribute, res.data)
     })
   }
 
-  var dd1 = { id: record.id }
-  exp_consumable_getParams(dd1).then((res) => {
+  /* 参数列表 */
+  exp_consumable_getParams({ id: record.id }).then((res) => {
     params.value = res.data
   })
 }
 
-const validateFields = () => {
-  var result = true
+/* 表单校验 */
+function validate() {
   errors.code = !attributeData.value.code
   errors.name = !attributeData.value.name
-  console.log(errors)
-  for (const key in errors) {
-    if (errors[key]) {
-      result = false
-      break
-    }
-  }
-  return result
+  return !Object.values(errors).some(Boolean)
 }
 
-const handleSubmit = () => {
-  console.log('=================handleSubmit=================')
-  if (!validateFields())
-    return
+/* 保存 */
+function handleSubmit() {
+  if (!validate()) return
 
-  armAttribute.consumableId = attributeData.value.id
   formLoading.value = true
-  var obj = {
-    ...attributeData.value,
-    armAttribute: armAttribute,
-    params: params.value,
-  }
-  console.log('========实际要提交的参数==========')
-  console.log(obj)
 
-  exp_consumable_edit(obj).then((res) => {
-    if (res.success) {
-      message.success('编辑成功')
-      resetAttribute()
-      emit('ok', obj)
-      handleCancel()
-    }
-  }).finally((res) => {
-    formLoading.value = false
-  })
+  const payload = {
+    ...attributeData.value,
+    armAttribute: { ...armAttribute },
+    params: params.value
+  }
+
+  exp_consumable_edit(payload)
+    .then((res) => {
+      if (res.success) {
+        message.success('编辑成功')
+        emit('ok')
+        handleCancel()
+      }
+    })
+    .finally(() => {
+      formLoading.value = false
+    })
 }
 
-const handleCancel = () => {
-  resetAttribute()
+function handleCancel() {
+  resetState()
   visible.value = false
 }
 
-const btnGoPos = (axle, value) => {
-  // Implementation needed
+/* 示例：运动调试按钮 */
+function btnGoPos(axle, value) {
+  if (!attributeData.value.id) return
+  const cmd = `${axle} ${value}`
+  doCmd({ cmd }).then(() => {
+    message.success('运动完成')
+  })
 }
 
-defineExpose({
-  edit
-})
+/* 向父组件暴露方法 */
+defineExpose({ edit })
 </script>
 
 <style scoped>
