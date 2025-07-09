@@ -1,355 +1,334 @@
 <template>
-  <div class="gantt-container">
-    <a-card title="实验跟踪" style="margin-bottom: 16px;">
-      <div class="search-form">
-        <a-form layout="inline">
-          <a-form-item label="案例编号">
-            <a-input v-model:value="queryParam.code" placeholder="请输入案例编号" />
-          </a-form-item>
-          <a-form-item label="案例名称">
-            <a-input v-model:value="queryParam.name" placeholder="请输入案例名称" />
-          </a-form-item>
-          <a-form-item>
-            <a-button type="primary" @click="handleQuery">查询</a-button>
-            <a-button style="margin-left: 8px" @click="handleReset">重置</a-button>
-          </a-form-item>
-        </a-form>
+  <div id="app">
+    <a-row style="height: 100vh; display: flex;">
+      <a-col :span="isCollapsed ? 0 : 6" style="overflow: auto;">
+        <a-table
+          :data-source="taskData"
+          :columns="columns"
+          rowKey="id"
+          :pagination="false"
+          :row-class-name="rowClassName"
+          :defaultExpandAllRows="true"
+        >
+        </a-table>
+      </a-col>
+      <div class="separator" @click="toggleCollapse">
+        <span v-if="isCollapsed">▶</span>
+        <span v-else>◀</span>
       </div>
-    </a-card>
-
-    <a-card :bordered="false">
-      <a-row :gutter="16" style="height: 70vh;">
-        <!-- 任务列表 -->
-        <a-col :span="isCollapsed ? 0 : 8">
-          <div class="task-list" style="height: 100%; overflow-y: auto;">
-            <h4>实验任务列表</h4>
-            <a-table
-              :data-source="taskData"
-              :columns="taskColumns"
-              :pagination="false"
-              :loading="loading"
-              size="small"
-              :scroll="{ y: 'calc(100vh - 300px)' }"
+      <a-col :span="isCollapsed ? 24 : 18" style="height: 100%;">
+        <div class="gantt-chart">
+          <div class="time-axis">
+            <div
+              class="day"
+              v-for="(day, index) in totalDays"
+              :key="index"
+              :style="{ width: `${100 / totalDays}%`, backgroundColor: getDayColor(index) }"
             >
-              <template #bodyCell="{ column, record }">
-                <template v-if="column.key === 'status'">
-                  <a-tag :color="getStatusColor(record.status)">
-                    {{ getStatusText(record.status) }}
-                  </a-tag>
-                </template>
-                <template v-else-if="column.key === 'progress'">
-                  <a-progress :percent="record.progress" size="small" />
-                </template>
-              </template>
-            </a-table>
+              <span v-if="isFirstDayOfMonth(new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000))">
+                {{ formatMonth(new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000)) }}
+              </span>
+              <span v-else>
+                {{ formatDate(new Date(startDate.getTime() + index * 24 * 60 * 60 * 1000)) }}
+              </span>
+            </div>
           </div>
-        </a-col>
-        
-        <!-- 分隔线 -->
-        <div class="separator" @click="toggleCollapse">
-          <span v-if="isCollapsed">▶</span>
-          <span v-else>◀</span>
-        </div>
-
-        <!-- 甘特图区域 -->
-        <a-col :span="isCollapsed ? 24 : 16">
-          <div class="gantt-chart" style="height: 100%; overflow: auto;">
-            <h4>甘特图视图</h4>
-            <div class="chart-container">
-              <!-- 时间轴 -->
-              <div class="time-axis">
-                <div 
-                  v-for="(day, index) in timeRange" 
-                  :key="index" 
-                  class="time-cell"
-                  :style="{ width: cellWidth + 'px' }"
-                >
-                  {{ formatDate(day) }}
-                </div>
+          <div class="vertical-lines">
+            <div
+              class="line"
+              v-for="index in totalDays - 1"
+              :key="index"
+              :style="{ left: `${(index / totalDays) * 100}%` }"
+            ></div>
+          </div>
+          <div class="tasks-container">
+            <div class="task" v-for="task in tasks" :key="task.id">
+              <div class="task-name">{{ task.name }}</div>
+              <div class="task-bar" :style="getTaskStyle(task)">
+                <div class="progress" :style="getProgressStyle(task)"></div>
               </div>
-              
-              <!-- 任务条 -->
-              <div class="task-rows">
-                <div 
-                  v-for="task in taskData" 
-                  :key="task.id" 
-                  class="task-row"
-                  :style="{ height: '40px' }"
-                >
-                  <div 
-                    class="task-bar"
-                    :style="getTaskBarStyle(task)"
-                  >
-                    <div class="task-progress" :style="getProgressStyle(task)"></div>
-                    <span class="task-text">{{ task.name }}</span>
+              <div class="sub-tasks">
+                <div class="sub-task" v-for="subTask in task.children" :key="subTask.id">
+                  <div class="sub-task-name">{{ subTask.name }}</div>
+                  <div class="sub-task-bar" :style="getTaskStyle(subTask)">
+                    <div class="sub-progress" :style="getProgressStyle(subTask)"></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </a-col>
-      </a-row>
-    </a-card>
+        </div>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue'
-import { message } from 'ant-design-vue'
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { exp_flow_page } from '@/api/modular/experiment/expFlowManage'
 
-export default defineComponent({
-  name: 'ExpGanttView',
-  data() {
-    return {
-      loading: false,
-      isCollapsed: false,
-      queryParam: {
-        code: '',
-        name: ''
-      },
-      taskColumns: [
-        {
-          title: '任务名称',
-          dataIndex: 'name',
-          key: 'name',
-          width: 150
-        },
-        {
-          title: '状态',
-          key: 'status',
-          width: 80,
-          align: 'center'
-        },
-        {
-          title: '进度',
-          key: 'progress',
-          width: 100,
-          align: 'center'
-        }
-      ],
-      taskData: [
-        {
-          id: 1,
-          name: '实验案例1',
-          startDate: '2024-01-01',
-          endDate: '2024-01-10',
-          status: 1,
-          progress: 60
-        },
-        {
-          id: 2,
-          name: '实验案例2',
-          startDate: '2024-01-05',
-          endDate: '2024-01-15',
-          status: 0,
-          progress: 30
-        },
-        {
-          id: 3,
-          name: '实验案例3',
-          startDate: '2024-01-08',
-          endDate: '2024-01-20',
-          status: 2,
-          progress: 100
-        }
-      ],
-      cellWidth: 80, // 每个时间单元格的宽度
-      startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31')
+const isCollapsed = ref(false)
+const tasks = ref([])
+
+onMounted(() => {
+  exp_flow_page({}).then((res) => {
+    if (res.success && res.data && res.data.rows) {
+      tasks.value = res.data.rows.map(item => ({
+        id: item.id,
+        name: item.name,
+        start: item.startTime,
+        end: item.endTime,
+        progress: item.progress || 0,
+        children: item.children ? item.children.map(child => ({
+          id: child.id,
+          name: child.name,
+          start: child.startTime,
+          end: child.endTime,
+          progress: child.progress || 0
+        })) : []
+      }));
     }
-  },
-  computed: {
-    timeRange() {
-      const days = []
-      const current = new Date(this.startDate)
-      while (current <= this.endDate) {
-        days.push(new Date(current))
-        current.setDate(current.getDate() + 1)
-      }
-      return days
-    }
-  },
-  mounted() {
-    this.loadData()
-  },
-  methods: {
-    async loadData() {
-      try {
-        this.loading = true
-        // 这里应该调用真实的API获取甘特图数据
-        // const response = await exp_gantt_data(this.queryParam)
-        
-        // 模拟数据加载
-        setTimeout(() => {
-          console.log('实验跟踪 - 数据加载完成')
-          this.loading = false
-        }, 1000)
-        
-      } catch (error) {
-        console.error('实验跟踪 - 数据加载失败:', error)
-        message.error('数据加载失败: ' + error.message)
-        this.loading = false
-      }
-    },
-
-    handleQuery() {
-      this.loadData()
-    },
-
-    handleReset() {
-      this.queryParam = {
-        code: '',
-        name: ''
-      }
-      this.loadData()
-    },
-
-    toggleCollapse() {
-      this.isCollapsed = !this.isCollapsed
-    },
-
-    getStatusColor(status) {
-      const colorMap = {
-        0: 'blue',    // 待执行
-        1: 'orange',  // 执行中
-        2: 'green',   // 已完成
-        3: 'red'      // 已取消
-      }
-      return colorMap[status] || 'default'
-    },
-
-    getStatusText(status) {
-      const textMap = {
-        0: '待执行',
-        1: '执行中',
-        2: '已完成',
-        3: '已取消'
-      }
-      return textMap[status] || '未知'
-    },
-
-    formatDate(date) {
-      return `${date.getMonth() + 1}/${date.getDate()}`
-    },
-
-    getTaskBarStyle(task) {
-      const taskStart = new Date(task.startDate)
-      const taskEnd = new Date(task.endDate)
-      const totalDays = Math.ceil((this.endDate - this.startDate) / (1000 * 60 * 60 * 24))
-      const startDays = Math.ceil((taskStart - this.startDate) / (1000 * 60 * 60 * 24))
-      const duration = Math.ceil((taskEnd - taskStart) / (1000 * 60 * 60 * 24)) + 1
-      
-      const left = (startDays / totalDays) * 100
-      const width = (duration / totalDays) * 100
-      
-      return {
-        position: 'absolute',
-        left: `${left}%`,
-        width: `${width}%`,
-        height: '30px',
-        backgroundColor: '#1890ff',
-        borderRadius: '4px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontSize: '12px',
-        margin: '5px 0'
-      }
-    },
-
-    getProgressStyle(task) {
-      return {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: `${task.progress}%`,
-        backgroundColor: '#52c41a',
-        borderRadius: '4px',
-        opacity: 0.8
-      }
-    }
-  }
+  })
 })
+
+const startDate = computed(() => {
+  if (tasks.value.length === 0) {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+  const earliestStart = new Date(Math.min(...tasks.value.map(task => new Date(task.start))));
+  earliestStart.setDate(earliestStart.getDate() - 2);
+  return earliestStart;
+});
+
+const endDate = computed(() => {
+  if (tasks.value.length === 0) {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  }
+  return new Date(Math.max(...tasks.value.map(task => new Date(task.end))));
+});
+
+const totalDays = computed(() => {
+  return Math.ceil((endDate.value - startDate.value) / (1000 * 60 * 60 * 24)) + 1;
+});
+
+const flatTasks = computed(() => {
+  const result = [];
+  tasks.value.forEach(task => {
+    result.push({ ...task, isParent: true });
+    if (task.children) {
+      task.children.forEach(child => {
+        result.push({ ...child, isParent: false });
+      });
+    }
+  });
+  return result;
+});
+
+const taskData = computed(() => {
+  return tasks.value.map(task => ({
+    id: task.id,
+    name: task.name,
+    start: task.start,
+    end: task.end,
+    progress: task.progress,
+    children: task.children.map(subTask => ({
+      id: subTask.id,
+      name: subTask.name,
+      start: subTask.start,
+      end: subTask.end,
+      progress: subTask.progress,
+    })),
+  }));
+});
+
+const columns = computed(() => [
+  { title: '任务名称', dataIndex: 'name', key: 'name', ellipsis: true },
+  { title: '开始日期', dataIndex: 'start', key: 'start', ellipsis: true },
+  { title: '结束日期', dataIndex: 'end', key: 'end', ellipsis: true },
+  { title: '进度(%)', dataIndex: 'progress', key: 'progress' },
+]);
+
+function toggleCollapse() {
+  isCollapsed.value = !isCollapsed.value;
+}
+
+function formatDate(date) {
+  return date.getDate();
+}
+
+function formatMonth(date) {
+  return date.toLocaleString('default', { month: 'long' });
+}
+
+function isFirstDayOfMonth(date) {
+  return date.getDate() === 1;
+}
+
+function getTaskStyle(task) {
+  const taskStart = new Date(task.start);
+  const taskEnd = new Date(task.end);
+  const duration = (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1;
+  const offset = (taskStart - startDate.value) / (1000 * 60 * 60 * 24);
+
+  return {
+    width: `${(duration / totalDays.value) * 100}%`,
+    left: `${(offset / totalDays.value) * 100}%`,
+  };
+}
+
+function getProgressStyle(task) {
+  return {
+    width: `${task.progress}%`,
+  };
+}
+
+function getDayColor(index) {
+  const date = new Date(startDate.value.getTime() + index * 24 * 60 * 60 * 1000);
+  const day = date.getDay();
+  if (day === 0 || day === 6) {
+    return 'rgba(211, 211, 211, 0.5)';
+  }
+  return 'transparent';
+}
+
+function rowClassName(record) {
+  if (record.children && record.children.length > 0) {
+    return 'parent-task-row';
+  }
+  return '';
+}
 </script>
 
 <style scoped>
-.gantt-container {
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  color: #2c3e50;
   height: 100%;
-}
-
-.search-form {
-  margin-bottom: 16px;
 }
 
 .separator {
-  width: 20px;
+  width: 10px;
   height: 100%;
-  background-color: #f0f0f0;
+  background-color: #f0f2f5;
+  cursor: col-resize;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  border: 1px solid #d9d9d9;
-  user-select: none;
 }
 
-.separator:hover {
-  background-color: #e6f7ff;
-}
-
-.chart-container {
+.gantt-chart {
+  display: flex;
+  flex-direction: column;
   position: relative;
-  min-width: 800px;
+  border: 1px solid #ccc;
+  overflow-x: auto;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .time-axis {
   display: flex;
-  border-bottom: 1px solid #d9d9d9;
-  background-color: #fafafa;
-  height: 40px;
+  background-color: #f4f4f4;
+  border-bottom: 1px solid #ccc;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-.time-cell {
-  border-right: 1px solid #d9d9d9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 500;
+.day {
+  flex: 1;
+  text-align: center;
+  padding: 10px 0;
+  border-right: 1px solid #ccc;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
-.task-rows {
-  position: relative;
+.day:last-child {
+  border-right: none;
 }
 
-.task-row {
-  border-bottom: 1px solid #f0f0f0;
-  position: relative;
-}
-
-.task-bar {
-  position: relative;
-  overflow: hidden;
-}
-
-.task-progress {
+.vertical-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
   z-index: 1;
 }
 
-.task-text {
+.line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #ccc;
+}
+
+.tasks-container {
   position: relative;
-  z-index: 2;
-  font-size: 12px;
+  width: 100%;
+  height: 100%;
+}
+
+.task-row {
+  display:none;
+}
+.bar-container{
+  display:none;
+}
+.task {
+  position: relative;
+  margin: 20px 0;
+  padding: 0 10px;
+}
+.task-name,
+.sub-task-name {
+  font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.sub-task-name{
+  font-weight: normal;
+  padding-left: 20px;
+}
 
-.task-list h4,
-.gantt-chart h4 {
-  margin-bottom: 16px;
-  color: #1890ff;
+.task-bar {
+  position: absolute;
+  top: 17px; /* vertically center inside 54px row */
+}
+
+.progress {
+  background-color: #52c41a; /* Antd success color */
+  height: 100%;
+  border-radius: 5px;
+}
+
+.sub-progress {
+  background-color: blue;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.sub-tasks {
+  margin-left: 20px;
+}
+
+.sub-task {
+  margin: 5px 0;
+}
+
+.sub-task-bar {
+  height: 15px;
+  border-radius: 5px;
+}
+
+::v-deep .parent-task-row {
+  background-color: #f0f8ff;
+  font-weight: bold;
 }
 </style>
