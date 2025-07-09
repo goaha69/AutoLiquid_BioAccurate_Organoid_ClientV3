@@ -67,8 +67,11 @@ export default {
       type: Boolean,
       default: false
     },
+    // 分页显示控制：可接收 string 或 boolean
     showPagination: {
-      type: String | Boolean,
+      // Vue3 中允许的多类型写法应使用数组，而非按位或运算符
+      // 否则在运行时会得到数字 0，导致 instanceof 校验报错
+      type: [String, Boolean],
       default: 'auto'
     },
     /**

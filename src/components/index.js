@@ -34,6 +34,10 @@ import ArticleListContent from '@/components/ArticleListContent'
 import AntdEditor from '@/components/Editor/WangEditor'
 import Dialog from '@/components/Dialog'
 
+// custom input components
+import spInput from '@/components/spInput'
+import spInputNumber from '@/components/spInputNumber'
+
 // xn components
 import vfd from '@/components/flow/FlowDesigner'
 
@@ -72,6 +76,8 @@ export {
   AntdEditor,
   Dialog,
   XCard,
+  spInput,
+  spInputNumber,
   vfd,
   expvfd
 }

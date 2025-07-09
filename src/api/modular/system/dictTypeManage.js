@@ -1,4 +1,4 @@
-import { axios } from '@/utils/axios'
+import { axios } from '@/utils/request'
 
 /**
  * 获取字典类型分页
@@ -53,4 +53,9 @@ export function sysDictTypeDelete(parameter) {
     method: 'post',
     data: parameter
   })
+}
+
+// 添加 dictTypeData 导出以解决导入警告
+export function dictTypeData(parameter) {
+  return sysDictTypeDropDown(parameter)
 } 

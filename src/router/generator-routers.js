@@ -387,6 +387,39 @@ export const generator = (routerMap, parent) => {
   return routerMap.map(item => {
     // eslint-disable-next-line no-unused-vars
     const { title, show, hideChildren, hiddenHeaderContent, target, icon, link, keepAlive } = item.meta || {}
+    
+    // 根据菜单标题自动分配图标（严格按照Vue2项目的图标风格）
+    const getIconByTitle = (title) => {
+      const titleIconMap = {
+        // 实验管理主菜单
+        '实验管理': 'experiment',
+        // 实验管理子菜单 - 使用更符合Vue2项目风格的图标
+        '设备管理': 'desktop',
+        '布局管理': 'layout',
+        '耗材管理': 'shopping-cart',
+        '试剂管理': 'medicine-box',
+        '实验步骤管理': 'branches',
+        '实验流程设置': 'apartment',
+        '实验案例管理': 'book',
+        '实验跟踪': 'bar-chart',
+        '培养箱存储': 'database',
+        '计划任务': 'calendar',
+        '视频监控': 'video-camera',
+        '样品信息表': 'table',
+        // 系统管理
+        '系统管理': 'setting',
+        '平台管理': 'appstore',
+        '业务应用': 'project',
+        '流程中心': 'apartment',
+        '运营管理': 'bar-chart',
+        // 其他常见菜单
+        '首页': 'home',
+        '工作台': 'dashboard',
+        '仪表盘': 'dashboard'
+      }
+      return titleIconMap[title] || null
+    }
+    
     // 使用与Vue2项目完全相同的路径生成逻辑
     const currentPath = item.path || `${parent && parent.path || ''}/${item.key}`
     const currentRouter = {
@@ -433,7 +466,8 @@ export const generator = (routerMap, parent) => {
       })(),
       meta: {
         title: title,
-        icon: icon || undefined,
+        // 优先使用后端提供的图标，如果没有则根据标题自动分配
+        icon: icon || getIconByTitle(title) || undefined,
         target: target,
         link: link,
         keepAlive: keepAlive

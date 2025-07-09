@@ -32,9 +32,12 @@ const ls = {
   }
 }
 
+// 根据环境变量动态设置后端地址，优先读取 VITE_APP_API_BASE_URL，未配置时回退到 /api
+const baseURL = import.meta?.env?.VITE_APP_API_BASE_URL || '/api'
+
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: '/api', // 使用代理路径
+  baseURL,
   timeout: 60000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json',

@@ -32,79 +32,72 @@
     </div>  
 </template>
 
-<script>
-import { defineComponent } from 'vue'
+<script setup>
+import { ref, watch } from 'vue'
 
-export default defineComponent({
-  name: 'SpInput',
-  props: {
-    modelValue: {
-      type: String,
-      default: '',
-    },
-    placeholder: {
-      type: String,
-      default: '请输入数字',
-    },
-    unit: {
-      type: String,
-      default: "",
-    },
-    label: {
-      type: String,
-      default: "",
-    },
-    required: {
-      type: Boolean,
-      default: false,
-    },
-    inputWidth: {
-      type: Number,
-      default: 160,
-    },
-    labelWidth: {
-      type: Number,
-      default: 130,
-    },
-    isError: {
-      type: Boolean,
-      default: false,
-    },
-    rightEmpty: {
-      type: Boolean,
-      default: false,
-    },
-    labelEmpty: {
-      type: Boolean,
-      default: false,
-    },
+defineOptions({
+  name: 'SpInput'
+})
+
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: '',
   },
-  emits: ['update:modelValue'],
-  data() {
-    return {
-      internalValue: this.modelValue,
-    };
+  placeholder: {
+    type: String,
+    default: '请输入数字',
   },
-  watch: {
-    modelValue(newValue) {
-      this.internalValue = newValue;
-    },
+  unit: {
+    type: String,
+    default: "",
   },
-  methods: {
-    handleChange(event) {
-      const value = event.target.value; 
-      if ((value === null || value === '') && this.required) { 
-        this.isError=true;
-        this.internalValue = '';
-        this.$emit('update:modelValue', this.internalValue);
-      } else {
-        this.isError=false;
-        this.internalValue = value;
-        this.$emit('update:modelValue', this.internalValue);
-      }
-    },
+  label: {
+    type: String,
+    default: "",
   },
-});
+  required: {
+    type: Boolean,
+    default: false,
+  },
+  inputWidth: {
+    type: Number,
+    default: 160,
+  },
+  labelWidth: {
+    type: Number,
+    default: 130,
+  },
+  isError: {
+    type: Boolean,
+    default: false,
+  },
+  rightEmpty: {
+    type: Boolean,
+    default: false,
+  },
+  labelEmpty: {
+    type: Boolean,
+    default: false,
+  },
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+const internalValue = ref(props.modelValue)
+
+watch(() => props.modelValue, (newValue) => {
+  internalValue.value = newValue
+})
+
+const handleChange = (event) => {
+  const value = event.target.value
+  if ((value === null || value === '') && props.required) { 
+    emit('update:modelValue', '')
+  } else {
+    emit('update:modelValue', value)
+  }
+}
 </script>
 
 <style scoped>

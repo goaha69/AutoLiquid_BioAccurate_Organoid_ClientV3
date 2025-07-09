@@ -1,5 +1,20 @@
 import { deviceEnquire, DEVICE_TYPE } from '@/utils/device'
 import { mapState } from 'vuex'
+import defaultSettings from '@/config/defaultSettings'
+
+// 获取应用设置的函数
+function getAppSettings() {
+  const storedSettings = localStorage.getItem('appSettings')
+  if (storedSettings) {
+    try {
+      return { ...defaultSettings, ...JSON.parse(storedSettings) }
+    } catch (error) {
+      console.warn('Failed to parse stored app settings:', error)
+      return defaultSettings
+    }
+  }
+  return defaultSettings
+}
 
 const mixin = {
   computed: {
@@ -104,4 +119,4 @@ export function useAppSettings() {
   }
 }
 
-export { mixin, AppDeviceEnquire, mixinDevice }
+export { mixin, AppDeviceEnquire, mixinDevice, getAppSettings }

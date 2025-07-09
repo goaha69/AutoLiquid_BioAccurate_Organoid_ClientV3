@@ -40,7 +40,24 @@ import {
   ThunderboltOutlined,
   RobotOutlined,
   QrcodeOutlined,
-  BoxPlotOutlined
+  BoxPlotOutlined,
+  // 实验管理相关图标
+  ExperimentOutlined,
+  DesktopOutlined,
+  LayoutOutlined,
+  ShoppingCartOutlined,
+  MedicineBoxOutlined,
+  BranchesOutlined,
+  FlowChartOutlined,
+  BookOutlined,
+  CalendarOutlined,
+  VideoCameraOutlined,
+  TableOutlined,
+  DatabaseOutlined,
+  // 新增图标
+  ApartmentOutlined,
+  BarChartOutlined,
+  ProjectOutlined
 } from '@ant-design/icons-vue'
 
 // 图标映射表，用于将字符串类型的图标名称映射到相应的组件
@@ -60,7 +77,23 @@ const iconMap = {
   'thunderbolt': ThunderboltOutlined,
   'robot': RobotOutlined,
   'qrcode': QrcodeOutlined,
-  'box-plot': BoxPlotOutlined
+  'box-plot': BoxPlotOutlined,
+  // 实验管理相关图标映射
+  'experiment': ExperimentOutlined,
+  'desktop': DesktopOutlined,           // 设备管理
+  'layout': LayoutOutlined,             // 布局管理
+  'shopping-cart': ShoppingCartOutlined, // 耗材管理
+  'medicine-box': MedicineBoxOutlined,   // 试剂管理
+  'branches': BranchesOutlined,          // 实验步骤管理
+  'flow-chart': FlowChartOutlined,       // 实验流程设置（备用）
+  'apartment': ApartmentOutlined,        // 实验流程设置
+  'book': BookOutlined,                  // 实验案例管理
+  'bar-chart': BarChartOutlined,         // 实验跟踪/运营管理
+  'calendar': CalendarOutlined,          // 计划任务
+  'video-camera': VideoCameraOutlined,   // 视频监控
+  'table': TableOutlined,                // 样品信息表
+  'database': DatabaseOutlined,          // 培养箱存储
+  'project': ProjectOutlined             // 业务应用
 }
 
 // =======================  递归菜单组件 - 基于Vue2的渲染逻辑  =======================
@@ -82,6 +115,24 @@ const MenuItem = defineComponent({
       return h(icon)
     }
 
+    // 根据菜单标题自动推断图标
+    const getIconByTitle = (title) => {
+      const titleIconMap = {
+        '设备管理': 'desktop',
+        '布局管理': 'layout',
+        '耗材管理': 'shopping-cart',
+        '试剂管理': 'medicine-box',
+        '实验步骤管理': 'branches',
+        '实验流程设置': 'flow-chart',
+        '实验案例管理': 'book',
+        '计划任务': 'calendar',
+        '视频监控': 'video-camera',
+        '样品信息表': 'table',
+        '培养箱存储': 'database'
+      }
+      return titleIconMap[title] || null
+    }
+
     const renderMenuItem = (menu) => {
       const target = menu.meta?.target || null
       const CustomTag = target ? 'a' : RouterLink
@@ -96,13 +147,16 @@ const MenuItem = defineComponent({
         })
       }
 
+      // 如果没有设置图标，尝试根据标题推断
+      const iconName = menu.meta?.icon || getIconByTitle(menu.meta?.title)
+
       return h(
         Menu.Item,
         { key: menu.path },
         {
           default: () => h(CustomTag, props, {
             default: () => [
-              renderIcon(menu.meta?.icon),
+              renderIcon(iconName),
               h('span', {}, menu.meta?.title)
             ]
           })
@@ -120,12 +174,15 @@ const MenuItem = defineComponent({
         })
       }
       
+      // 如果没有设置图标，尝试根据标题推断
+      const iconName = menu.meta?.icon || getIconByTitle(menu.meta?.title)
+      
       return h(
         Menu.SubMenu,
         { key: menu.path },
         {
           title: () => h('span', {}, [
-            renderIcon(menu.meta?.icon),
+            renderIcon(iconName),
             h('span', {}, menu.meta?.title)
           ]),
           default: () => itemArr
