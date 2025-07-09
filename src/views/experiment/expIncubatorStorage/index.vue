@@ -1,539 +1,330 @@
 <template>
-  <div class="incubator-storage">
-    <a-card title="培养箱存储管理" style="margin-bottom: 16px;">
-      <div class="search-form">
-        <a-form layout="inline">
-          <a-form-item label="样品编号">
-            <a-input v-model:value="queryParam.sampleCode" placeholder="请输入样品编号" />
-          </a-form-item>
-          <a-form-item label="培养箱">
-            <a-select v-model:value="queryParam.incubatorId" style="width: 200px;" allowClear>
-              <a-select-option v-for="incubator in incubatorList" :key="incubator.id" :value="incubator.id">
-                {{ incubator.name }}
-              </a-select-option>
-            </a-select>
-          </a-form-item>
-          <a-form-item>
-            <a-button type="primary" @click="handleQuery">查询</a-button>
-            <a-button style="margin-left: 8px" @click="handleReset">重置</a-button>
-          </a-form-item>
-        </a-form>
-      </div>
-    </a-card>
-
-    <a-row :gutter="16">
-      <!-- 左侧培养箱列表 -->
-      <a-col :span="6">
-        <a-card title="培养箱列表" size="small">
-          <div class="incubator-list">
-            <div 
-              v-for="incubator in incubatorList" 
-              :key="incubator.id"
-              :class="['incubator-item', { 'active': selectedIncubator?.id === incubator.id }]"
-              @click="selectIncubator(incubator)"
+  <div class="container">
+    <div class="table-wrapper">
+      <table class="incubator-table">
+        <thead>
+          <tr>
+            <th class="header-cell corner">层\列</th>
+            <th v-for="column in 9" :key="column" class="header-cell">
+              {{ column }}列
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, rowIndex) in incubatorData" :key="rowIndex">
+            <td class="row-header">{{ rowIndex + 1 }}层</td>
+            <td 
+              v-for="(col, colIndex) in row" 
+              :key="colIndex"
+              :class="['data-cell', { 'has-data': col.sampleCode }]"
             >
-              <div class="incubator-name">{{ incubator.name }}</div>
-              <div class="incubator-info">
-                <span>温度: {{ incubator.temperature }}°C</span>
-                <span>湿度: {{ incubator.humidity }}%</span>
-              </div>
-              <div class="incubator-status">
-                <a-tag :color="incubator.status === 1 ? 'green' : 'red'">
-                  {{ incubator.status === 1 ? '运行中' : '停止' }}
-                </a-tag>
-              </div>
-            </div>
-          </div>
-        </a-card>
-      </a-col>
-
-      <!-- 右侧存储网格 -->
-      <a-col :span="18">
-        <a-card :title="selectedIncubator ? `${selectedIncubator.name} - 存储位置` : '请选择培养箱'" size="small">
-          <div v-if="selectedIncubator" class="storage-grid">
-            <!-- 网格表头 -->
-            <div class="grid-header">
-              <div class="grid-cell header-corner">位置</div>
-              <div 
-                v-for="col in gridCols" 
-                :key="col" 
-                class="grid-cell header-col"
-              >
-                {{ col }}
-              </div>
-            </div>
-            
-            <!-- 网格行 -->
-            <div 
-              v-for="row in gridRows" 
-              :key="row" 
-              class="grid-row"
-            >
-              <div class="grid-cell header-row">{{ row }}</div>
-              <div 
-                v-for="col in gridCols" 
-                :key="`${row}-${col}`"
-                :class="['grid-cell', 'storage-cell', getStorageCellClass(row, col)]"
-                @click="handleCellClick(row, col)"
-              >
-                <div class="cell-content">
-                  <div class="position-label">{{ row }}-{{ col }}</div>
-                  <div v-if="getStorageData(row, col)" class="sample-info">
-                    <div class="sample-code">{{ getStorageData(row, col).sampleCode }}</div>
-                    <div class="sample-time">{{ formatTime(getStorageData(row, col).createTime) }}</div>
-                  </div>
-                  <div v-else class="empty-slot">空闲</div>
+              <div class="cell-content" @click="getDataDetail(col)">
+                <div class="coordinates">{{ col.rowIndex + 1 }}-{{ col.colIndex + 1 }}</div>
+                <div v-if="col.sampleCode" class="sample-code">
+                  {{ col.sampleCode }}
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div v-else class="no-incubator">
-            <a-empty description="请从左侧选择一个培养箱查看存储情况" />
-          </div>
-        </a-card>
-      </a-col>
-    </a-row>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <!-- 样品信息模态框 -->
-    <a-modal
-      v-model:open="detailModalVisible"
-      :title="modalTitle"
-      @ok="handleDetailOk"
-      @cancel="handleDetailCancel"
-      width="600px"
+    <a-modal 
+      title="实验数据"
+      v-model:open="visible" 
+      :footer="null" 
+      :maskClosable="false"
+      @cancel="cancelEditForm"
     >
-      <div v-if="selectedStorage">
-        <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="位置">{{ selectedStorage.position }}</a-descriptions-item>
-          <a-descriptions-item label="样品编号">{{ selectedStorage.sampleCode || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="存储时间">{{ formatTime(selectedStorage.createTime) || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="状态">
-            <a-tag :color="selectedStorage.sampleCode ? 'green' : 'default'">
-              {{ selectedStorage.sampleCode ? '已占用' : '空闲' }}
-            </a-tag>
-          </a-descriptions-item>
-          <a-descriptions-item label="备注" :span="2">{{ selectedStorage.remark || '-' }}</a-descriptions-item>
-        </a-descriptions>
-
-        <div v-if="!selectedStorage.sampleCode" style="margin-top: 20px;">
-          <h4>添加样品</h4>
-          <a-form layout="vertical">
-            <a-form-item label="样品编号" required>
-              <a-input v-model:value="newSample.sampleCode" placeholder="请输入样品编号" />
-            </a-form-item>
-            <a-form-item label="备注">
-              <a-textarea v-model:value="newSample.remark" placeholder="请输入备注" :rows="3" />
-            </a-form-item>
-          </a-form>
-        </div>
-
-        <div v-else style="margin-top: 20px;">
-          <a-space>
-            <a-button type="primary" danger @click="removeSample">移除样品</a-button>
-            <a-button @click="editSample">编辑信息</a-button>
-          </a-space>
-        </div>
-      </div>
+      <a-row type="flex">
+        <a-col :span="24">
+          <a-row :gutter="16">
+            <a-col :span="24">
+              <div>
+                <sp-input label="流程" v-model="incubator.flowId" class="input-field"/>
+                <a-button type="primary" class="copy-btn" @click="deleteData">
+                  删除
+                </a-button>
+              </div>
+            </a-col>
+            <a-col :span="24">
+              <div>
+                <sp-input label="样品编码" v-model="incubator.sampleCode" class="input-field"/>
+                <a-button type="primary" class="copy-btn" @click="handleCopy">
+                  复制
+                </a-button>
+              </div>
+            </a-col>
+            <a-col :span="24"><sp-input label="节点" v-model="incubator.nodeId" class="input-field"/></a-col>
+            <a-col :span="24"><sp-input label="步骤" v-model="incubator.stepId" class="input-field"/></a-col>
+            <a-col :span="24"><sp-input label="开始时间" v-model="incubator.startTime" class="input-field"/></a-col>
+            <a-col :span="24"><sp-input label="结束时间" v-model="incubator.endTime" class="input-field"/></a-col>
+          </a-row>
+        </a-col>
+      </a-row>
     </a-modal>
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue'
-import { message } from 'ant-design-vue'
+<script setup>
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { message, Modal } from 'ant-design-vue'
+import { exp_incubator_storage_list, exp_incubator_storage_DeleteData } from '@/api/modular/experiment/expIncubatorStorageManage'
+import SpInput from '@/components/spInput.vue'
 
-export default defineComponent({
-  name: 'ExpIncubatorStorage',
-  data() {
-    return {
-      loading: false,
-      queryParam: {
-        sampleCode: '',
-        incubatorId: null
-      },
-      selectedIncubator: null,
-      incubatorList: [
-        {
-          id: 1,
-          name: '培养箱A',
-          temperature: 37,
-          humidity: 95,
-          status: 1
-        },
-        {
-          id: 2,
-          name: '培养箱B',
-          temperature: 37,
-          humidity: 95,
-          status: 1
-        },
-        {
-          id: 3,
-          name: '培养箱C',
-          temperature: 4,
-          humidity: 80,
-          status: 0
-        }
-      ],
-      gridRows: ['A', 'B', 'C', 'D', 'E', 'F'],
-      gridCols: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      storageData: [
-        {
-          incubatorId: 1,
-          row: 'A',
-          col: 1,
-          position: 'A-1',
-          sampleCode: 'S001',
-          createTime: '2024-01-01 10:00:00',
-          remark: '细胞培养样品'
-        },
-        {
-          incubatorId: 1,
-          row: 'A',
-          col: 3,
-          position: 'A-3',
-          sampleCode: 'S002',
-          createTime: '2024-01-01 11:00:00',
-          remark: '组织样品'
-        },
-        {
-          incubatorId: 2,
-          row: 'B',
-          col: 2,
-          position: 'B-2',
-          sampleCode: 'S003',
-          createTime: '2024-01-01 12:00:00',
-          remark: '实验样品'
-        }
-      ],
-      detailModalVisible: false,
-      modalTitle: '存储位置详情',
-      selectedStorage: null,
-      newSample: {
-        sampleCode: '',
-        remark: ''
-      }
-    }
-  },
-  mounted() {
-    this.loadData()
-  },
-  methods: {
-    async loadData() {
-      try {
-        this.loading = true
-        // 这里应该调用真实的API获取培养箱和存储数据
-        // const response = await exp_incubator_storage_data(this.queryParam)
-        
-        console.log('培养箱存储 - 数据加载完成')
-        setTimeout(() => {
-          this.loading = false
-        }, 500)
-        
-      } catch (error) {
-        console.error('培养箱存储 - 数据加载失败:', error)
-        message.error('数据加载失败: ' + error.message)
-        this.loading = false
-      }
-    },
+const incubatorData = ref([])
+const incubator = ref({})
+const visible = ref(false)
+let refreshTimer = null
 
-    handleQuery() {
-      this.loadData()
-    },
+onMounted(() => {
+  loadData()
+})
 
-    handleReset() {
-      this.queryParam = {
-        sampleCode: '',
-        incubatorId: null
-      }
-      this.selectedIncubator = null
-      this.loadData()
-    },
-
-    selectIncubator(incubator) {
-      this.selectedIncubator = incubator
-      console.log('选择培养箱:', incubator.name)
-    },
-
-    getStorageData(row, col) {
-      if (!this.selectedIncubator) return null
-      return this.storageData.find(item => 
-        item.incubatorId === this.selectedIncubator.id && 
-        item.row === row && 
-        item.col === col
-      )
-    },
-
-    getStorageCellClass(row, col) {
-      const data = this.getStorageData(row, col)
-      return {
-        'occupied': !!data?.sampleCode,
-        'empty': !data?.sampleCode
-      }
-    },
-
-    handleCellClick(row, col) {
-      if (!this.selectedIncubator) {
-        message.warning('请先选择培养箱')
-        return
-      }
-
-      const existingData = this.getStorageData(row, col)
-      this.selectedStorage = existingData || {
-        incubatorId: this.selectedIncubator.id,
-        row: row,
-        col: col,
-        position: `${row}-${col}`,
-        sampleCode: '',
-        createTime: '',
-        remark: ''
-      }
-
-      this.modalTitle = `位置 ${row}-${col} 详情`
-      this.detailModalVisible = true
-      this.newSample = {
-        sampleCode: '',
-        remark: ''
-      }
-    },
-
-    async handleDetailOk() {
-      if (!this.selectedStorage.sampleCode && this.newSample.sampleCode) {
-        // 添加样品
-        try {
-          const newStorage = {
-            ...this.selectedStorage,
-            sampleCode: this.newSample.sampleCode,
-            remark: this.newSample.remark,
-            createTime: new Date().toLocaleString()
-          }
-
-          // 这里应该调用API保存数据
-          // await exp_incubator_storage_add(newStorage)
-
-          // 更新本地数据
-          const existingIndex = this.storageData.findIndex(item => 
-            item.incubatorId === newStorage.incubatorId && 
-            item.row === newStorage.row && 
-            item.col === newStorage.col
-          )
-
-          if (existingIndex >= 0) {
-            this.storageData[existingIndex] = newStorage
-          } else {
-            this.storageData.push(newStorage)
-          }
-
-          message.success('样品添加成功')
-          this.detailModalVisible = false
-        } catch (error) {
-          console.error('添加样品失败:', error)
-          message.error('添加样品失败: ' + error.message)
-        }
-      } else {
-        this.detailModalVisible = false
-      }
-    },
-
-    handleDetailCancel() {
-      this.detailModalVisible = false
-      this.selectedStorage = null
-    },
-
-    async removeSample() {
-      try {
-        // 这里应该调用API删除数据
-        // await exp_incubator_storage_remove(this.selectedStorage)
-
-        // 更新本地数据
-        const index = this.storageData.findIndex(item => 
-          item.incubatorId === this.selectedStorage.incubatorId && 
-          item.row === this.selectedStorage.row && 
-          item.col === this.selectedStorage.col
-        )
-
-        if (index >= 0) {
-          this.storageData.splice(index, 1)
-        }
-
-        message.success('样品移除成功')
-        this.detailModalVisible = false
-      } catch (error) {
-        console.error('移除样品失败:', error)
-        message.error('移除样品失败: ' + error.message)
-      }
-    },
-
-    editSample() {
-      // 编辑样品信息
-      this.newSample.sampleCode = this.selectedStorage.sampleCode
-      this.newSample.remark = this.selectedStorage.remark
-    },
-
-    formatTime(timeStr) {
-      if (!timeStr) return '-'
-      return new Date(timeStr).toLocaleString()
-    }
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer)
   }
 })
+
+const loadData = () => {
+  exp_incubator_storage_list().then((res) => {
+    // 先创建一个包含所有位置信息的完整表格
+    const tableData = Array.from({ length: 25 }, (_, rowIndex) => 
+      Array.from({ length: 9 }, (_, colIndex) => ({
+        rowIndex: rowIndex,
+        colIndex: colIndex,
+        flowId: '',
+        sampleCode: '',
+        nodeId: '',
+        stepId: '',
+        startTime: '',
+        endTime: '',
+        id: null
+      }))
+    )
+    
+    // 然后用实际数据覆盖对应位置
+    const data = res.data
+    for (let k = 0; k < data.length; k++) {
+      const e = data[k]
+      tableData[e.rowIndex][e.colIndex] = e
+    }
+    incubatorData.value = tableData
+  }).catch(err => {
+    console.error('加载数据失败:', err)
+    message.error('加载数据失败: ' + err.message)
+  })
+  
+  // 设置5秒后自动刷新
+  refreshTimer = setTimeout(() => {
+    loadData()
+  }, 5000)
+}
+
+const getDataDetail = (item) => {
+  incubator.value = { ...item }
+  visible.value = true
+}
+
+const cancelEditForm = () => {
+  visible.value = false
+}
+
+// 复制功能
+const handleCopy = async () => {
+  const text = incubator.value.sampleCode
+
+  if (!text) {
+    message.warning('没有可复制的内容')
+    return
+  }
+
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      await fallbackCopyTextToClipboard(text)
+    }
+    message.success('复制成功')
+  } catch (err) {
+    console.error('复制失败:', err)
+    message.error('复制失败，请手动复制')
+  }   
+}
+
+// 降级复制方法
+const fallbackCopyTextToClipboard = (text) => {
+  return new Promise((resolve, reject) => {
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-999999px'
+    textArea.style.top = '-999999px'
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    
+    try {
+      const successful = document.execCommand('copy')
+      document.body.removeChild(textArea)
+      if (successful) {
+        resolve()
+      } else {
+        reject(new Error('复制命令失败'))
+      }
+    } catch (err) {
+      document.body.removeChild(textArea)
+      reject(err)
+    }
+  })
+}
+
+// 删除数据
+const deleteData = async () => {
+  if (!incubator.value.sampleCode && !incubator.value.startTime && !incubator.value.endTime && !incubator.value.flowId) {
+    message.warning('没有可删除的数据')
+    return
+  }
+  
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除Id为 ${incubator.value.id} 的数据吗？`,
+    okText: '确认删除',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        const res = await exp_incubator_storage_DeleteData({ 
+          id: incubator.value.id 
+        })
+        if (res.code === 200) {
+          message.success('删除成功')
+          visible.value = false
+          loadData()
+        } else {
+          message.error(res.message || '删除失败')
+        }
+      } catch (error) {
+        console.error('删除数据时出错:', error)
+        message.error('删除数据时发生错误')
+      }
+    }
+  })
+}
 </script>
 
 <style scoped>
-.incubator-storage {
+.header-cell.corner {
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.incubator-table {
+  table-layout: fixed;
+}
+
+.container {
+  height: 100vh;
+  padding: 20px;
+  background: #f0f2f5;
+}
+
+.table-wrapper {
   height: calc(100vh - 100px);
+  overflow: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.search-form {
-  margin-bottom: 16px;
+.incubator-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 1000px;
 }
 
-.incubator-list {
-  max-height: 70vh;
-  overflow-y: auto;
+.header-cell {
+  background: #fafafa;
+  color: rgba(0,0,0,.85);
+  font-weight: 600;
+  padding: 16px;
+  border: 1px solid #e8e8e8;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-.incubator-item {
+.corner {
+  background: #fafafa;
+  z-index: 3;
+}
+
+.row-header {
+  text-align: center;
+  width: 100px;
+  height: 130px;
+  background: #fafafa;
+  font-weight: 500;
   padding: 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  margin-bottom: 8px;
-  cursor: pointer;
+  border: 1px solid #e8e8e8;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.data-cell {
+  padding: 8px;
+  border: 1px solid #e8e8e8;
+  text-align: center;
   transition: all 0.3s;
+  min-width: 120px;
 }
 
-.incubator-item:hover {
-  border-color: #1890ff;
-  background-color: #f0f8ff;
+.data-cell:hover {
+  background-color: #f5f5f5;
 }
 
-.incubator-item.active {
-  border-color: #1890ff;
+.has-data {
   background-color: #e6f7ff;
 }
 
-.incubator-name {
-  font-weight: 500;
-  margin-bottom: 8px;
-}
-
-.incubator-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-.incubator-status {
-  text-align: center;
-}
-
-.storage-grid {
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.grid-header {
-  display: flex;
-  background-color: #fafafa;
-  border-bottom: 1px solid #d9d9d9;
-}
-
-.grid-row {
-  display: flex;
-  border-bottom: 1px solid #d9d9d9;
-}
-
-.grid-row:last-child {
-  border-bottom: none;
-}
-
-.grid-cell {
-  flex: 1;
-  min-height: 60px;
-  border-right: 1px solid #d9d9d9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-}
-
-.grid-cell:last-child {
-  border-right: none;
-}
-
-.header-corner {
-  background-color: #f0f0f0;
-  font-weight: 500;
-}
-
-.header-col,
-.header-row {
-  background-color: #fafafa;
-  font-weight: 500;
-}
-
-.storage-cell {
-  cursor: pointer;
-  transition: all 0.3s;
-  position: relative;
-}
-
-.storage-cell:hover {
-  background-color: #f0f8ff;
-}
-
-.storage-cell.occupied {
-  background-color: #f6ffed;
-  border-color: #52c41a;
-}
-
-.storage-cell.empty {
-  background-color: #fff;
-}
-
 .cell-content {
-  width: 100%;
-  height: 100%;
+  cursor: pointer;
+  padding: 8px;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 4px;
 }
 
-.position-label {
-  font-size: 10px;
-  color: #999;
-  margin-bottom: 2px;
-}
-
-.sample-info {
-  text-align: center;
+.coordinates {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
 }
 
 .sample-code {
+  font-size: 14px;
+  color: #1890ff;
   font-weight: 500;
-  color: #52c41a;
-  margin-bottom: 2px;
+  word-break: break-all;
 }
 
-.sample-time {
-  font-size: 10px;
-  color: #666;
-}
-
-.empty-slot {
-  color: #ccc;
-  font-size: 10px;
-}
-
-.no-incubator {
-  height: 400px;
+.input-group {
   display: flex;
+  gap: 10px;
   align-items: center;
-  justify-content: center;
+}
+
+.input-field {
+  margin: 12px 0;
+}
+
+.copy-btn {
+  height: 40px;
+  margin-left: 10px;
 }
 </style>
