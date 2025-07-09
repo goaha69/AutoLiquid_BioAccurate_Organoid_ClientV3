@@ -2,28 +2,40 @@
   <a-layout>
     <!-- 左侧搜索和列表 -->
     <a-layout-sider width="500" style="background:#fff;padding:20px">
-      <a-form layout="inline">
-        <a-form-item v-if="hasPerm('exp_video:page')">
-          <a-input v-model:value="name" placeholder="测试用：请输入实验步骤名称" allow-clear />
-          <a-button type="primary" @click="startRecording" :disabled="isRecording" style="margin-left:8px">开始录制</a-button>
-          <a-button danger style="margin-left:8px" @click="stopRecording" :disabled="!isRecording">结束录制</a-button>
-        </a-form-item>
+      <div class="search-wrapper">
+        <!-- 第一行：录制控制 -->
+        <a-form layout="inline" style="margin-bottom: 12px;">
+          <a-form-item v-if="hasPerm('exp_video:page')">
+            <a-input v-model:value="name" placeholder="测试用：请输入实验步骤名称" allow-clear style="width: 280px;" />
+            <a-button type="primary" @click="startRecording" :disabled="isRecording" style="margin-left:8px">开始录制</a-button>
+            <a-button danger style="margin-left:8px" @click="stopRecording" :disabled="!isRecording">结束录制</a-button>
+          </a-form-item>
+        </a-form>
+        
+        <!-- 第二行：搜索条件 -->
+        <a-form layout="inline">
+          <a-form-item label="相机名称" v-if="hasPerm('exp_video:page')">
+            <a-select v-model:value="queryParam.cameraId" placeholder="请选择相机" allow-clear style="width:120px">
+              <a-select-option v-for="(camera,index) in cameras" :key="index" :value="index+1">{{ camera }}</a-select-option>
+            </a-select>
+          </a-form-item>
 
-        <a-form-item label="相机名称" v-if="hasPerm('exp_video:page')">
-          <a-select v-model:value="queryParam.cameraId" placeholder="请选择相机" allow-clear style="width:200px">
-            <a-select-option v-for="(camera,index) in cameras" :key="index" :value="index+1">{{ camera }}</a-select-option>
-          </a-select>
-        </a-form-item>
+          <a-form-item label="录制日期" v-if="hasPerm('exp_video:page')">
+            <a-date-picker 
+              v-model:value="queryParam.videoDate" 
+              placeholder="请选择日期" 
+              allow-clear 
+              style="width:120px"
+              :locale="locale"
+            />
+          </a-form-item>
 
-        <a-form-item label="录制日期" v-if="hasPerm('exp_video:page')">
-          <a-date-picker v-model:value="queryParam.videoDate" placeholder="请选择日期" allow-clear style="width:200px" />
-        </a-form-item>
-
-        <a-form-item>
-          <a-button type="primary" @click="handleQuery" style="margin-right:8px">查询</a-button>
-          <a-button @click="handleReset">重置</a-button>
-        </a-form-item>
-      </a-form>
+          <a-form-item>
+            <a-button type="primary" @click="handleQuery" style="margin-right:8px">查询</a-button>
+            <a-button @click="handleReset">重置</a-button>
+          </a-form-item>
+        </a-form>
+      </div>
 
       <a-table
         :dataSource="dataSource"
@@ -77,8 +89,13 @@ import {
   exp_video_stop
 } from '@/api/modular/experiment/expVideoManage'
 import moment from 'moment'
+import 'moment/locale/zh-cn'
 import { VideoCameraOutlined } from '@ant-design/icons-vue'
 import { usePermission } from '@/hooks/usePermission'
+import locale from 'ant-design-vue/es/date-picker/locale/zh_CN'
+
+// 设置moment为中文
+moment.locale('zh-cn')
 
 const { hasPerm } = usePermission()
 
@@ -253,6 +270,31 @@ function customRow(record) {
 </script>
 
 <style scoped>
+.search-wrapper {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+}
+
+.search-wrapper .ant-form {
+  margin-bottom: 0;
+}
+
+.search-wrapper .ant-form-item {
+  margin-bottom: 0;
+  margin-right: 12px;
+}
+
+.search-wrapper .ant-form-item:last-child {
+  margin-right: 0;
+}
+
+.search-wrapper .ant-form-item-label {
+  padding-right: 8px;
+}
+
 .video-placeholder {
   height: 500px;
   display: flex;
