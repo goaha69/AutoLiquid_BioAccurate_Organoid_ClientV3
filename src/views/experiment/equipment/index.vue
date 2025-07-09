@@ -91,6 +91,7 @@
                     <a v-if="record.paramsPage?.includes('debugKeyto')" @click="handleDebug(record, 'debugKeyto')">调试</a>
                     <a v-if="record.paramsPage?.includes('debugMisumi')" @click="handleDebug(record, 'debugMisumi')">调试</a>
                     <a v-if="record.paramsPage?.includes('debugBarcode')" @click="handleDebug(record, 'debugBarcode')">调试</a>
+                    <a v-if="record.paramsPage?.includes('debugVisionRecognition')" @click="handleDebug(record, 'debugVisionRecognition')">调试</a>
                   </a-menu-item>
                   <a-menu-item v-if="hasPerm('exp_equipment:scale') && record.isThirdParty === false">
                     <a @click="handleSetScale(record)">设置scale</a>
@@ -127,6 +128,7 @@
     <DebugMisumi ref="debugMisumiRef" @ok="handleOk" />
     <DebugKeyto ref="debugKeytoRef" @ok="handleOk" />
     <DebugBarcode ref="debugBarcodeRef" @ok="handleOk" />
+    <DebugVisionRecognition ref="debugVisionRecognitionRef" @ok="handleOk" />
   </div>
 </template>
 
@@ -152,6 +154,7 @@ import DebugMicroscope from './debugMicroscope.vue'
 import DebugMisumi from './debugMisumi.vue'
 import DebugKeyto from './debugKeyto.vue'
 import DebugBarcode from './debugBarcode.vue'
+import DebugVisionRecognition from './debugVisionRecognition.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -182,6 +185,7 @@ const debugMicroscopeRef = ref(null)
 const debugMisumiRef = ref(null)
 const debugKeytoRef = ref(null)
 const debugBarcodeRef = ref(null)
+const debugVisionRecognitionRef = ref(null)
 
 // 表格列配置
 const columns = computed(() => {
@@ -392,7 +396,8 @@ function handleDebug(record, debugType) {
     'debugMicroscope': debugMicroscopeRef,
     'debugKeyto': debugKeytoRef,
     'debugMisumi': debugMisumiRef,
-    'debugBarcode': debugBarcodeRef
+    'debugBarcode': debugBarcodeRef,
+    'debugVisionRecognition': debugVisionRecognitionRef
   }
   
   const ref = refMap[debugType]

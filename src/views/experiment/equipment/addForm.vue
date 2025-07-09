@@ -9,42 +9,44 @@
           </div>
 
           <div style="margin-top:10px;">            
-            <span class="span-label">是否第三方::</span>
+            <span class="span-label">是否第三方：</span>
             <a-radio-group v-model:value="attributeData.isThirdParty" class="my-radio-group">
               <a-radio :value="true">是</a-radio>
               <a-radio :value="false">否</a-radio>
             </a-radio-group>
 
-            <span class="span-label" style="margin-left:40px;">通讯协议::</span>
-            <a-select class="my-select" placeholder="请选择通讯协议:" v-model:value="attributeData.communicatioProtocol" @change="changeProtocolType">
+            <span class="span-label" style="margin-left:40px;">通讯协议：</span>
+            <a-select class="my-select" placeholder="请选择通讯协议" v-model:value="attributeData.communicatioProtocol" @change="changeProtocolType">
               <a-select-option v-for="(item, index) in protocolTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
           </div>
 
           <div style="margin-top:10px;" v-if="attributeData.isThirdParty">
-            <sp-input label="控制类::" :labelWidth="120" :inputWidth="580" v-model="attributeData.controlClass" />
+            <sp-input label="控制类：" :labelWidth="120" :inputWidth="580" v-model="attributeData.controlClass"/>
           </div>
 
-          <div style="margin-top:10px;" v-if="attributeData.communicatioProtocol<3">            
+          <div style="margin-top:10px;" v-if="attributeData.communicatioProtocol < 3">            
             <sp-input label="主机" :required="true" :isError="errors.host" :labelWidth="120" v-model="attributeData.host" />
             <sp-input-number label="端口" :step="1" :required="true" :isError="errors.port" :labelWidth="120" v-model="attributeData.port" />
           </div>
 
-          <div style="margin-top:10px;" v-if="attributeData.communicatioProtocol>=3">            
+          <div style="margin-top:10px;" v-if="attributeData.communicatioProtocol >= 3">            
             <sp-input label="Com口" :required="true" :isError="errors.comPort" :labelWidth="120" v-model="attributeData.comPort" />
             <sp-input-number label="波特率" :step="1" :required="true" :isError="errors.baudRate" :labelWidth="120" v-model="attributeData.baudRate" />
           </div>
 
           <div style="margin-top:10px;">   
             <sp-input label="生产厂商" :labelWidth="120" v-model="attributeData.manufacturer" />
-            <span class="span-label">生产日期::</span>
-            <a-date-picker placeholder="请选择生产日期:" class="my-data-picker" v-model:value="attributeData.manufactureDate" @change="onDateChange" />
+
+            <span class="span-label">生产日期：</span>
+            <a-date-picker placeholder="请选择生产日期" class="my-data-picker" v-model:value="attributeData.manufactureDate" @change="onDateChange"/>
           </div>
 
           <div style="margin-top:10px;">   
             <sp-input label="配置url" :labelWidth="120" v-model="attributeData.paramsPage" />
-            <span class="span-label">设备类型::</span>
-            <a-select class="my-select" placeholder="请选择设备类型:" v-model:value="attributeData.type" @change="equipmentTypeFunc">
+
+            <span class="span-label">设备类型：</span>
+            <a-select class="my-select" placeholder="请选择设备类型" v-model:value="attributeData.type" @change="equipmentTypeFunc">
               <a-select-option v-for="(item, index) in equipmentTypes" :key="index" :value="item.code">{{ item.value }}</a-select-option>
             </a-select>
           </div>
@@ -63,14 +65,10 @@ import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
 import SpInputNumber from '@/components/spInputNumber.vue'
 import SpInput from '@/components/spInput.vue'
 
-defineOptions({
-  name: 'EquipmentAddForm'
-})
-
+// 定义emits
 const emit = defineEmits(['ok'])
 
-const labelCol_JG = { xs: {span: 24}, sm: {span: 3} }
-const wrapperCol_JG = { xs: {span: 24}, sm: { span: 20} }
+// 响应式数据
 const visible = ref(false)
 const formLoading = ref(false)
 const form = ref({})
@@ -92,7 +90,8 @@ const attributeData = reactive({
   baudRate: 0,
   manufacturer: '',
   paramsPage: '',  
-  isThirdParty: false        
+  isThirdParty: false,
+  manufactureDate: null
 })
 
 const pipetteAttribute = reactive({
@@ -137,19 +136,21 @@ const errors = reactive({
   baudRate: false
 })
 
+// 生命周期
 onMounted(() => {
   manufactureDateString.value = moment().format('YYYY-MM-DD')
-  sysDictTypeDropDownFunc()
+  loadSysDictTypeDropDown()
 })
 
-const resetAttribute = () => {
+// 方法
+function resetAttribute() {
   Object.assign(attributeData, {
     id: 0,
     code: '',
     name: '',          
     type: 0,
     communicatioProtocol: 1,
-    manufactureDate: manufactureDateString.value,
+    manufactureDate: null,
     remark: '',
     controlClass: '',
     host: '',
@@ -204,49 +205,55 @@ const resetAttribute = () => {
   })
 }
 
-const onDateChange = (date) => {
+function onDateChange(date) {
   manufactureDateString.value = moment(date).format('YYYY-MM-DD')
 }
 
-const changeProtocolType = (value) => {
-  // Protocol type change logic
+function changeProtocolType(value) {
+  // 协议类型改变时的处理
 }
 
-const equipmentTypeFunc = (value) => {
-  // Equipment type change logic
+function equipmentTypeFunc(value) {
+  // 设备类型改变时的处理
 }
 
-const sysDictTypeDropDownFunc = () => {
+function loadSysDictTypeDropDown() {
+  // 加载协议类型字典
   sysDictTypeDropDown({ code: 'protocol_type' }).then((res) => {
-    protocolTypes.value = res.data
-    protocolTypes.value.forEach((item) => {
-      item.code = parseInt(item.code)
-    })
+    if (res.success) {
+      protocolTypes.value = res.data.map(item => ({
+        ...item,
+        code: parseInt(item.code)
+      }))
+    }
   })
 
+  // 加载设备类型字典
   sysDictTypeDropDown({ code: 'equipment_type' }).then((res) => {
-    equipmentTypes.value = res.data
-    equipmentTypes.value.forEach((item) => {
-      item.code = parseInt(item.code)
-    })
+    if (res.success) {
+      equipmentTypes.value = res.data.map(item => ({
+        ...item,
+        code: parseInt(item.code)
+      }))
+    }
   })
 }
 
-const add = (record) => {
+function add(record) {
   visible.value = true
   formLoading.value = false
-  resetAttribute() 
+  resetAttribute()
 }
 
-const validateFields = () => {
-  var result = true
+function validateFields() {
+  let result = true
   errors.code = !attributeData.code
   errors.name = !attributeData.name
   errors.host = attributeData.communicatioProtocol < 3 ? !attributeData.host : false
   errors.port = attributeData.communicatioProtocol < 3 ? !attributeData.port : false
   errors.comPort = attributeData.communicatioProtocol >= 3 ? !attributeData.comPort : false
   errors.baudRate = attributeData.communicatioProtocol >= 3 ? !attributeData.baudRate : false
-  console.log(errors)
+  
   for (const key in errors) {          
     if (errors[key]) {            
       result = false
@@ -256,43 +263,51 @@ const validateFields = () => {
   return result
 }
 
-const handleSubmit = () => {
-  console.log('=================handleSubmit=================')
-  if (!validateFields())
+function handleSubmit() {
+  if (!validateFields()) {
     return
+  }
 
   formLoading.value = true
+  
   const host = attributeData.communicatioProtocol >= 3 ? '' : attributeData.host
   const port = attributeData.communicatioProtocol >= 3 ? 0 : attributeData.port
   const comPort = attributeData.communicatioProtocol >= 3 ? attributeData.comPort : ''
   const baudRate = attributeData.communicatioProtocol >= 3 ? attributeData.baudRate : 0
 
-  attributeData.baudRate = baudRate
-  attributeData.comPort = comPort
-  attributeData.host = host
-  attributeData.port = port
-  attributeData.manufactureDate = manufactureDateString.value    
+  const submitData = {
+    ...attributeData,
+    baudRate,
+    comPort,
+    host,
+    port,
+    manufactureDate: manufactureDateString.value
+  }
   
-  if ((!attributeData.isThirdParty && attributeData.type === 0) || (attributeData.isThirdParty === true && attributeData.type === 2))
-    attributeData.pipetteAttribute = pipetteAttribute   
+  if ((!attributeData.isThirdParty && attributeData.type === 0) || (attributeData.isThirdParty === true && attributeData.type === 2)) {
+    submitData.pipetteAttribute = pipetteAttribute
+  }
   
-  exp_equipment_add(attributeData).then((res) => {
+  exp_equipment_add(submitData).then((res) => {
     if (res.success) {
       message.success('新增成功')
       visible.value = false
-      emit('ok', attributeData)
+      emit('ok', submitData)
+      resetAttribute()
     } else {
       message.error(res.message)
     }
-  }).finally((res) => {
+  }).finally(() => {
     formLoading.value = false
   })
 }
 
-const handleCancel = () => {
+function handleCancel() {
+  resetAttribute()
   visible.value = false
 }
 
+// 暴露方法给父组件
 defineExpose({
   add
 })

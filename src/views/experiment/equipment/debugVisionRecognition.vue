@@ -1,106 +1,87 @@
 <template>
-  <a-modal :title="'调试设备--' + equipmentName" :width="1000" :open="visible" :maskClosable="false" @cancel="handleCancel" :footer="null">
+  <a-modal :title="'调试设备--' + equipmentName" :width="1200" :open="visible" :maskClosable="false" @cancel="handleCancel" :footer="null">
     <a-spin :spinning="formLoading">
-      <a-form :form="form" >
-         <a-form-item style="display: none;" has-feedback>
-          <a-input v-decorator="['id']" />
-        </a-form-item>
-
-        <div>
-            <a-form-item>
-              <a-button type="primary" @click.stop="btnConnect">连接设备</a-button>
-                <a-divider type="vertical" />
-                <a-button type="primary" @click="btnInitMachine">全部复位</a-button>
-            </a-form-item>
-        </div>
-
+      <a-form :model="form">
+        <a-row :gutter="[16,24]">
+          <a-col :span="8">
+            <a-button type="primary" @click="btnConnect()">连接设备</a-button>  
+          </a-col>
+          <a-col :span="8">
+            <div style="display: flex; flex-direction: row; align-items: center;">
+              <a-input v-model:value="resultcode" style="margin-right:10px;"></a-input>
+              <a-button type="primary" @click="beginRecognition()">开始识别</a-button>
+            </div>
+          </a-col>
+        </a-row>
       </a-form>
     </a-spin>
   </a-modal>
 </template>
 
-<script>
-  import {connect,doCmd} from '@/api/modular/experiment/debug'
-  export default {
-    data() {
-      return {
-        visible: false,
-        confirmLoading: false,
-        formLoading: false,
-        form: this.$form.createForm(this),
-        equipmentName:'',
-        cmdParam:''
-      }
-    },
-    methods: {
-      btnInitMachine()
-      {
+<script setup>
+import { ref, reactive } from 'vue'
+import { message } from 'ant-design-vue'
+import { connect, doCmd } from '@/api/modular/experiment/debug'
 
-      },
-      /**
-       * 初始化方法
-       */
-      debug(record) {
-        this.visible = true
-        this.equipmentName=record.name
-        setTimeout(() => {
-          this.form.setFieldsValue({
-            id: record.id,
-          })
-        }, 100)     
-      },
-      btnConnect() {
-        const data = this.form.getFieldsValue()
-        console.log('连接设备ID:'+data.id)
-        connect(data).then((res) => {
-          if (res.success) {
-            this.$message.success('设备连接成功')
-            this.$refs.table.refresh()
-          } else {
-            this.$message.error('设备连接失败:' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('设备连接错误:' + err.message)
-        })
-      },
-      btnInitCmd(cmd) {
-        const data = this.form.getFieldsValue()
-        data.cmd=cmd+'I'
-        doCmd(data).then((res) => {
-          if (res.success) {
-          } else {
-            this.$message.error('执行命令失败::' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('执行命令错误::' + err.message)
-        })
-      },      
-      btnDoCmd() {
-        const data = this.form.getFieldsValue()
-        data.cmd=this.cmdParam
-        if(!this.cmdParam || this.cmdParam.trim().length === 0)
-        {
-          this.$message.error('请输入命令!')
-            return;
-        }
-        doCmd(data).then((res) => {
-          if (res.success) {
-          } else {
-            this.$message.error('执行命令失败::' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('执行命令错误::' + err.message)
-        })
-      }, 
-      handleCancel() {
-        this.form.resetFields()
-        this.visible = false
-      }
+// 定义emits
+const emit = defineEmits(['ok'])
+
+// 响应式数据
+const visible = ref(false)
+const confirmLoading = ref(false)
+const formLoading = ref(false)
+const equipmentName = ref('')
+const resultcode = ref('')
+
+const form = reactive({
+  id: ''
+})
+
+// 方法
+function debug(record) {
+  visible.value = true
+  equipmentName.value = record.name
+  form.id = record.id
+}
+
+function handleCancel() {
+  visible.value = false
+  form.id = ''
+  resultcode.value = ''
+}
+
+function btnConnect() {
+  const data = { ...form }
+  console.log('连接设备ID：' + data.id)
+  connect(data).then((res) => {
+    console.log(res.data)
+    if (res.success) {
+      message.success('设备连接成功')
+      emit('ok')
+    } else {
+      message.error('设备连接失败：' + res.message)
     }
-  }
+  }).catch((err) => {
+    message.error('设备连接错误：' + err.message)
+  })
+}
+
+function beginRecognition() {
+  const data = { ...form }
+  data.param = { "cmd": "beginRecognition" }
+  doCmd(data).then((res) => {
+    resultcode.value = res.data
+  })
+}
+
+// 暴露方法给父组件
+defineExpose({
+  debug
+})
 </script>
+
 <style scoped>
 .form-footer {
-  text-align: right; /* 使按钮居中 */
+  text-align: right; /* 使按钮居右 */
 }
 </style>
