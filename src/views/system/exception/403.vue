@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ExceptionPage } from '@/components/Exception';
+import ExceptionPage from '@/components/Exception';
 </script>
 
 <style scoped>

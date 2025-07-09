@@ -1,34 +1,32 @@
 <template>
-  <a-modal :title="title" :width="(this.attributeData.type === 3 || this.attributeData.type === 4 || this.attributeData.type === 5 || this.attributeData.type === 7 || this.attributeData.type === 9)?(600+(this.currentConsumableTag.colCount+1)*37):800" :open="visible" :maskClosable="false" @ok="handleSubmit" @cancel="handleCancel">
-    <consumableedit-form ref="consumableeditForm" @ok="handleOk" />
+  <a-modal :title="title" :width="(attributeData.type === 3 || attributeData.type === 4 || attributeData.type === 5 || attributeData.type === 7 || attributeData.type === 9) ? (600 + (currentConsumableTag?.colCount + 1) * 37) : 800" :open="visible" :maskClosable="false" @ok="handleSubmit" @cancel="handleCancel">
+    <consumable-edit-form ref="consumableEditFormRef" @ok="handleOk" />
     <a-spin :spinning="formLoading">
       <div style="display: flex; clear: both;">
         <div style="float:left;height:auto;">
           <a-row :gutter="8">
-            <div>            
-              <sp-input label="步骤编号" :required="true" :isError="errors.code" v-model="attributeData.code" style="display:none"/>
+            <div>
               <sp-input label="步骤名称" :required="true" :isError="errors.name" :labelWidth="90" :inputWidth="200" v-model="attributeData.name" />
-            </div>          
+            </div>
           </a-row>
 
-          <a-row :gutter="8" v-if="attributeData.type<=101 || attributeData.type==801 || attributeData.type==901  || attributeData.type==1001">
+          <a-row :gutter="8" v-if="attributeData.type <= 101 || attributeData.type === 801 || attributeData.type === 901 || attributeData.type === 1001">
             <div style="margin-top:10px;">
-              <span class="span-label" style="width:100px;">设备：</span> 
-              <a-select style="width: 200px" placeholder="请选择设备" v-model="attributeData.equipmentId" @change="equipmentChange">
-                <a-select-option v-for="(item, index) in equipmentData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <span class="span-label" style="width:100px;">设备：</span>
+              <a-select style="width: 200px" placeholder="请选择设备" v-model:value="attributeData.equipmentId" @change="equipmentChange">
+                <a-select-option v-for="item in equipmentData" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
           </a-row>
 
           <!-- 取枪头 -->
-          <a-row :gutter="8" v-if="attributeData.type===1">
+          <a-row :gutter="8" v-if="attributeData.type === 1">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">枪头类型：</span>
-              <a-select style="width: 100px" v-model="attributeData.liquidRange">
-                <a-select-option v-for="(item, index) in liquidRanges" :key="index" :value="item.code">{{ item.value }}</a-select-option>
+              <a-select style="width: 100px" v-model:value="attributeData.liquidRange">
+                <a-select-option v-for="item in liquidRanges" :key="item.code" :value="item.code">{{ item.value }}</a-select-option>
               </a-select>
               <span class="span-unit">(μl)</span>
-              <!-- <span class="span-label">试剂：</span> -->              
             </div>
           </a-row>
 
@@ -38,13 +36,13 @@
               <span class="span-label" style="width:200px;">枪头是否退回原位：</span>
               <a-radio-group  v-model="attributeData.releaseTipSourcePos">
                 <a-radio v-for="(item, index) in yesnos" :key="index" :value="item.code">{{ item.value }}</a-radio>
-              </a-radio-group>  
+              </a-radio-group>
 
               <span class="span-label" style="width:200px;">退回原位枪头是否复用：</span>
               <a-radio-group  v-model="attributeData.useReleaseTipSourcePos">
                 <a-radio v-for="(item, index) in yesnos" :key="index" :value="item.code">{{ item.value }}</a-radio>
               </a-radio-group>
-              
+
             </div>
           </a-row>
 
@@ -52,64 +50,64 @@
           <a-row :gutter="8" v-if="attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">耗材：</span>
-              <a-select style="width: 200px" placeholder="请选择耗材" v-model="attributeData.consumableTagId" @change="consumableTagChange">
-                <a-select-option v-for="(item, index) in consumableTagData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 200px" placeholder="请选择耗材" v-model:value="attributeData.consumableTagId" @change="consumableTagChange">
+                <a-select-option v-for="item in consumableTagData" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
                <a-button type="primary" style="margin-left:5px;" @click="btnGetConsumable()">耗材参数</a-button>
             </div>
-          </a-row> 
+          </a-row>
           <a-row :gutter="8" v-if="attributeData.type===3">
             <div style="margin-top:10px;">
                 <span class="span-label" style="width:100px;">关闭液面探测：</span>
                 <a-checkbox v-model="attributeData.isStepStopDetectLiquid" />
-              </div>  
+              </div>
           </a-row>
           <a-row :gutter="8" v-if="attributeData.type===4">
             <div style="margin-top:10px;">
                 <span class="span-label" style="width:100px;">喷液完成后吸喷：</span>
                 <a-checkbox v-model="attributeData.isStepAbsorAndJet" />
-              </div>  
+              </div>
           </a-row>
           <a-row :gutter="8" v-if="attributeData.type===1 || attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">通道数：</span>
               <a-select style="width: 80px" v-model="attributeData.channelRow">
-                <a-select-option v-for="(item, index) in channelRows" :key="index" :value="item">{{ item }}</a-select-option>
+                <a-select-option v-for="item in channelRows" :key="item" :value="item">{{ item }}</a-select-option>
               </a-select>
               <span class="span-unit">行</span>
               <a-select style="width: 80px;margin-left:10px;" v-model="attributeData.channelCol">
-                <a-select-option v-for="(item, index) in channelRows" :key="index" :value="item">{{ item }}</a-select-option>
+                <a-select-option v-for="item in channelRows" :key="item" :value="item">{{ item }}</a-select-option>
               </a-select>
               <span class="span-unit">列</span>
             </div>
-          </a-row>   
+          </a-row>
           <a-row :gutter="8" v-if="attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">试剂：</span>
-              <a-select style="width: 200px" placeholder="请选择试剂" v-model="attributeData.liquidId">
-                <a-select-option v-for="(item, index) in liquidData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 200px" placeholder="请选择试剂" v-model:value="attributeData.liquidId">
+                <a-select-option v-for="item in liquidData" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
-          </a-row>     
+          </a-row>
           <a-row :gutter="8" v-if="attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <sp-input-number label="体积" :labelWidth="90" :inputWidth="80" unit="μl" v-model="attributeData.volume"/>
 
               <sp-input-number label="混合次数" :labelWidth="70" :inputWidth="70" :rightEmpty="true" v-if="attributeData.type===5" v-model="attributeData.mixTime" :step="1" />
-              
+
              </div>
           </a-row>
           <a-row :gutter="8" v-if="attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <sp-input-number label="混合间隔" :labelWidth="70" :inputWidth="70" :rightEmpty="true" v-if="attributeData.type===5" v-model="attributeData.mixInterval" :step="1" />
-              
+
               <sp-input-number label="X偏移" :labelWidth="90" :inputWidth="70" v-model="attributeData.xOffset"/>
              </div>
           </a-row>
           <a-row :gutter="8" v-if="attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <sp-input-number label="等待时间" :labelWidth="80" :inputWidth="70" unit="min" :rightEmpty="true" v-if="attributeData.type===5" v-model="attributeData.waitTime" :step="1" />
-              
+
               <sp-input-number label="Y偏移" :labelWidth="90" :inputWidth="70" v-model="attributeData.yOffset"/>
             </div>
           </a-row>
@@ -122,8 +120,8 @@
           <a-row :gutter="8" v-if="attributeData.type===3 || attributeData.type===4 || attributeData.type===5">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">特殊方法：</span>
-              <a-select style="width: 180px" v-model="attributeData.specialMethod">
-                <a-select-option v-for="(item, index) in specialMethods" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 180px" v-model:value="attributeData.specialMethod">
+                <a-select-option v-for="item in specialMethods" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
           </a-row>
@@ -131,8 +129,8 @@
           <a-row :gutter="8" v-if="attributeData.type===1">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">特殊方法：</span>
-              <a-select style="width: 180px" v-model="attributeData.specialMethod">
-                <a-select-option v-for="(item, index) in tipSpecialMethods" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 180px" v-model:value="attributeData.specialMethod">
+                <a-select-option v-for="item in tipSpecialMethods" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
           </a-row>
@@ -150,8 +148,8 @@
           <a-row :gutter="8" v-if="attributeData.type===7">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">夹抓源盘：</span>
-              <a-select style="width: 200px" placeholder="请选择夹抓源盘" v-model="attributeData.consumableTagId"  @change="consumableTagChange">
-                <a-select-option v-for="(item, index) in consumableTagData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 200px" placeholder="请选择夹抓源盘" v-model:value="attributeData.consumableTagId"  @change="consumableTagChange">
+                <a-select-option v-for="item in consumableTagData" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
           </a-row>
@@ -160,16 +158,16 @@
           <a-row :gutter="8" v-if="attributeData.type===9">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">夹抓源盘：</span>
-              <a-select style="width: 200px" placeholder="请选择夹抓源盘" v-model="attributeData.consumableTagId"  @change="consumableTagChange">
-                <a-select-option v-for="(item, index) in consumableTagData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 200px" placeholder="请选择夹抓源盘" v-model:value="attributeData.consumableTagId"  @change="consumableTagChange">
+                <a-select-option v-for="item in consumableTagData" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
           </a-row>
           <a-row :gutter="8" v-if="attributeData.type===9">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">目标舱位：</span>
-              <a-select style="width: 250px" placeholder="请选择目标舱位" v-model="attributeData.targetSpaceId" @change="targetSpaceChange">
-                <a-select-option v-for="(item, index) in shippingSpaceData" :key="index" :value="item.id">{{ item.name }}</a-select-option>
+              <a-select style="width: 250px" placeholder="请选择目标舱位" v-model:value="attributeData.targetSpaceId" @change="targetSpaceChange">
+                <a-select-option v-for="item in shippingSpaceData" :key="item.id" :value="item.id">{{ item.name }}</a-select-option>
               </a-select>
             </div>
           </a-row>
@@ -197,12 +195,12 @@
               <sp-input-number label="Z偏移" :labelWidth="90" :inputWidth="70" v-model="attributeData.zOffset"/>
             </div>
           </a-row>
-          
+
           <!-- 脚本命令  -->
           <a-row :gutter="8" v-if="attributeData.type===0" style="height:335px;">
             <div style="margin-top:10px;display: flex; align-items: flex-start;">
               <span class="span-label" style="width:100px;">脚本命令：</span>
-              <a-textarea placeholder="请输入脚本命令" style="width:500px;font-size:16px;color:black;" rows="15" v-model="attributeData.cmdScript" allow-clear/>
+              <a-textarea placeholder="请输入脚本命令" style="width:500px;font-size:16px;color:black;" rows="15" v-model:value="attributeData.cmdScript" allow-clear/>
               <a-button type="primary" style="margin-left:5px;" @click="btnDoCmd()" :loading="scriptRunning">执行</a-button>
             </div>
           </a-row>
@@ -211,8 +209,8 @@
           <a-row :gutter="8" v-if="attributeData.type>100">
             <div style="margin-top:10px;">
               <span class="span-label" style="width:100px;">设备事件：</span>
-              <a-select style="width: 250px" placeholder="请选择设备事件" v-model="attributeData.executeMethod" @change="methodChange">
-                <a-select-option v-for="(item, index) in controlMethodData" :key="index" :value="item.methodName">{{ item.summary }}</a-select-option>
+              <a-select style="width: 250px" placeholder="请选择设备事件" v-model:value="attributeData.executeMethod" @change="methodChange">
+                <a-select-option v-for="item in controlMethodData" :key="item.methodName" :value="item.methodName">{{ item.summary }}</a-select-option>
               </a-select>
               <a-button type="primary" style="margin-left:5px;" @click="doMethod()" :loading="scriptRunning">执行</a-button>
             </div>
@@ -220,13 +218,13 @@
           <a-row :gutter="8" v-if="attributeData.type>100 && selectMethod!=null" style="height: auto;">
             <div style="margin-top:10px;">
               <a-table size="middle" :columns="columns" :dataSource="selectMethod.parameters" style="margin-left:100px;"
-              :pagination="false" rowKey="paramName"> 
-                <span slot="value" slot-scope="text, record">
+              :pagination="false" rowKey="paramName">
+                <template #value="{ text, record }">
                    <sp-input v-model="record.value" :labelEmpty="true" placeholder="请输入值"/>
-                </span>
+                </template>
               </a-table>
             </div>
-          </a-row>          
+          </a-row>
 
           <a-row :gutter="8">
             <div style="margin-top:10px;">
@@ -242,7 +240,7 @@
           </a-row> -->
         </div>
 
-        <div v-if="(attributeData.type === 3 || attributeData.type === 4 || attributeData.type === 5 || attributeData.type === 7 || attributeData.type === 9) && currentConsumableTag!=null" 
+        <div v-if="(attributeData.type === 3 || attributeData.type === 4 || attributeData.type === 5 || attributeData.type === 7 || attributeData.type === 9) && currentConsumableTag!=null"
         style="float:right;height:100%;margin-left:20px;padding:10px;padding-right:20px;background-color:#EBEEF5">
           <a-row :gutter="8"
             :style="{
@@ -251,12 +249,12 @@
             <table>
               <tr v-for="(r, i) in holes" :key="i">
                   <td v-for="(c, j) in r" :key="j">
-                      <a-button 
+                      <a-button
                           v-if=" i > 0  && j > 0"
                           style="width:30px;height:30px;border:0px;"
                           :class="{holecolorselected:holes[i][j].isSelected}"
                           shape="circle"
-                          @click="selectHole(i,j)"></a-button>  
+                          @click="selectHole(i,j)"></a-button>
                       <a-button style="width:30px;height:30px;background-color:#EBEEF5;color:black;border:0px;" shape="circle" type="text" disabled v-if="i === 0 && j> 0">{{numbers[j-1]}}</a-button>
                       <a-button style="width:30px;height:30px;background-color:#EBEEF5;color:black;border:0px;" shape="circle" type="text" disabled v-if="j === 0 && i> 0">{{letters[i-1]}}</a-button>
                   </td>
@@ -267,643 +265,600 @@
       </div>
     </a-spin>
   </a-modal>
-
 </template>
 
-<script>
-  import { defineComponent } from 'vue'
-  import { message } from 'ant-design-vue'
-  import {doMethod,doCmd} from '@/api/modular/experiment/debug'  
-  import {exp_flow_step_add,exp_flow_step_edit} from '@/api/modular/experiment/expFlowStepManage'
-  import {sysDictTypeDropDown } from '@/api/modular/system/dictManage'
-  import { exp_liquid_list } from '@/api/modular/experiment/liquidManage'
-  import { exp_equipment_list,exp_equipment_getControlMethods,exp_equipment_getPipetteAttribute} from '@/api/modular/experiment/equipmentManage'
-  import { exp_consumable_list,exp_consumable_getConsumableTags,exp_getConsumable_Param } from '@/api/modular/experiment/consumableManage'
-  import { exp_layout_getShippingSpaces} from '@/api/modular/experiment/layoutManage'
-  import SpInputNumber from '@/components/spInputNumber.vue';
-  import SpInput from '@/components/spInput.vue';
-  import consumableeditForm from '../consumable/editForm.vue'
-  
-  export default defineComponent({
-    components: {
-      SpInputNumber,
-      SpInput,
-      consumableeditForm
-    },
-    data () {
-      return {
-        visible: false,
-        title: '实验步骤',
-        formLoading: false,
-        scriptRunning:false,
-        isholeselect:false,
-        selectMethod:null,
-        typeData:[],
-        liquidRanges:[],
-        yesnos:[],
-        channelRows:[1,2,3,4,5,6,7,8,9,10,11,12],
-        attributeData:{
-          type:-1,
-          pid:'0',
-          name:'',
-          volume:0,
-          mixTime:1,
-          mixInterval:1,
-          waitTime:0,
-          waitTip:'',
-          liquidId:0,
-          targetSpaceId:0,
-          consumableTagId:0,
-          cmdScript:'',
-          sort:0,
-          controlClass:'',
-          executeMethod:'',
-          methodDescription:'',
-          executeParam:'',
-          holeIndex:0,
-          holeIndexStr:'',
-          liquidRange:0, 
-          releaseTipSourcePos:false,
-          useReleaseTipSourcePos:false,
-          description:'',
-          remark:'',
-          channelRow:1,
-          channelCol:1,
-          xOffset:0,
-          yOffset:0,
-          zOffset:0,
-          isClipRelease: true,
-          isSpecialAction:false,
-          specialMethod:'',
-          isStepStopDetectLiquid:false,
-          isStepAbsorAndJet:false,
-        },
-        errors:{
-          code:false,
-          name:false,
-        },
-        consumableData:[],
-        consumableTagData:[],
-        equipmentData:[],
-        controlMethodData:[],
-        liquidData:[],
-        shippingSpaceData:[],
-        letters:['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'],
-        numbers:[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26],   
-        holes:[],
-        currentConsumableTag: {
-          rowCount: 1, // Initialize with default values
-          colCount: 1,
-        },
-        columns: [ 
-          {
-            title: '参数名',
-            width:'100px',
-            dataIndex: 'paramName'
-          },     
-          {
-            title: '类型',
-            width:'120px',
-            dataIndex: 'paramType'
-          },
-          {
-            title: '值',
-            width:'100px',
-            editable: true,
-            dataIndex: 'value',
-            scopedSlots: { customRender: 'value' }
-          }
-        ],
-        specialMethods:[
-          {id:'',name:'无'},
-          {id:'JetAction343',name:'种胶喷液'},
-          {id:'RemoveSupernatant',name:'弃上清'},
-          {id:'MixBME',name:'混胶'},
-          {id:'HighVolumeAction',name:'大容量吸液喷液'},
-          {id:'JetBME',name:'吸胶喷胶'},
-          {id:'JetCultureMedium',name:'吸培养基喷培养基'},
-          {id:'AfterAction343Remove',name:'种胶后弃液'},
-          {id:'AfterAction343JetCultureMedium',name:'种胶后喷培养基'},
-          {id:'JetCellCount',name:'计数片吸喷液'},
-          {id:'Jet96Hole',name:'96孔板吸喷液'},
-          {id:'Jet384HoleRemoveVolume',name:'384孔板弃液'},
-          {id:'Jet384HoleSaltWater',name:'384生理盐水'},
-          {id:'Jet384HoleLight', name:'384加发光试剂'}, 
-          {id:'Jet384Planking', name:'384孔板铺板'},
-          {id:'Jet384Dosing', name:'384孔板加药'},
-          {id:'Jet6HoleClean',name:'6孔板摇床洗板'},
-          {id:"Mix6Hole", name:'6孔板混合'},
-          {id:"Jet384ATP", name:'384加ATP'},
-          {id:"Hole6PiPetting", name:'6孔板补液'},
-          {id:"Hole6TiltPiPetting", name:'6孔板倾斜补液'},
-          {id:"Hole6TiltRemove", name:'6孔板倾斜废液'},
-        ],
-        tipSpecialMethods:[
-          {id:'',name:'无'},
-          {id:'TakeTipByBMEVolume',name:'种胶枪头'},
-          {id:'TakeTipByCultureMediumVolume',name:'培养基枪头'},
-          {id:'Jet384TakeTip',name:'384枪头'},
-          {id:'Jet384SaltWaterTakeTip',name:'384生理盐水枪头'},
-          {id:'Jet384ATPTakeTip',name:'384ATP枪头计算'},
-        ],
+<script setup>
+import { ref, reactive, toRefs, onMounted, computed, watch } from 'vue'
+import { message } from 'ant-design-vue'
+import {doMethod as doApiMethod, doCmd} from '@/api/modular/experiment/debug'
+import { exp_flow_step_add, exp_flow_step_edit } from '@/api/modular/experiment/expFlowStepManage'
+import { sysDictTypeDropDown } from '@/api/modular/system/dictManage'
+import { exp_liquid_list } from '@/api/modular/experiment/liquidManage'
+import { exp_equipment_list, exp_equipment_getControlMethods, exp_equipment_getPipetteAttribute } from '@/api/modular/experiment/equipmentManage'
+import { exp_consumable_list, exp_consumable_getConsumableTags, exp_getConsumable_Param } from '@/api/modular/experiment/consumableManage'
+import { exp_layout_getShippingSpaces } from '@/api/modular/experiment/layoutManage'
+import SpInputNumber from '@/components/spInputNumber.vue'
+import SpInput from '@/components/spInput.vue'
+import ConsumableEditForm from '../consumable/editForm.vue'
+
+const emit = defineEmits(['ok'])
+
+const visible = ref(false)
+const title = ref('实验步骤')
+const formLoading = ref(false)
+const scriptRunning = ref(false)
+
+const attributeData = ref({
+  type: -1,
+  pid: '0',
+  name: '',
+  volume: 0,
+  mixTime: 1,
+  mixInterval: 1,
+  waitTime: 0,
+  waitTip: '',
+  liquidId: null,
+  targetSpaceId: null,
+  consumableTagId: null,
+  cmdScript: '',
+  sort: 0,
+  controlClass: '',
+  executeMethod: '',
+  methodDescription: '',
+  executeParam: '',
+  holeIndex: 0,
+  holeIndexStr: '',
+  liquidRange: null,
+  releaseTipSourcePos: false,
+  useReleaseTipSourcePos: false,
+  description: '',
+  remark: '',
+  channelRow: 1,
+  channelCol: 1,
+  xOffset: 0,
+  yOffset: 0,
+  zOffset: 0,
+  isClipRelease: true,
+  isSpecialAction: false,
+  specialMethod: '',
+  isStepStopDetectLiquid: false,
+  isStepAbsorAndJet: false,
+})
+
+const errors = reactive({
+  code: false,
+  name: false,
+})
+
+const typeData = ref([])
+const liquidRanges = ref([])
+const yesnos = ref([])
+const channelRows = ref([1,2,3,4,5,6,7,8,9,10,11,12])
+const consumableData = ref([])
+const consumableTagData = ref([])
+const equipmentData = ref([])
+const controlMethodData = ref([])
+const liquidData = ref([])
+const shippingSpaceData = ref([])
+const letters = ref(['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'])
+const numbers = ref([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26])
+const holes = ref([])
+const currentConsumableTag = ref({
+  rowCount: 1, // Initialize with default values
+  colCount: 1,
+})
+const columns = ref([
+  {
+    title: '参数名',
+    width:'100px',
+    dataIndex: 'paramName'
+  },
+  {
+    title: '类型',
+    width:'120px',
+    dataIndex: 'paramType'
+  },
+  {
+    title: '值',
+    width:'100px',
+    editable: true,
+    dataIndex: 'value',
+    scopedSlots: { customRender: 'value' }
+  }
+])
+const specialMethods = ref([
+  {id:'',name:'无'},
+  {id:'JetAction343',name:'种胶喷液'},
+  {id:'RemoveSupernatant',name:'弃上清'},
+  {id:'MixBME',name:'混胶'},
+  {id:'HighVolumeAction',name:'大容量吸液喷液'},
+  {id:'JetBME',name:'吸胶喷胶'},
+  {id:'JetCultureMedium',name:'吸培养基喷培养基'},
+  {id:'AfterAction343Remove',name:'种胶后弃液'},
+  {id:'AfterAction343JetCultureMedium',name:'种胶后喷培养基'},
+  {id:'JetCellCount',name:'计数片吸喷液'},
+  {id:'Jet96Hole',name:'96孔板吸喷液'},
+  {id:'Jet384HoleRemoveVolume',name:'384孔板弃液'},
+  {id:'Jet384HoleSaltWater',name:'384生理盐水'},
+  {id:'Jet384HoleLight', name:'384加发光试剂'},
+  {id:'Jet384Planking', name:'384孔板铺板'},
+  {id:'Jet384Dosing', name:'384孔板加药'},
+  {id:'Jet6HoleClean',name:'6孔板摇床洗板'},
+  {id:"Mix6Hole", name:'6孔板混合'},
+  {id:"Jet384ATP", name:'384加ATP'},
+  {id:"Hole6PiPetting", name:'6孔板补液'},
+  {id:"Hole6TiltPiPetting", name:'6孔板倾斜补液'},
+  {id:"Hole6TiltRemove", name:'6孔板倾斜废液'},
+])
+const tipSpecialMethods = ref([
+  {id:'',name:'无'},
+  {id:'TakeTipByBMEVolume',name:'种胶枪头'},
+  {id:'TakeTipByCultureMediumVolume',name:'培养基枪头'},
+  {id:'Jet384TakeTip',name:'384枪头'},
+  {id:'Jet384SaltWaterTakeTip',name:'384生理盐水枪头'},
+  {id:'Jet384ATPTakeTip',name:'384ATP枪头计算'},
+])
+
+const consumableEditFormRef = ref(null)
+
+const selectMethod = ref(null)
+
+const edit = (record) => {
+  visible.value = true
+  // Deep copy to avoid mutating the original record
+  attributeData.value = JSON.parse(JSON.stringify(record))
+  loadDefaultData()
+  title.value = `编辑实验步骤-[${getTypeName(attributeData.value.type)}]`
+}
+
+const getTypeName = (type) => {
+  const typeItem = typeData.value.find(item => item.code === type)
+  return typeItem ? typeItem.value : '未知'
+}
+
+const loadDefaultData = async () => {
+  formLoading.value = true
+  await Promise.all([
+    getEquipmentData(),
+    getConsumableTagData(),
+    getConsumableData(),
+    getLiquidData(),
+    getShippingSpaceData(),
+    getControlMethods()
+  ])
+  formLoading.value = false
+}
+
+const equipmentChange = (value) => {
+  attributeData.value.equipmentId = value
+  refreshHoles()
+}
+
+const consumableTagChange = (id) => {
+  const record = consumableTagData.value.find(item => item.id === id)
+  if (record) {
+    currentConsumableTag.value = record
+    refreshHoles()
+  }
+}
+
+const btnGetConsumable = () => {
+  const data = { id: attributeData.value.consumableTagId }
+  exp_getConsumable_Param(data).then((res) => {
+    consumableEditFormRef.value.edit(res.data)
+  })
+}
+
+const handleOk = () => {
+  // This method is now handled by the parent component's @ok event
+}
+
+const refreshHoles = () => {
+  holes.value = []
+  const sHoles = []
+  for (let i = 0; i < currentConsumableTag.value.rowCount + 1; i++) {
+    holes.value[i] = []
+    for (let j = 0; j < currentConsumableTag.value.colCount + 1; j++) {
+      if (holes.value[i] == null) {
+        holes.value[i] = []
       }
-    },
-    created () {
-      this.currentConsumableTag=null;
-      this.sysDictTypeDropDown()
-      // this.getEquipmentData()
-      // this.loadDefaultData()
-    },
-    mounted(){
-      // this.loadDefaultData();
-      // this.getEquipmentData()
-    },
-    methods: 
-    {
-      targetSpaceChange(value)
-      {
-        this.attributeData.targetSpaceId=value;
-        this.$forceUpdate();
-      },
-      resetAttribute()
-      {
-        this.holes=[],
-        this.currentConsumableTag= {
-          rowCount: 0, // Initialize with default values
-          colCount: 0,
-        }
-      },
-      equipmentChange(value)
-      {
-        console.log('====>equipmentChange====>')
-        console.log(value)
-        this.attributeData.equipmentId=value;
-
-        this.refreshHoles()
-        this.$forceUpdate()
-      },
-      consumableTagChange(id)
-      {
-        var record=this.consumableTagData.filter(item => item.id == id)[0]        
-        if(record!=null)
-        {
-          this.currentConsumableTag=record
-          this.refreshHoles()
-        }
-      },
-      btnGetConsumable(){
-        var data={id:this.attributeData.consumableTagId}
-        exp_getConsumable_Param(data).then((res)=>{
-        this.$refs.consumableeditForm.edit(res.data)
-        })    
-      },    
-      handleOk () {
-      this.$refs.table.refresh()
-    },
-      refreshHoles()
-      {
-        this.holes=[];
-        var sHoles=[];
-        for(var i=0;i<this.currentConsumableTag.rowCount+1;i++)
-        {
-            for(var j=0;j<this.currentConsumableTag.colCount+1;j++)
-            {
-                if(this.holes[i] == null)
-                  this.holes[i]=[]
-                if(i==0 || j==0)
-                  this.holes[i][j]={name:'none',isSelected:false}
-                else
-                {
-                  var ln = this.getHoleId(i-1,j-1)
-                  if(this.attributeData.holeIndexStr!=null && this.attributeData.holeIndexStr.length>0 )
-                  {
-                    if(this.attributeData.holeIndexStr.indexOf(ln)>=0)
-                    {
-                      this.holes[i][j]={name:ln,isSelected:true}
-                      sHoles.push({name:ln,row:i+1,col:j})
-                    }
-                    else
-                    {
-                      var shole=sHoles.filter(item => item.col==j)[0]
-                      if(shole!=null)
-                      {
-                        var sRowIndex=shole.row;
-                        if((i+1)-sRowIndex<this.attributeData.channelRow)
-                          this.holes[i][j]={name:ln,isSelected:true}
-                        else
-                        {
-                          this.holes[i][j]={name:ln,isSelected:false}
-                        }
-                      }
-                      else
-                        this.holes[i][j]={name:ln,isSelected:false}
-                    }
-                  }
-                  else
-                  {
-                    this.holes[i][j]={name:ln,isSelected:false}                    
-                  }
-                }
-            }
-        }
-      },
-      getHoleId(i,j)
-      {
-        var l=this.letters[i]
-        var n=this.numbers[j]
-        //所有组合
-        var ln=l+n
-        return ln
-      },
-      selectHole(i,j)
-      {
-        var channelRow = this.attributeData.channelRow;
-        // var channelRow = this.pipetteAttribute.channelRow;
-        if(i>0 && j>0)
-        {
-          console.log(i+"+"+j);
-          if(this.attributeData.type === 3 || this.attributeData.type === 7 || this.attributeData.type === 9){
-          //单选 可添加选框改变状态
-            this.refreshHoles()
-          }
-          if(i+channelRow >= this.currentConsumableTag.rowCount+1){
-            if(this.holes[i][j].isSelected){
-              for(var local = this.currentConsumableTag.rowCount;local>this.currentConsumableTag.rowCount-channelRow;local--){
-                if(this.holes[local][j].isSelected){
-                  this.attributeData.holeIndexStr = (this.attributeData.holeIndexStr.split(",").sort().filter(a=>a!==this.holes[local+1-channelRow][j].name)).join(',')
-                  for(var k=local+1-channelRow;k<=local;k++){
-                    this.$set(this.holes[k][j],'isSelected',!this.holes[k][j].isSelected)
-                    this.$forceUpdate()
-                  }
-                  break
-                }
+      if (i === 0 || j === 0) {
+        holes.value[i][j] = { name: 'none', isSelected: false }
+      } else {
+        const ln = getHoleId(i - 1, j - 1)
+        if (attributeData.value.holeIndexStr && attributeData.value.holeIndexStr.length > 0) {
+          if (attributeData.value.holeIndexStr.includes(ln)) {
+            holes.value[i][j] = { name: ln, isSelected: true }
+            sHoles.push({ name: ln, row: i + 1, col: j })
+          } else {
+            const shole = sHoles.find(item => item.col === j)
+            if (shole) {
+              const sRowIndex = shole.row
+              if ((i + 1) - sRowIndex < attributeData.value.channelRow) {
+                holes.value[i][j] = { name: ln, isSelected: true }
+              } else {
+                holes.value[i][j] = { name: ln, isSelected: false }
               }
-            }
-            else{
-              if(this.attributeData.holeIndexStr==""){
-                this.attributeData.holeIndexStr = this.holes[this.currentConsumableTag.rowCount+1-channelRow][j].name
-              }else{
-                this.attributeData.holeIndexStr += "," + this.holes[this.currentConsumableTag.rowCount+1-channelRow][j].name
-                this.attributeData.holeIndexStr = (this.attributeData.holeIndexStr.split(",").sort()).join(',')
-              }
-              for(var item=this.currentConsumableTag.rowCount+1-channelRow;item<this.currentConsumableTag.rowCount+1;item++){
-                this.$set(this.holes[item][j],'isSelected',!this.holes[item][j].isSelected)
-                this.$forceUpdate()
-              }
-            }
-          }
-          else{
-            if(!this.holes[i][j].isSelected){
-              for(var local = i;local<=i+channelRow;local++){
-                if(this.holes[local][j].isSelected){
-                  this.attributeData.holeIndexStr = (this.attributeData.holeIndexStr.split(",").sort().filter(a=>a!==this.holes[local][j].name)).join(',')
-                  for(var item=local;item<local+channelRow;item++){
-                    this.$set(this.holes[item][j],'isSelected',!this.holes[item][j].isSelected)
-                    this.$forceUpdate()
-                  }
-                  break
-                }
-              }
-              if(this.attributeData.holeIndexStr==""){
-                this.attributeData.holeIndexStr = this.holes[i][j].name
-              }else{
-                this.attributeData.holeIndexStr += "," + this.holes[i][j].name
-                this.attributeData.holeIndexStr = (this.attributeData.holeIndexStr.split(",").sort()).join(',')
-              }
-              for(var item=i;item<i+channelRow;item++){
-                this.$set(this.holes[item][j],'isSelected',!this.holes[item][j].isSelected)
-                this.$forceUpdate()
-              }
-            }
-            else{
-              for(var local = 1;local<=i;local++){
-                if(this.holes[local][j].isSelected){
-                  if(i-local>=channelRow){
-                    console.log((i-local)%channelRow)
-                    this.attributeData.holeIndexStr = (this.attributeData.holeIndexStr.split(",").sort().filter(a=>a!==this.holes[i-((i-local)%channelRow)][j].name)).join(',')
-                    for(var item=i-((i-local)%channelRow);item<i-((i-local)%channelRow)+channelRow;item++){
-                      this.$set(this.holes[item][j],'isSelected',!this.holes[item][j].isSelected)
-                      this.$forceUpdate()
-                    }
-                    break
-                  }
-                  else{
-                    this.attributeData.holeIndexStr = (this.attributeData.holeIndexStr.split(",").sort().filter(a=>a!==this.holes[local][j].name)).join(',')
-                    for(var item=local;item<local+channelRow;item++){
-                      this.$set(this.holes[item][j],'isSelected',!this.holes[item][j].isSelected)
-                      this.$forceUpdate()
-                    }
-                    break
-                  }
-                }
-              }
-            }
-          }
-        }          
-      },
-      doMethod()
-      {
-        this.scriptRunning=true
-        var param={
-          "controlClass":this.attributeData.controlClass,
-          "executeMethod":this.attributeData.executeMethod,
-          "parameters":this.selectMethod.parameters?this.selectMethod.parameters:[],
-          "type":this.attributeData.type
-        }
-
-        console.log('=========doMethod==========')
-        console.log(param)
-        var data={
-          id:this.attributeData.equipmentId,
-          param:param
-        };
-        doMethod(data).then((res) => {
-          this.scriptRunning=false
-          if (!res.success) {
-            this.$message.error('执行控制器方法失败：' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('执行控制器方法错误：' + err.message)
-        })
-      },
-      btnDoCmd()
-      { 
-        if(!this.attributeData.cmdScript || this.attributeData.cmdScript.trim().length === 0)
-        {
-          this.$message.error('请输入脚本命令！')
-            return;
-        }
-        this.scriptRunning=true
-        var data={
-          id:this.attributeData.equipmentId,
-          cmd:this.attributeData.cmdScript
-        };
-        doCmd(data).then((res) => {
-          this.scriptRunning=false
-          if (!res.success) {
-            this.$message.error('执行脚本命令失败：' + res.message)
-          }
-        }).catch((err) => {
-          this.$message.error('执行脚本命令错误：' + err.message)
-        })
-      },
-      getTypeName(){
-        return this.typeData.filter(item => item.code == this.attributeData.type)[0].value;
-      },
-      loadDefaultData() {
-        this.formLoading = true
-        this.getEquipmentData()
-        this.getConsumableTagData()
-        this.getConsumableData()        
-        this.getLiquidData()
-        this.getShippingSpaceData()
-        this.getControlMethods()
-        this.formLoading = false
-      },
-      methodChange(name)
-      {
-          this.selectMethod=this.controlMethodData.filter(item => item.methodName == name)[0]
-          console.log('============methodChange===========')
-          console.log(this.selectMethod)
-      },
-      getControlMethods(){
-        if(this.attributeData.type>100)
-        {
-          exp_equipment_getControlMethods({stepType:this.attributeData.type}).then((res) => {
-            if (res.success) {
-              this.controlMethodData=res.data.executeMethod
-
-              console.log('===========getControlMethods============')
-              console.log(res.data)
-
-              this.attributeData.controlClass=res.data.controlClass
-              if(this.attributeData.type>100 && this.attributeData.equipmentId==null)
-                this.attributeData.equipmentId=res.data.equipmentId
-
-              if(this.attributeData.executeMethod==='')
-              {
-                this.attributeData.executeMethod=res.data.executeMethod[0].methodName
-                this.attributeData.methodDescription=res.data.executeMethod[0].summary
-              }
-              else
-              {
-                this.selectMethod=this.controlMethodData.filter(item => item.methodName == this.attributeData.executeMethod)[0]
-              }
-              if(this.attributeData.executeParam!==''){
-                this.selectMethod.parameters = JSON.parse(this.attributeData.executeParam)
-              }
-              console.log(this.selectMethod)
             } else {
-              this.$message.error('获取设备事件失败：' + res.message);
-            }
-          })
-        }
-      },
-      add(record) {
-        this.visible = true    
-        this.resetAttribute()    
-        console.log(record)
-        this.attributeData= { ...record };
-        this.loadDefaultData()
-        this.title = '新增实验步骤-['+this.getTypeName()+']'
-        console.log(this.attributeData);
-      },
-      // 初始化方法
-      edit (record) {
-        this.visible = true     
-        this.resetAttribute()       
-        console.log('================record.holeIndexStr===============')
-        console.log(record.holeIndexStr)
-        this.attributeData= { ...record };   
-        this.loadDefaultData()        
-        this.title = '编辑实验步骤-['+this.getTypeName()+']'
-        console.log(this.attributeData);
-      },
-      sysDictTypeDropDown() {
-          sysDictTypeDropDown({code: 'yes_true_false'}).then((res) => {
-            this.yesnos = res.data
-            this.yesnos.forEach((item) => {
-              item.code=item.code==='true'?true:false
-            })
-          })
-
-          sysDictTypeDropDown({ code: 'flow_step_type' }).then((res) => {
-            this.typeData = res.data
-            this.typeData.forEach((item) => {
-              item.code=parseInt(item.code)
-            })
-          })
-
-          sysDictTypeDropDown({code: 'liquid_range'}).then((res) => {
-          this.liquidRanges = res.data
-          this.liquidRanges.forEach((item) => {
-            item.code=parseInt(item.code)            
-            if(this.attributeData.liquidRange==0)
-              this.attributeData.liquidRange=parseInt(item.code)
-          })
-        })
-      },
-      getConsumableData() {
-          exp_consumable_list({}).then((res) => {
-            this.consumableData = res.data
-          })
-      },
-      getConsumableTagData() {
-        var data={id:this.attributeData.layoutId}
-        exp_consumable_getConsumableTags(data).then((res) => {
-          this.consumableTagData = res.data
-          if(this.attributeData.consumableTagId==null && this.attributeData.type!=7){
-            if(this.consumableTagData!=null && this.consumableTagData.length>0)
-            {
-              this.currentConsumableTag=this.consumableTagData[0]
-              this.attributeData.consumableTagId=this.currentConsumableTag.id
+              holes.value[i][j] = { name: ln, isSelected: false }
             }
           }
-          var record=this.consumableTagData.filter(item => item.id == this.attributeData.consumableTagId)[0]        
-          if(record!=null)
-          {
-            this.currentConsumableTag=record
-            this.refreshHoles()
-          }
-        })
-      },
-      getEquipmentData() 
-      {
-        exp_equipment_list({}).then((res) => {
-          var data=res.data
-          if(this.attributeData.type==0 || this.attributeData.type==6 || this.attributeData.type==101)
-            this.equipmentData = data.filter(item => item.isThirdParty==false)
-          else if(this.attributeData.type>200)
-            this.equipmentData = data.filter(item => item.isThirdParty==true)
-          else if(this.attributeData.type>0 && this.attributeData.type<6)
-            this.equipmentData = data.filter(item => item.isThirdParty==false && item.type==0)
-          else
-            this.equipmentData = data.filter(item => item.isThirdParty==false && item.type==1)
-        })
-      },
-      getLiquidData() {
-        exp_liquid_list({}).then((res) => {
-          this.liquidData = res.data
-          if(this.attributeData.liquidId==null)
-            this.attributeData.liquidId=this.liquidData[0].id
-        })
-      },  
-      getShippingSpaceData() {
-        var data={id:this.attributeData.layoutId}
-        exp_layout_getShippingSpaces(data).then((res) => {
-          this.shippingSpaceData = res.data
-          if(this.attributeData.targetSpaceId==null && this.attributeData.type!=7)
-            this.attributeData.targetSpaceId=this.shippingSpaceData[0].id
-        })
-      },       
-      validateFields()
-      {
-        var result=true;
-        this.errors.code=!this.attributeData.code;
-        this.errors.name=!this.attributeData.name;
-        console.log(this.errors)
-        for (const key in this.errors) {          
-          if (this.errors[key]) {            
-            result=false
-            break;
-          }
+        } else {
+          holes.value[i][j] = { name: ln, isSelected: false }
         }
-        return result
-      },
-      handleSubmit () {
-        console.log('=================handleSubmit=================')
-        console.log(this.attributeData)
-        if(!this.validateFields())
-          return;
-        
-        if(this.selectMethod!=null)
-        {
-          this.attributeData.methodDescription=this.selectMethod.summary
-          if(this.selectMethod.parameters!=null && this.selectMethod.parameters.length>0)
-            this.attributeData.executeParam = JSON.stringify(this.selectMethod.parameters)
-        }
-        
-
-        if(this.attributeData.holeIndexStr!=null)
-        {
-          if(this.attributeData.holeIndexStr.includes('undefined'))
-            this.attributeData.holeIndexStr=this.attributeData.holeIndexStr.replace('undefined','')
-          if(this.attributeData.holeIndexStr.includes('null'))
-            this.attributeData.holeIndexStr=this.attributeData.holeIndexStr.replace('null','')
-          if(this.attributeData.holeIndexStr.startsWith(','))
-            this.attributeData.holeIndexStr=this.attributeData.holeIndexStr.replace(',','')
-        }     
-        if(this.attributeData.type===1 || this.attributeData.type===3 || this.attributeData.type===4 || this.attributeData.type===5)   
-        {
-          //this.attributeData.specialMethod=JSON.stringify(this.attributeData.specialMethod)
-        }
-        else
-          this.attributeData.specialMethod="";
-
-        this.formLoading = true
-        if(this.attributeData.id==0)
-        {
-          exp_flow_step_add(this.attributeData).then((res) => {
-            if (res.success) {
-              this.$message.success('新增成功')
-              this.$emit('ok', this.attributeData)
-              this.handleCancel()
-            } else {
-              this.$message.error(res.message)
-            }
-          }).finally((res) => {
-            this.formLoading = false
-          })
-        }
-        else
-        {
-          exp_flow_step_edit(this.attributeData).then((res) => {
-            if (res.success) {
-              this.$message.success('编辑成功')
-              this.$emit('ok', this.attributeData)
-              this.handleCancel()
-            } else {
-              this.$message.error(res.message)//  + res.message
-            }
-          }).finally((res) => {
-            this.formLoading = false
-          })
-        }
-      },
-      handleCancel () {
-        this.visible = false
       }
     }
+  }
+}
+
+const getHoleId = (i, j) => {
+  const l = letters.value[i]
+  const n = numbers.value[j]
+  //所有组合
+  const ln = l + n
+  return ln
+}
+
+const selectHole = (i, j) => {
+  const channelRow = attributeData.value.channelRow
+  // var channelRow = this.pipetteAttribute.channelRow;
+  if (i > 0 && j > 0) {
+    if (attributeData.value.type === 3 || attributeData.value.type === 7 || attributeData.value.type === 9) {
+      //单选 可添加选框改变状态
+      refreshHoles()
+    }
+    if (i + channelRow >= currentConsumableTag.value.rowCount + 1) {
+      if (holes.value[i][j].isSelected) {
+        for (let local = currentConsumableTag.value.rowCount; local > currentConsumableTag.value.rowCount - channelRow; local--) {
+          if (holes.value[local][j].isSelected) {
+            attributeData.value.holeIndexStr = (attributeData.value.holeIndexStr.split(',').sort().filter(a => a !== holes.value[local + 1 - channelRow][j].name)).join(',')
+            for (let k = local + 1 - channelRow; k <= local; k++) {
+              holes.value[k][j].isSelected = !holes.value[k][j].isSelected
+            }
+            break
+          }
+        }
+      } else {
+        if (attributeData.value.holeIndexStr === '') {
+          attributeData.value.holeIndexStr = holes.value[currentConsumableTag.value.rowCount + 1 - channelRow][j].name
+        } else {
+          attributeData.value.holeIndexStr += ',' + holes.value[currentConsumableTag.value.rowCount + 1 - channelRow][j].name
+          attributeData.value.holeIndexStr = (attributeData.value.holeIndexStr.split(',').sort()).join(',')
+        }
+        for (let item = currentConsumableTag.value.rowCount + 1 - channelRow; item < currentConsumableTag.value.rowCount + 1; item++) {
+          holes.value[item][j].isSelected = !holes.value[item][j].isSelected
+        }
+      }
+    } else {
+      if (!holes.value[i][j].isSelected) {
+        for (let local = i; local <= i + channelRow; local++) {
+          if (holes.value[local][j].isSelected) {
+            attributeData.value.holeIndexStr = (attributeData.value.holeIndexStr.split(',').sort().filter(a => a !== holes.value[local][j].name)).join(',')
+            for (let item = local; item < local + channelRow; item++) {
+              holes.value[item][j].isSelected = !holes.value[item][j].isSelected
+            }
+            break
+          }
+        }
+        if (attributeData.value.holeIndexStr === '') {
+          attributeData.value.holeIndexStr = holes.value[i][j].name
+        } else {
+          attributeData.value.holeIndexStr += ',' + holes.value[i][j].name
+          attributeData.value.holeIndexStr = (attributeData.value.holeIndexStr.split(',').sort()).join(',')
+        }
+        for (let item = i; item < i + channelRow; item++) {
+          holes.value[item][j].isSelected = !holes.value[item][j].isSelected
+        }
+      } else {
+        for (let local = 1; local <= i; local++) {
+          if (holes.value[local][j].isSelected) {
+            if (i - local >= channelRow) {
+              attributeData.value.holeIndexStr = (attributeData.value.holeIndexStr.split(',').sort().filter(a => a !== holes.value[i - ((i - local) % channelRow)][j].name)).join(',')
+              for (let item = i - ((i - local) % channelRow); item < i - ((i - local) % channelRow) + channelRow; item++) {
+                holes.value[item][j].isSelected = !holes.value[item][j].isSelected
+              }
+              break
+            } else {
+              attributeData.value.holeIndexStr = (attributeData.value.holeIndexStr.split(',').sort().filter(a => a !== holes.value[local][j].name)).join(',')
+              for (let item = local; item < local + channelRow; item++) {
+                holes.value[item][j].isSelected = !holes.value[item][j].isSelected
+              }
+              break
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+const doMethod = () => {
+  scriptRunning.value = true
+  var param = {
+    "controlClass": attributeData.value.controlClass,
+    "executeMethod": attributeData.value.executeMethod,
+    "parameters": selectMethod.value ? selectMethod.value.parameters : [],
+    "type": attributeData.value.type
+  }
+
+  console.log('=========doMethod==========')
+  console.log(param)
+  var data = {
+    id: attributeData.value.equipmentId,
+    param: param
+  };
+  doApiMethod(data).then((res) => {
+    scriptRunning.value = false
+    if (!res.success) {
+      message.error('执行控制器方法失败：' + res.message)
+    }
+  }).catch((err) => {
+    message.error('执行控制器方法错误：' + err.message)
   })
+}
+
+const btnDoCmd = () => {
+  if (!attributeData.value.cmdScript || attributeData.value.cmdScript.trim().length === 0) {
+    message.error('请输入脚本命令！')
+    return
+  }
+  scriptRunning.value = true
+  const data = {
+    id: attributeData.value.equipmentId,
+    cmd: attributeData.value.cmdScript
+  };
+  doCmd(data).then((res) => {
+    scriptRunning.value = false
+    if (!res.success) {
+      message.error('执行脚本命令失败：' + res.message)
+    }
+  }).catch((err) => {
+    message.error('执行脚本命令错误：' + err.message)
+  })
+}
+
+const methodChange = (name) => {
+  selectMethod.value = controlMethodData.value.find(item => item.methodName === name)
+  console.log('============methodChange===========')
+  console.log(selectMethod.value)
+}
+
+const getControlMethods = async () => {
+  if (attributeData.value.type > 100) {
+    const res = await exp_equipment_getControlMethods({ stepType: attributeData.value.type })
+    if (res.success) {
+      controlMethodData.value = res.data.executeMethod
+
+      console.log('===========getControlMethods============')
+      console.log(res.data)
+
+      attributeData.value.controlClass = res.data.controlClass
+      if (attributeData.value.type > 100 && attributeData.value.equipmentId === null) {
+        attributeData.value.equipmentId = res.data.equipmentId
+      }
+
+      if (attributeData.value.executeMethod === '') {
+        attributeData.value.executeMethod = res.data.executeMethod[0].methodName
+        attributeData.value.methodDescription = res.data.executeMethod[0].summary
+      } else {
+        selectMethod.value = controlMethodData.value.find(item => item.methodName === attributeData.value.executeMethod)
+      }
+      if (attributeData.value.executeParam !== '') {
+        selectMethod.value.parameters = JSON.parse(attributeData.value.executeParam)
+      }
+      console.log(selectMethod.value)
+    } else {
+      message.error('获取设备事件失败：' + res.message)
+    }
+  }
+}
+
+const add = (record) => {
+  visible.value = true
+  resetAttribute()
+  console.log(record)
+  attributeData.value = { ...record }
+  loadDefaultData()
+  title.value = `新增实验步骤-[${getTypeName(attributeData.value.type)}]`
+  console.log(attributeData.value)
+}
+
+const resetAttribute = () => {
+  holes.value = []
+  currentConsumableTag.value = {
+    rowCount: 0, // Initialize with default values
+    colCount: 0,
+  }
+}
+
+const loadDictData = async () => {
+  const res = await sysDictTypeDropDown({ code: 'yes_true_false' })
+  yesnos.value = res.data
+  yesnos.value.forEach((item) => {
+    item.code = item.code === 'true' ? true : false
+  })
+
+  const res2 = await sysDictTypeDropDown({ code: 'flow_step_type' })
+  typeData.value = res2.data
+  typeData.value.forEach((item) => {
+    item.code = parseInt(item.code)
+  })
+
+  const res3 = await sysDictTypeDropDown({ code: 'liquid_range' })
+  liquidRanges.value = res3.data
+  liquidRanges.value.forEach((item) => {
+    item.code = parseInt(item.code)
+    if (attributeData.value.liquidRange === 0) {
+      attributeData.value.liquidRange = parseInt(item.code)
+    }
+  })
+}
+
+const getConsumableData = async () => {
+  const res = await exp_consumable_list()
+  consumableData.value = res.data
+}
+
+const getConsumableTagData = async () => {
+  const data = { id: attributeData.value.layoutId }
+  const res = await exp_consumable_getConsumableTags(data)
+  consumableTagData.value = res.data
+  if (attributeData.value.consumableTagId === null && attributeData.value.type !== 7) {
+    if (consumableTagData.value !== null && consumableTagData.value.length > 0) {
+      currentConsumableTag.value = consumableTagData.value[0]
+      attributeData.value.consumableTagId = currentConsumableTag.value.id
+    }
+  }
+  const record = consumableTagData.value.find(item => item.id === attributeData.value.consumableTagId)
+  if (record) {
+    currentConsumableTag.value = record
+    refreshHoles()
+  }
+}
+
+const getEquipmentData = async () => {
+  const res = await exp_equipment_list()
+  if (attributeData.value.type === 0 || attributeData.value.type === 6 || attributeData.value.type === 101) {
+    equipmentData.value = res.data.filter(item => item.isThirdParty === false)
+  } else if (attributeData.value.type > 200) {
+    equipmentData.value = res.data.filter(item => item.isThirdParty === true)
+  } else if (attributeData.value.type > 0 && attributeData.value.type < 6) {
+    equipmentData.value = res.data.filter(item => item.isThirdParty === false && item.type === 0)
+  } else {
+    equipmentData.value = res.data.filter(item => item.isThirdParty === false && item.type === 1)
+  }
+}
+
+const getLiquidData = async () => {
+  const res = await exp_liquid_list()
+  liquidData.value = res.data
+  if (attributeData.value.liquidId === null) {
+    attributeData.value.liquidId = liquidData.value[0].id
+  }
+}
+
+const getShippingSpaceData = async () => {
+  const data = { id: attributeData.value.layoutId }
+  const res = await exp_layout_getShippingSpaces(data)
+  shippingSpaceData.value = res.data
+  if (attributeData.value.targetSpaceId === null && attributeData.value.type !== 7) {
+    attributeData.value.targetSpaceId = shippingSpaceData.value[0].id
+  }
+}
+
+const validateFields = () => {
+  let result = true
+  errors.value.code = !attributeData.value.code
+  errors.value.name = !attributeData.value.name
+  console.log(errors.value)
+  for (const key in errors.value) {
+    if (errors.value[key]) {
+      result = false
+      break
+    }
+  }
+  return result
+}
+
+const handleSubmit = async () => {
+  console.log('=================handleSubmit=================')
+  console.log(attributeData.value)
+  if (!validateFields()) {
+    return
+  }
+
+  if (selectMethod.value) {
+    attributeData.value.methodDescription = selectMethod.value.summary
+    if (selectMethod.value.parameters !== null && selectMethod.value.parameters.length > 0) {
+      attributeData.value.executeParam = JSON.stringify(selectMethod.value.parameters)
+    }
+  }
+
+  if (attributeData.value.holeIndexStr !== null) {
+    if (attributeData.value.holeIndexStr.includes('undefined')) {
+      attributeData.value.holeIndexStr = attributeData.value.holeIndexStr.replace('undefined', '')
+    }
+    if (attributeData.value.holeIndexStr.includes('null')) {
+      attributeData.value.holeIndexStr = attributeData.value.holeIndexStr.replace('null', '')
+    }
+    if (attributeData.value.holeIndexStr.startsWith(',')) {
+      attributeData.value.holeIndexStr = attributeData.value.holeIndexStr.replace(',', '')
+    }
+  }
+  if (attributeData.value.type === 1 || attributeData.value.type === 3 || attributeData.value.type === 4 || attributeData.value.type === 5) {
+    //this.attributeData.specialMethod=JSON.stringify(this.attributeData.specialMethod)
+  } else {
+    attributeData.value.specialMethod = ''
+  }
+
+  formLoading.value = true
+  if (attributeData.value.id === 0) {
+    const res = await exp_flow_step_add(attributeData.value)
+    if (res.success) {
+      message.success('新增成功')
+      emit('ok', attributeData.value)
+      handleCancel()
+    } else {
+      message.error(res.message)
+    }
+  } else {
+    const res = await exp_flow_step_edit(attributeData.value)
+    if (res.success) {
+      message.success('编辑成功')
+      emit('ok', attributeData.value)
+      handleCancel()
+    } else {
+      message.error(res.message) //  + res.message
+    }
+  }
+  formLoading.value = false
+}
+
+const handleCancel = () => {
+  visible.value = false
+}
+
+// Expose the edit method to the parent component
+defineExpose({
+  edit
+})
+
+onMounted(() => {
+  loadDictData()
+  // this.getEquipmentData()
+  // this.loadDefaultData()
+})
+
 </script>
 <style scoped>
-.ant-row{
+.ant-row {
   height: 40px;
 }
-.ant-col{
+.ant-col {
   height: 40px;
 }
-.ant-form-item{
+.ant-form-item {
   height: 40px;
 }
-.ant-form-item-control{
+.ant-form-item-control {
   height: 40px;
 }
-.ant-form-explain{
+.ant-form-explain {
   height: 0;
 }
 
-.span-unit{
+.span-unit {
   margin-left: 5px;
   color: black;
 }
-.span-label{
-  width: 140px;
+.span-label {
+  width: 130px;
   text-align: right;
-  display:inline-block;
+  display: inline-block;
   color: black;
+  padding-right: 5px;
 }
-.holecolorselected{
-  background-color: #13C2C2;
+.holecolorselected {
+  background-color: #f79a49;
 }
 </style>
